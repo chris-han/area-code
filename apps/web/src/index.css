@@ -1,0 +1,5 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* Import the UI package styles */
+@import "@workspace/ui/styles/globals.css"; 
