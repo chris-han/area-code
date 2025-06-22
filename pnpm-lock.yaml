@@ -162,6 +162,9 @@ importers:
       tailwindcss:
         specifier: ^4.1.10
         version: 4.1.10
+      typescript:
+        specifier: 5.5.4
+        version: 5.5.4
 
 packages:
 

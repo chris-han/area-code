@@ -1,34 +1,33 @@
-# `Turborepo` Vite starter
+# Starter Application
 
-This is a community-maintained example. If you experience a problem, please submit a pull request with a fix. GitHub Issues will be closed.
+Area Code is a starter repo with all the necessary building blocks for a production ready repository that can be used to build multi-modal applications.
 
-## Using this example
+It's built on top of Turborepo. The monorepo contains the following capabilities:
 
-Run the following command:
+## Apps
+- `web`: a Vite app that serves the frontend
 
-```sh
-npx create-turbo@latest -e with-vite
-```
+## Services
+API centric services that power functionality for your applications
+- `analytical-service`: Analytical service that powers the analytical functionality for your applications (e.g. analytics, reporting, dashboards, newsfeeds, etc.)
+- `retrieval-service`: Retrieval service that powers the retrieval functionality for your applications (e.g. search, recommendations, etc.)
+- `transaction-service`: Transaction service that powers the transactional functionality for your applications (e.g. payments, orders, etc.)
+- `messaging-service`: Messaging service that powers the messaging functionality for your applications (e.g. chat, notifications, etc.)
+- `ai-service`: AI service that powers the AI functionality for your applications (e.g. chat, voice, etc.)
 
-## What's inside?
+## Packages
+- `<library-name>-config`: configuration implementations for specific libraries
+- `ui`: a library of shared web UI components
 
-This Turborepo includes the following packages and apps:
+## Future plans
+We plan on enabling a user to compose their own application with a subset of the services and packages. We plan on leveraging the `generate` tool provided by turborepo to generate the application code. We also plan on enabling python and other languages based services to be added to the repository.
 
-### Apps and Packages
-
-- `web`: another vanilla [vite](https://vitejs.dev) ts app
-- `@repo/ui`: a stub component & utility library shared by both `web` applications
-- `@repo/eslint-config`: shared `eslint` configurations
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-- `@repo/tailwind-config`: shared tailwind config
-
-Each package and app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [Tailwind CSS](https://tailwindcss.com/) for styling
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+- Add a `mobile` app that serves the mobile frontend
+- Add a `desktop` app that serves the desktop frontend
+- Add a `cli` app that serves the command line interface
+- Add a `docs` app that serves the documentation
+- Add a `blog` app that serves the blog
+- Add a `worker` service that enables background processing for the application
+- Add a `tests` package that contains shared tests for the repository
+- Add a `types` package that contains shared types for the repository
+- Add a `utils` package that contains shared utilities for the repository
