@@ -1,0 +1,13 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+This is a mono repo. It leverages turbo repo.
+
+If you need information refer to the official turborepo docs with the latest version: https://turborepo.com/docs
+
+The mono repo is composed of three high level concepts:
+1. Apps: core user facing functionality
+2. Services: shared capabilities and infrastructure across apps
+3. Packages: shared functionality across apps (like configs or component/design systems)

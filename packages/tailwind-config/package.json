@@ -1,0 +1,15 @@
+{
+  "name": "@repo/tailwind-config",
+  "version": "0.0.0",
+  "main": "./shared-styles.css",
+  "exports": {
+    ".": "./shared-styles.css"
+  },
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "tailwindcss": "^4.1.10"
+  }
+}
