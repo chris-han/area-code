@@ -9,9 +9,15 @@
     "./components/*": "./src/components/*.tsx",
     "./lib/*": "./src/lib/*.ts",
     "./hooks/*": "./src/hooks/*.ts",
-    "./styles/*": "./src/styles/*.css"
+    "./styles.css": "./dist/index.css"
   },
   "scripts": {
+    "build:styles": "tailwindcss -i ./src/styles/globals.css -o ./dist/index.css",
+    "build:components": "tsc",
+    "build": "pnpm run build:styles && pnpm run build:components",
+    "dev:styles": "tailwindcss -i ./src/styles/globals.css -o ./dist/index.css --watch",
+    "dev:components": "tsc --watch",
+    "dev": "pnpm run dev:styles & pnpm run dev:components",
     "lint": "eslint . --max-warnings 0",
     "generate:component": "turbo gen react-component"
   },
@@ -20,7 +26,11 @@
     "@repo/typescript-config": "workspace:*",
     "@types/react": "^18.2.61",
     "@types/react-dom": "^18.2.19",
-    "react": "^18.2.0"
+    "react": "^18.2.0",
+    "@tailwindcss/cli": "^4.1.10",
+    "@tailwindcss/postcss": "^4.1.10",
+    "autoprefixer": "^10.4.21",
+    "tailwindcss": "^4.1.10"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.3",

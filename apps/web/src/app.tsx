@@ -10,7 +10,7 @@ import {
 function App() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
+      <Card>
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">shadcn/ui Monorepo</CardTitle>
           <CardDescription>
