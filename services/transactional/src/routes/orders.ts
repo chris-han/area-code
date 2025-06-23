@@ -13,30 +13,33 @@ import {
 
 export async function orderRoutes(fastify: FastifyInstance) {
   // Get all orders with user and items
-  fastify.get<{ Reply: any[] }>("/orders", async (request, reply) => {
-    try {
-      const allOrders = await db
-        .select({
-          id: orders.id,
-          status: orders.status,
-          totalAmount: orders.totalAmount,
-          createdAt: orders.createdAt,
-          user: {
-            id: users.id,
-            email: users.email,
-            firstName: users.firstName,
-            lastName: users.lastName,
-          },
-        })
-        .from(orders)
-        .leftJoin(users, eq(orders.userId, users.id))
-        .orderBy(desc(orders.createdAt));
+  fastify.get<{ Reply: any[] | { error: string } }>(
+    "/orders",
+    async (request, reply) => {
+      try {
+        const allOrders = await db
+          .select({
+            id: orders.id,
+            status: orders.status,
+            totalAmount: orders.totalAmount,
+            createdAt: orders.createdAt,
+            user: {
+              id: users.id,
+              email: users.email,
+              firstName: users.firstName,
+              lastName: users.lastName,
+            },
+          })
+          .from(orders)
+          .leftJoin(users, eq(orders.userId, users.id))
+          .orderBy(desc(orders.createdAt));
 
-      return reply.send(allOrders);
-    } catch (error) {
-      return reply.status(500).send({ error: "Failed to fetch orders" });
+        return reply.send(allOrders);
+      } catch (error) {
+        return reply.status(500).send({ error: "Failed to fetch orders" });
+      }
     }
-  });
+  );
 
   // Get order by ID with full details
   fastify.get<{ Params: { id: string }; Reply: any | { error: string } }>(

@@ -11,14 +11,17 @@ import {
 
 export async function userRoutes(fastify: FastifyInstance) {
   // Get all users
-  fastify.get<{ Reply: User[] }>("/users", async (request, reply) => {
-    try {
-      const allUsers = await db.select().from(users);
-      return reply.send(allUsers);
-    } catch (error) {
-      return reply.status(500).send({ error: "Failed to fetch users" });
+  fastify.get<{ Reply: User[] | { error: string } }>(
+    "/users",
+    async (request, reply) => {
+      try {
+        const allUsers = await db.select().from(users);
+        return reply.send(allUsers);
+      } catch (error) {
+        return reply.status(500).send({ error: "Failed to fetch users" });
+      }
     }
-  });
+  );
 
   // Get user by ID
   fastify.get<{ Params: { id: string }; Reply: User | { error: string } }>(

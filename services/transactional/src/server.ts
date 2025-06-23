@@ -7,7 +7,10 @@ import { orderRoutes } from "./routes/orders";
 const fastify = Fastify({
   logger: {
     level: "info",
-    prettyPrint: process.env.NODE_ENV === "development",
+    transport:
+      process.env.NODE_ENV === "development"
+        ? { target: "pino-pretty" }
+        : undefined,
   },
 });
 

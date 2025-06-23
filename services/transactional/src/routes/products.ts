@@ -10,14 +10,17 @@ import {
 
 export async function productRoutes(fastify: FastifyInstance) {
   // Get all products
-  fastify.get<{ Reply: Product[] }>("/products", async (request, reply) => {
-    try {
-      const allProducts = await db.select().from(products);
-      return reply.send(allProducts);
-    } catch (error) {
-      return reply.status(500).send({ error: "Failed to fetch products" });
+  fastify.get<{ Reply: Product[] | { error: string } }>(
+    "/products",
+    async (request, reply) => {
+      try {
+        const allProducts = await db.select().from(products);
+        return reply.send(allProducts);
+      } catch (error) {
+        return reply.status(500).send({ error: "Failed to fetch products" });
+      }
     }
-  });
+  );
 
   // Get product by ID
   fastify.get<{ Params: { id: string }; Reply: Product | { error: string } }>(
