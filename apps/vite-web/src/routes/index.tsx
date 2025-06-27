@@ -7,6 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@workspace/ui/components/card";
+import { Link } from '@tanstack/react-router'
 
 function Index() {
   return (
@@ -28,6 +29,16 @@ function Index() {
               <Button variant="outline">Outline Button</Button>
               <Button variant="destructive">Destructive Button</Button>
             </div>
+          </div>
+          <div className="border-t pt-4">
+            <p className="text-sm text-muted-foreground mb-2 text-center">
+              Try out TanStack Form:
+            </p>
+            <Link to="/form-example">
+              <Button variant="outline" className="w-full">
+                View Form Example
+              </Button>
+            </Link>
           </div>
         </CardContent>
       </Card>
