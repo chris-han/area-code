@@ -73,4 +73,4 @@ services:
 
 volumes:
   db_data:
-    driver: local 
+    driver: local
