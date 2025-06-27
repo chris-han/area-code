@@ -1,3 +1,4 @@
+import { createFileRoute } from '@tanstack/react-router'
 import { Button } from "@workspace/ui/components/button";
 import {
   Card,
@@ -7,14 +8,14 @@ import {
   CardTitle,
 } from "@workspace/ui/components/card";
 
-function App() {
+function Index() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card>
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">shadcn/ui Monorepo</CardTitle>
+          <CardTitle className="text-2xl">shadcn/ui Monorepo with TanStack Router</CardTitle>
           <CardDescription>
-            Successfully configured with monorepo best practices!
+            Successfully configured with monorepo best practices and routing!
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -34,4 +35,6 @@ function App() {
   );
 }
 
-export default App;
+export const Route = createFileRoute('/')({
+  component: Index,
+}) 
