@@ -1,27 +1,9 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "lib": ["ES2020", "DOM"],
-    "module": "commonjs",
-    "moduleResolution": "node",
-    "allowSyntheticDefaultImports": true,
+    "outDir": "dist",
     "esModuleInterop": true,
-    "declaration": true,
-    "outDir": "./dist",
-    "strict": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "strictFunctionTypes": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "noImplicitOverride": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
     "paths": {
-      "datamodels/*": ["./app/ingest/*"],
+      "datamodels/*": ["./app/datamodels/*"],
       "versions/*": ["./.moose/versions/*"]
     },
     "plugins": [
@@ -32,8 +14,7 @@
       {
         "transform": "typia/lib/transform"
       }
-    ]
-  },
-  "include": ["./app/**/*"],
-  "exclude": ["node_modules", "dist"]
+    ],
+    "strictNullChecks": true
+  }
 }

@@ -31,214 +31,333 @@ We welcome contributions to Moose! Please check out the [contribution guidelines
 
 Our mission at [fiveonefour](https://www.fiveonefour.com/) is to bring incredible developer experiences to the data stack. If you're interested in enterprise solutions, commercial support, or design partnerships, then we'd love to chat with you: [hello@moosejs.dev](mailto:hello@moosejs.dev)
 
-# Sync Base Service - CDC Data Sync Workflow
+# 🔄 Sync-Base Service
 
-This service implements a sophisticated Change Data Capture (CDC) workflow that syncs data from the transactional-base service to an analytical data store using Supabase's realtime features and Moose workflows.
+A **Moose-powered data synchronization service** that provides real-time CDC (Change Data Capture) from transactional databases to analytical stores using **Supabase Postgres Changes** and **dual-workflow architecture**.
 
-## Architecture Overview
+## 🏗️ **Architecture Overview**
 
-The sync service consists of:
+This service uses a **two-workflow approach** for optimal separation of concerns:
 
-1. **CDC Handler** (`supabase-cdc/cdc-handler.ts`) - Manages realtime subscriptions to PostgreSQL changes via Supabase
-2. **Moose Workflow** (`index.ts`) - Orchestrates the sync process with scheduling, retries, and monitoring
-3. **Data Validation** - Uses Zod schemas to ensure data integrity during sync
+### **1. 🔥 CDC Manager Workflow** (Long-Running)
+- **Purpose**: Manages the CDC handler lifecycle
+- **Execution**: Manually triggered, runs continuously (24-72 hours)
+- **Responsibilities**:
+  - Initialize and start CDC handler
+  - Perform initial historical sync
+  - Maintain persistent CDC connections
+  - Handle CDC restarts and recovery
 
-## Features
+### **2. 🔍 Sync Monitor Workflow** (Scheduled)
+- **Purpose**: Monitors CDC health and generates reports
+- **Execution**: Automatically runs every 2 minutes
+- **Responsibilities**:
+  - Check CDC handler status
+  - Generate monitoring reports
+  - Alert if CDC is down
+  - Provide observability data
 
-- 🔄 **Real-time Change Data Capture** using Supabase realtime subscriptions
-- ⏰ **Scheduled Workflow** runs every 2 minutes to monitor and maintain CDC connections
-- 🔁 **Initial Sync** for historical data when first starting
-- 🛡️ **Error Handling** with retries at both task and workflow levels
-- 📊 **Monitoring** with status reporting and health checks
-- 🧩 **Batch Processing** to efficiently handle multiple changes
-- ✅ **Data Validation** using Zod schemas before ingestion
-
-## Setup Instructions
-
-### 1. Prerequisites
-
-Ensure you have the following running:
-- **Transactional Base Service** (source database on port 5433)
-- **Supabase-compatible PostgreSQL** with realtime enabled
-- **Node.js 18+** and **pnpm**
-
-### 2. Environment Configuration
-
-Set these environment variables in your `.env` file or environment:
-
-```env
-# Supabase Configuration
-SUPABASE_URL=http://localhost:54321
-SUPABASE_ANON_KEY=your-supabase-anon-key
-
-# Source Database (Transactional Base)
-TRANSACTIONAL_DB_URL=postgresql://postgres:your-super-secret-and-long-postgres-password@localhost:5433/postgres
+```mermaid
+graph TD
+    A[Manual Trigger] --> B[CDC Manager Workflow]
+    B --> C[Initialize CDC Handler]
+    C --> D[Initial Historical Sync]
+    D --> E[Maintain CDC Connection - LONG RUNNING]
+    
+    F[Every 2 Minutes] --> G[Sync Monitor Workflow]
+    G --> H[Check CDC Status]
+    H --> I[Generate Report]
+    
+    E -.->|Status Check| H
+    
+    J[Database Changes] --> K[Supabase Realtime]
+    K --> L[CDC Handler]
+    L --> M[Event Buffer]
+    M --> N[Batch Processing]
+    N --> O[Data Validation]
+    O --> P[Moose Ingestion]
 ```
 
-### 3. Install Dependencies
+## 🚀 **Getting Started**
 
+### **Prerequisites**
+- Node.js 18+
+- PostgreSQL database (transactional-base)
+- Supabase project configured
+- Moose CLI installed
+
+### **1. Install Dependencies**
 ```bash
 cd services/sync-base
 pnpm install
 ```
 
-### 4. Start the Development Server
+### **2. Configure Environment**
+```bash
+# .env
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
+TRANSACTIONAL_DB_URL=postgresql://postgres:password@localhost:5433/postgres
+```
 
+### **3. Start the Service**
 ```bash
 pnpm dev
 ```
 
-This will start the Moose development server with the CDC workflow enabled.
-
-## Workflow Operation
-
-### Workflow Schedule
-
-The `dataSyncWorkflow` runs every 2 minutes (`@every 2m`) and performs:
-
-1. **Initialize CDC** - Sets up or verifies Supabase realtime subscriptions
-2. **Initial Sync** - Processes historical data on first run
-3. **Monitor Status** - Checks CDC handler health and buffered events
-4. **Update Status** - Logs workflow completion and statistics
-
-### CDC Handler Operation
-
-The CDC handler operates continuously in the background:
-
-- **Realtime Subscriptions** to `foo`, `bar`, and `foo_bar` tables
-- **Event Buffering** with configurable batch sizes (default: 50 events)
-- **Automatic Processing** of batched events every 30 seconds
-- **Error Recovery** with automatic reconnection on failures
-
-### Data Flow
-
-```
-PostgreSQL (Transactional DB)
-    ↓ (Realtime CDC)
-Supabase CDC Handler
-    ↓ (Batch Processing)
-Data Validation (Zod)
-    ↓ (Ingestion)
-Analytical Store (ClickHouse)
-```
-
-## Usage Examples
-
-### Running the Workflow Manually
-
+### **4. Start CDC Data Sync**
 ```bash
-# Run the workflow once
-moose workflow run dataSyncWorkflow
+# In another terminal, start the CDC manager (long-running)
+moose workflow run cdcManagerWorkflow
 
-# Run with custom input
-moose workflow run dataSyncWorkflow --input '{"batchSize": 100}'
+# The monitor workflow runs automatically every 2 minutes
 ```
 
-### Monitoring Workflow Status
+## 🎯 **Workflow Management**
 
+### **Starting CDC**
 ```bash
-# Check workflow status
-moose workflow status dataSyncWorkflow
-
-# Get detailed status with logs
-moose workflow status dataSyncWorkflow --verbose
+# Start the CDC manager workflow (this runs continuously)
+moose workflow run cdcManagerWorkflow
 ```
 
-### Viewing Workflow in Temporal Dashboard
+### **Checking Status**
+```bash
+# View CDC manager workflow status
+moose workflow status cdcManagerWorkflow
 
-When the workflow runs, it provides a URL to view execution in the Temporal dashboard:
+# View scheduled monitor workflow status
+moose workflow status syncMonitorWorkflow
+
+# View all workflow runs
+moose workflow list
 ```
-View it in the Temporal dashboard: http://localhost:8080/namespaces/default/workflows/dataSyncWorkflow/...
+
+### **Stopping CDC**
+```bash
+# Cancel the CDC manager workflow
+moose workflow cancel cdcManagerWorkflow
 ```
 
-## Configuration Options
+### **Manual Status Check**
+```bash
+# Run monitor workflow manually
+moose workflow run syncMonitorWorkflow
+```
 
-You can customize the sync behavior by modifying `initialSyncConfig`:
+## 📊 **Data Flow**
 
+### **Tables Synchronized**
+- `foo` → `FooSync`
+- `bar` → `BarSync` 
+- `foo_bar` → `FooBarSync`
+
+### **Event Processing**
+1. **Real-time Events**: Database changes trigger Supabase realtime notifications
+2. **Event Buffering**: Events are batched (default: 50 events)
+3. **Dual Triggers**: Process when buffer is full OR every 30 seconds
+4. **Data Validation**: Zod schema validation before ingestion
+5. **Moose Ingestion**: Validated data sent to analytical store
+
+### **CDC Operations Supported**
+- ✅ **INSERT**: New records
+- ✅ **UPDATE**: Modified records  
+- ✅ **DELETE**: Removed records
+- ✅ **Historical Sync**: Initial data catch-up
+
+## 🔧 **Configuration**
+
+### **Workflow Configuration**
 ```typescript
 export const initialSyncConfig: SyncWorkflowConfig = {
   supabaseUrl: process.env.SUPABASE_URL || 'http://localhost:54321',
   supabaseKey: process.env.SUPABASE_ANON_KEY || '',
-  transactionalDbUrl: process.env.TRANSACTIONAL_DB_URL || '...',
-  batchSize: 50,                    // Events per batch
-  syncInterval: '@every 2m',        // Workflow frequency
-  tables: ['foo', 'bar', 'foo_bar'], // Tables to sync
+  transactionalDbUrl: process.env.TRANSACTIONAL_DB_URL || 'postgresql://...',
+  batchSize: 50,              // Events per batch
+  syncInterval: '@every 2m',  // Monitor frequency
+  tables: ['foo', 'bar', 'foo_bar'],
 };
 ```
 
-## Monitoring and Debugging
-
-### CDC Handler Status
-
-The workflow logs CDC handler status including:
-- Running state
-- Number of buffered events
-- Subscribed tables
-- Total events synced
-
-### Error Handling
-
-The system includes multiple layers of error protection:
-
-- **Workflow Level**: 1 retry with 20-minute timeout
-- **Task Level**: Individual retry policies (1-3 retries each)
-- **CDC Handler Level**: Automatic reconnection and batch retry
-
-### Common Issues
-
-1. **Connection Failures**
-   - Check that transactional-base service is running on port 5433
-   - Verify Supabase URL and key are correct
-
-2. **No Events Received**
-   - Ensure Supabase realtime is enabled for the tables
-   - Check that the transactional database allows CDC connections
-
-3. **High Buffer Counts**
-   - The workflow will warn if buffered events exceed 2x batch size
-   - Consider increasing batch size or processing frequency
-
-## Development
-
-### Adding New Tables
-
-To sync additional tables:
-
-1. Add the table name to the `tables` array in config
-2. Create a corresponding Zod schema for validation
-3. Add a case in the `processCDCEvents` function
-
-### Customizing Processing
-
-The `processCDCEvents` function can be modified to:
-- Transform data before ingestion
-- Add custom validation logic
-- Route different data types to different destinations
-
-### Testing
-
-```bash
-# Test CDC connectivity
-moose workflow run dataSyncWorkflow --input '{"batchSize": 1}'
-
-# Monitor realtime events
-# (Check the terminal output for CDC event logs)
+### **CDC Handler Configuration**
+```typescript
+const cdcConfig: CDCConfig = {
+  supabaseUrl: config.supabaseUrl,
+  supabaseKey: config.supabaseKey,
+  transactionalDbUrl: config.transactionalDbUrl,
+  tables: config.tables,
+  batchSize: config.batchSize,
+  onBatch: processCDCEvents,    // Batch processor function
+};
 ```
 
-## Production Considerations
+## 🔍 **Monitoring & Observability**
 
-- **Scaling**: The CDC handler maintains persistent connections - consider connection pooling for multiple instances
-- **Monitoring**: Implement proper logging and alerting for production deployments
-- **Security**: Use proper authentication and network security for database connections
-- **Data Validation**: The Zod schemas provide runtime validation - ensure they match your analytical store requirements
+### **Temporal Dashboard**
+- View both workflows in Temporal UI
+- Monitor workflow execution history
+- Track failures and retries
+- Analyze performance metrics
 
-## Troubleshooting
+### **Logs & Metrics**
+```bash
+# View real-time logs
+moose logs
 
-For debugging CDC issues:
+# Check workflow-specific logs
+moose workflow logs cdcManagerWorkflow
+moose workflow logs syncMonitorWorkflow
+```
 
-1. Check the Temporal dashboard for workflow execution details
-2. Monitor the terminal output for CDC event logs
-3. Verify database connectivity using the health check endpoints
-4. Use `moose workflow status` for detailed execution information
+### **Status Indicators**
+- **🔥 CDC Manager**: Long-running workflow status
+- **🔍 Monitor**: Scheduled health checks
+- **💓 Heartbeat**: CDC connection health (every minute)
+- **📊 Metrics**: Events processed, buffer status, uptime
 
-For additional help, refer to the [Moose documentation](https://docs.fiveonefour.com/moose/) and [Supabase realtime documentation](https://supabase.com/docs/guides/realtime).
+## 🛠️ **Development & Testing**
+
+### **Test CDC Connection**
+```bash
+node test-cdc.js
+```
+
+### **Manual Status Check**
+```javascript
+// In Node.js REPL or script
+const { getCDCStatus } = require('./app/index.ts');
+console.log(getCDCStatus());
+```
+
+### **Debug Mode**
+```bash
+# Enable verbose logging
+DEBUG=moose:* pnpm dev
+```
+
+## 🏥 **Error Handling & Recovery**
+
+### **Automatic Recovery**
+- **Connection Drops**: Auto-reconnect with exponential backoff
+- **Batch Failures**: Individual event retry with dead letter queue
+- **Workflow Failures**: Temporal retry policies with proper timeouts
+- **CDC Handler Restart**: Monitor workflow detects and alerts
+
+### **Manual Recovery**
+```bash
+# Restart CDC if stuck
+moose workflow cancel cdcManagerWorkflow
+moose workflow run cdcManagerWorkflow
+
+# Check what went wrong
+moose workflow logs cdcManagerWorkflow --tail 100
+```
+
+## 🚀 **Production Deployment**
+
+### **Scaling Considerations**
+- **CDC Manager**: One instance per database
+- **Monitor Workflow**: Can run multiple instances safely
+- **Event Volume**: Adjust `batchSize` based on throughput
+- **Resources**: Long-running workflows need persistent containers
+
+### **High Availability**
+```bash
+# Deploy with process manager
+pm2 start pnpm --name "sync-base" -- dev
+
+# Or with Docker
+docker-compose up -d
+```
+
+### **Monitoring Setup**
+- Configure Temporal alerts
+- Set up log aggregation
+- Monitor CDC lag metrics
+- Track sync completion rates
+
+## 🤔 **Why Two Workflows?**
+
+### **Traditional Single Workflow Issues**
+- ❌ Bootstrap dependency (need scheduled workflow to start CDC)
+- ❌ Poor observability for long-running operations  
+- ❌ Mixed concerns (CDC management + monitoring)
+- ❌ Difficult to control independently
+
+### **Dual Workflow Benefits**
+- ✅ **Clear Separation**: CDC management vs. monitoring
+- ✅ **Independent Control**: Start/stop CDC without affecting monitoring
+- ✅ **Better Observability**: Each workflow visible in Temporal
+- ✅ **Fault Isolation**: CDC failure doesn't break monitoring
+- ✅ **Scalability**: Each workflow can scale independently
+
+## 📚 **API Reference**
+
+### **Exported Functions**
+```typescript
+// Get current CDC status
+getCDCStatus(): CDCStatus
+
+// Graceful shutdown
+shutdownCDC(): Promise<void>
+```
+
+### **Workflow Names**
+- `cdcManagerWorkflow` - Long-running CDC manager
+- `syncMonitorWorkflow` - Scheduled monitoring
+
+### **Data Schemas**
+- `FooSync` - Zod schema for foo table sync
+- `BarSync` - Zod schema for bar table sync  
+- `FooBarSync` - Zod schema for foo_bar table sync
+
+## 🔗 **Related Services**
+
+- **[transactional-base](../transactional-base)**: Source database service
+- **[analytical-base](../analytical-base)**: Target analytical store
+- **[Supabase Realtime](https://supabase.com/docs/guides/realtime)**: CDC source
+
+## 🆘 **Troubleshooting**
+
+### **Common Issues**
+
+**CDC Not Starting**
+```bash
+# Check environment variables
+echo $SUPABASE_URL
+echo $SUPABASE_ANON_KEY
+
+# Verify database connection
+psql $TRANSACTIONAL_DB_URL -c "SELECT 1;"
+```
+
+**No Events Being Processed**
+```bash
+# Check Supabase realtime configuration
+# Verify table has realtime enabled
+# Check CDC handler status
+```
+
+**Workflow Stuck**
+```bash
+# Cancel and restart
+moose workflow cancel cdcManagerWorkflow
+moose workflow run cdcManagerWorkflow
+```
+
+**High Memory Usage**
+```bash
+# Reduce batch size
+# Check for event processing bottlenecks
+# Monitor buffer sizes
+```
+
+### **Getting Help**
+- Check Moose documentation: https://moosejs.dev
+- Review Temporal workflow patterns
+- Analyze workflow execution history
+- Enable debug logging for detailed traces
+
+---
+
+🎉 **Ready to sync data in real-time with robust, observable, and scalable CDC workflows!**
