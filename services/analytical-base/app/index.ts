@@ -23,3 +23,6 @@
 
 // Need help? Check out the quickstart guide:
 // → docs.fiveonefour.com/moose/getting-started/quickstart
+
+
+export * from './pipelines/eventsPipeline';

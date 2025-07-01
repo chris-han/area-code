@@ -8,7 +8,11 @@
     "types": ["node"],
     "moduleResolution": "Node",
     "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "paths": {
+      "@workspace/models": ["../../packages/models/src/index"],
+      "@workspace/models/*": ["../../packages/models/src/*"]
+    }
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

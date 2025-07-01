@@ -10,6 +10,7 @@
   "dependencies": {
     "@514labs/moose-lib": "latest",
     "@supabase/supabase-js": "^2.50.2",
+    "@workspace/models": "workspace:*",
     "axios": "^1.10.0",
     "pg": "^8.16.3",
     "ts-patch": "^3.3.0",
@@ -19,7 +20,6 @@
   "devDependencies": {
     "@514labs/moose-cli": "latest",
     "@types/node": "^20.19.2",
-    "@types/pg": "^8.15.4",
-    "ts-node": "^10.9.2"
+    "@types/pg": "^8.15.4"
   }
 }

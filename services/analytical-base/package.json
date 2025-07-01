@@ -10,7 +10,8 @@
     "axios": "^1.7.7",
     "ts-patch": "^3.3.0",
     "@514labs/moose-lib": "latest",
-    "typia": "^7.6.0"
+    "typia": "^7.6.0",
+    "@workspace/models": "workspace:*"
   },
   "devDependencies": {
     "@514labs/moose-cli": "latest",
