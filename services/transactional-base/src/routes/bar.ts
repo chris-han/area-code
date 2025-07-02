@@ -6,7 +6,8 @@ import {
   foo,
   insertBarSchema,
   type Bar,
-  type NewBar,
+  type CreateBar,
+  type UpdateBar,
 } from "../database/schema";
 
 export async function barRoutes(fastify: FastifyInstance) {
@@ -81,7 +82,7 @@ export async function barRoutes(fastify: FastifyInstance) {
   );
 
   // Create new bar
-  fastify.post<{ Body: NewBar; Reply: Bar | { error: string } }>(
+  fastify.post<{ Body: CreateBar; Reply: Bar | { error: string } }>(
     "/bar",
     async (request, reply) => {
       try {
@@ -113,7 +114,7 @@ export async function barRoutes(fastify: FastifyInstance) {
   // Update bar
   fastify.put<{
     Params: { id: string };
-    Body: Partial<NewBar>;
+    Body: UpdateBar;
     Reply: Bar | { error: string };
   }>("/bar/:id", async (request, reply) => {
     try {

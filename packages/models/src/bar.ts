@@ -3,8 +3,8 @@ export interface Bar {
   id: string;
   fooId: string;
   value: number;
-  label?: string;
-  notes?: string;
+  label: string | null;
+  notes: string | null;
   isEnabled: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -14,8 +14,8 @@ export interface Bar {
 export interface CreateBar {
   fooId: string;
   value: number;
-  label?: string;
-  notes?: string;
+  label?: string | null;
+  notes?: string | null;
   isEnabled?: boolean;
 }
 
@@ -24,8 +24,8 @@ export interface UpdateBar {
   id: string;
   fooId?: string;
   value?: number;
-  label?: string;
-  notes?: string;
+  label?: string | null;
+  notes?: string | null;
   isEnabled?: boolean;
   updatedAt?: Date;
 } 

@@ -2,7 +2,7 @@
 export interface Foo {
   id: string;
   name: string;
-  description?: string;
+  description: string | null;
   status: string;
   priority: number;
   isActive: boolean;
@@ -13,7 +13,7 @@ export interface Foo {
 // Interface for creating new foo (without generated fields)
 export interface CreateFoo {
   name: string;
-  description?: string;
+  description?: string | null;
   status?: string;
   priority?: number;
   isActive?: boolean;
@@ -23,7 +23,7 @@ export interface CreateFoo {
 export interface UpdateFoo {
   id: string;
   name?: string;
-  description?: string;
+  description?: string | null;
   status?: string;
   priority?: number;
   isActive?: boolean;

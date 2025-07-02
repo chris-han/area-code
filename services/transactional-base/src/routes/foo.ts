@@ -6,7 +6,8 @@ import {
   insertFooSchema,
   selectFooSchema,
   type Foo,
-  type NewFoo,
+  type CreateFoo,
+  type UpdateFoo,
 } from "../database/schema";
 
 export async function fooRoutes(fastify: FastifyInstance) {
@@ -47,7 +48,7 @@ export async function fooRoutes(fastify: FastifyInstance) {
   );
 
   // Create new foo
-  fastify.post<{ Body: NewFoo; Reply: Foo | { error: string } }>(
+  fastify.post<{ Body: CreateFoo; Reply: Foo | { error: string } }>(
     "/foo",
     async (request, reply) => {
       try {
@@ -67,7 +68,7 @@ export async function fooRoutes(fastify: FastifyInstance) {
   // Update foo
   fastify.put<{
     Params: { id: string };
-    Body: Partial<NewFoo>;
+    Body: UpdateFoo;
     Reply: Foo | { error: string };
   }>("/foo/:id", async (request, reply) => {
     try {

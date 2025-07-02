@@ -2,7 +2,6 @@
   "extends": "@repo/typescript-config/base.json",
   "compilerOptions": {
     "outDir": "dist",
-    "rootDir": "src",
     "target": "ES2022",
     "lib": ["ES2022"],
     "types": ["node"],
@@ -14,6 +13,6 @@
       "@workspace/models/*": ["../../packages/models/src/*"]
     }
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "../../packages/models/src/**/*"],
   "exclude": ["node_modules", "dist"]
 }

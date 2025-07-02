@@ -8,20 +8,29 @@ import {
   boolean,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+// Import models from the shared package
+import type { 
+  Foo, 
+  CreateFoo, 
+  UpdateFoo,
+  Bar,
+  CreateBar,
+  UpdateBar
+} from "@workspace/models";
 
-// Foo table - generic primary entity
+// Foo table - matches models package exactly
 export const foo = pgTable("foo", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
   status: varchar("status", { length: 50 }).notNull().default("active"),
-  priority: integer("priority").default(1),
-  isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  priority: integer("priority").notNull().default(1),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-// Bar table - generic secondary entity
+// Bar table - matches models package exactly
 export const bar = pgTable("bar", {
   id: uuid("id").primaryKey().defaultRandom(),
   fooId: uuid("foo_id")
@@ -30,9 +39,9 @@ export const bar = pgTable("bar", {
   value: integer("value").notNull(),
   label: varchar("label", { length: 100 }),
   notes: text("notes"),
-  isEnabled: boolean("is_enabled").default(true),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  isEnabled: boolean("is_enabled").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 // FooBar junction table - many-to-many relationship
@@ -59,12 +68,15 @@ export const selectBarSchema = createSelectSchema(bar);
 export const insertFooBarSchema = createInsertSchema(fooBar);
 export const selectFooBarSchema = createSelectSchema(fooBar);
 
-// Types
-export type Foo = typeof foo.$inferSelect;
-export type NewFoo = typeof foo.$inferInsert;
+// Export models from shared package for API types
+export type { Foo, CreateFoo, UpdateFoo, Bar, CreateBar, UpdateBar };
 
-export type Bar = typeof bar.$inferSelect;
-export type NewBar = typeof bar.$inferInsert;
+// Keep Drizzle types for internal database operations
+export type DbFoo = typeof foo.$inferSelect;
+export type NewDbFoo = typeof foo.$inferInsert;
+
+export type DbBar = typeof bar.$inferSelect;
+export type NewDbBar = typeof bar.$inferInsert;
 
 export type FooBar = typeof fooBar.$inferSelect;
 export type NewFooBar = typeof fooBar.$inferInsert; 
