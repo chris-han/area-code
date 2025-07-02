@@ -9,13 +9,19 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as FormExampleRouteImport } from './routes/form-example'
+import { Route as FooRouteImport } from './routes/foo'
+import { Route as BarRouteImport } from './routes/bar'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 
-const FormExampleRoute = FormExampleRouteImport.update({
-  id: '/form-example',
-  path: '/form-example',
+const FooRoute = FooRouteImport.update({
+  id: '/foo',
+  path: '/foo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BarRoute = BarRouteImport.update({
+  id: '/bar',
+  path: '/bar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -32,40 +38,51 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/form-example': typeof FormExampleRoute
+  '/bar': typeof BarRoute
+  '/foo': typeof FooRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/form-example': typeof FormExampleRoute
+  '/bar': typeof BarRoute
+  '/foo': typeof FooRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/form-example': typeof FormExampleRoute
+  '/bar': typeof BarRoute
+  '/foo': typeof FooRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/form-example'
+  fullPaths: '/' | '/about' | '/bar' | '/foo'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/form-example'
-  id: '__root__' | '/' | '/about' | '/form-example'
+  to: '/' | '/about' | '/bar' | '/foo'
+  id: '__root__' | '/' | '/about' | '/bar' | '/foo'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
-  FormExampleRoute: typeof FormExampleRoute
+  BarRoute: typeof BarRoute
+  FooRoute: typeof FooRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/form-example': {
-      id: '/form-example'
-      path: '/form-example'
-      fullPath: '/form-example'
-      preLoaderRoute: typeof FormExampleRouteImport
+    '/foo': {
+      id: '/foo'
+      path: '/foo'
+      fullPath: '/foo'
+      preLoaderRoute: typeof FooRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/bar': {
+      id: '/bar'
+      path: '/bar'
+      fullPath: '/bar'
+      preLoaderRoute: typeof BarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/about': {
@@ -88,7 +105,8 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
-  FormExampleRoute: FormExampleRoute,
+  BarRoute: BarRoute,
+  FooRoute: FooRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

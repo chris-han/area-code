@@ -1,5 +1,5 @@
 {
-  "name": "sync-base",
+  "name": "@workspace/sync-base",
   "version": "0.0",
   "scripts": {
     "moose": "moose-cli",
