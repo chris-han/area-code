@@ -4,7 +4,7 @@ import * as schema from "./schema";
 
 const connectionString =
   process.env.DATABASE_URL ||
-  "postgresql://postgres:your-super-secret-and-long-postgres-password@localhost:5433/postgres";
+  "postgresql://postgres:your-super-secret-and-long-postgres-password@localhost:5434/postgres";
 
 const pool = new Pool({
   connectionString,

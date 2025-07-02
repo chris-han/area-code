@@ -1,5 +1,6 @@
 import { db, pool } from "../database/connection";
 import { foo, bar, fooBar } from "../database/schema";
+import type { CreateFoo, CreateBar } from "@workspace/models";
 
 async function seedDatabase() {
   console.log("🌱 Seeding database with sample data...");
@@ -13,76 +14,80 @@ async function seedDatabase() {
 
     // Create sample foo items
     console.log("Creating sample foo items...");
+    const fooData: CreateFoo[] = [
+      {
+        name: "Alpha Foo",
+        description: "First sample foo entity",
+        status: "active",
+        priority: 1,
+      },
+      {
+        name: "Beta Foo",
+        description: "Second sample foo entity",
+        status: "pending",
+        priority: 2,
+      },
+      {
+        name: "Gamma Foo",
+        description: "Third sample foo entity",
+        status: "inactive",
+        priority: 3,
+        isActive: false,
+      },
+      {
+        name: "Delta Foo",
+        description: "Fourth sample foo entity",
+        status: "active",
+        priority: 1,
+      },
+    ];
+
     const sampleFoos = await db
       .insert(foo)
-      .values([
-        {
-          name: "Alpha Foo",
-          description: "First sample foo entity",
-          status: "active",
-          priority: 1,
-        },
-        {
-          name: "Beta Foo",
-          description: "Second sample foo entity",
-          status: "pending",
-          priority: 2,
-        },
-        {
-          name: "Gamma Foo",
-          description: "Third sample foo entity",
-          status: "inactive",
-          priority: 3,
-          isActive: false,
-        },
-        {
-          name: "Delta Foo",
-          description: "Fourth sample foo entity",
-          status: "active",
-          priority: 1,
-        },
-      ])
+      .values(fooData)
       .returning();
 
     console.log(`✅ Created ${sampleFoos.length} foo items`);
 
     // Create sample bar items
     console.log("Creating sample bar items...");
+    const barData: CreateBar[] = [
+      {
+        fooId: sampleFoos[0].id,
+        value: 100,
+        label: "First Bar",
+        notes: "Associated with Alpha Foo",
+      },
+      {
+        fooId: sampleFoos[0].id,
+        value: 200,
+        label: "Second Bar",
+        notes: "Also associated with Alpha Foo",
+      },
+      {
+        fooId: sampleFoos[1].id,
+        value: 150,
+        label: "Third Bar",
+        notes: "Associated with Beta Foo",
+      },
+      {
+        fooId: sampleFoos[1].id,
+        value: 300,
+        label: "Fourth Bar",
+        notes: "Another bar for Beta Foo",
+        isEnabled: false,
+      },
+      {
+        fooId: sampleFoos[3].id,
+        value: 250,
+        label: "Fifth Bar",
+        notes: "Associated with Delta Foo",
+      },
+    ];
+
     const sampleBars = await db
       .insert(bar)
-      .values([
-        {
-          fooId: sampleFoos[0].id,
-          value: 100,
-          label: "First Bar",
-          notes: "Associated with Alpha Foo",
-        },
-        {
-          fooId: sampleFoos[0].id,
-          value: 200,
-          label: "Second Bar",
-          notes: "Also associated with Alpha Foo",
-        },
-        {
-          fooId: sampleFoos[1].id,
-          value: 150,
-          label: "Third Bar",
-          notes: "Associated with Beta Foo",
-        },
-        {
-          fooId: sampleFoos[1].id,
-          value: 300,
-          label: "Fourth Bar",
-          notes: "Another bar for Beta Foo",
-          isEnabled: false,
-        },
-        {
-          fooId: sampleFoos[3].id,
-          value: 250,
-          label: "Fifth Bar",
-          notes: "Associated with Delta Foo",
-        },
-      ])
+      .values(barData)
       .returning();
 
     console.log(`✅ Created ${sampleBars.length} bar items`);

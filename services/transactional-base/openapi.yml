@@ -1,0 +1,162 @@
+openapi: 3.0.3
+info:
+  title: Transactional Base Service API
+  version: 1.0.0
+  description: RESTful API for generic transactional operations with foo and bar
+    entities using PostgreSQL and Drizzle ORM
+components:
+  schemas: {}
+paths:
+  /health:
+    get:
+      responses:
+        "200":
+          description: Default Response
+  /:
+    get:
+      responses:
+        "200":
+          description: Default Response
+  /api/foo:
+    get:
+      responses:
+        "200":
+          description: Default Response
+    post:
+      responses:
+        "200":
+          description: Default Response
+  /api/foo/{id}:
+    get:
+      parameters:
+        - schema:
+            type: string
+          in: path
+          name: id
+          required: true
+      responses:
+        "200":
+          description: Default Response
+    put:
+      parameters:
+        - schema:
+            type: string
+          in: path
+          name: id
+          required: true
+      responses:
+        "200":
+          description: Default Response
+    delete:
+      parameters:
+        - schema:
+            type: string
+          in: path
+          name: id
+          required: true
+      responses:
+        "200":
+          description: Default Response
+  /api/bar:
+    get:
+      responses:
+        "200":
+          description: Default Response
+    post:
+      responses:
+        "200":
+          description: Default Response
+  /api/bar/{id}:
+    get:
+      parameters:
+        - schema:
+            type: string
+          in: path
+          name: id
+          required: true
+      responses:
+        "200":
+          description: Default Response
+    put:
+      parameters:
+        - schema:
+            type: string
+          in: path
+          name: id
+          required: true
+      responses:
+        "200":
+          description: Default Response
+    delete:
+      parameters:
+        - schema:
+            type: string
+          in: path
+          name: id
+          required: true
+      responses:
+        "200":
+          description: Default Response
+  /api/foo/{fooId}/bars:
+    get:
+      parameters:
+        - schema:
+            type: string
+          in: path
+          name: fooId
+          required: true
+      responses:
+        "200":
+          description: Default Response
+  /api/foo-bar:
+    get:
+      responses:
+        "200":
+          description: Default Response
+    post:
+      responses:
+        "200":
+          description: Default Response
+  /api/foo-bar/{id}:
+    delete:
+      parameters:
+        - schema:
+            type: string
+          in: path
+          name: id
+          required: true
+      responses:
+        "200":
+          description: Default Response
+  /api/foo/{fooId}/relationships:
+    get:
+      parameters:
+        - schema:
+            type: string
+          in: path
+          name: fooId
+          required: true
+      responses:
+        "200":
+          description: Default Response
+  /api/bar/{barId}/relationships:
+    get:
+      parameters:
+        - schema:
+            type: string
+          in: path
+          name: barId
+          required: true
+      responses:
+        "200":
+          description: Default Response
+  /documentation/json:
+    get:
+      responses:
+        "200":
+          description: Default Response
+  /documentation/yaml:
+    get:
+      responses:
+        "200":
+          description: Default Response
