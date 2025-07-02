@@ -71,6 +71,32 @@ services:
       GOTRUE_SMTP_SENDER_NAME: ""
       GOTRUE_MAILER_AUTOCONFIRM: "true"
 
+  # Real-time Server
+  realtime:
+    image: supabase/realtime:v2.25.50
+    container_name: transactional-base-realtime
+    depends_on:
+      - db
+    restart: unless-stopped
+    ports:
+      - "4002:4002"
+    environment:
+      PORT: 4002
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: your-super-secret-and-long-postgres-password
+      DB_NAME: postgres
+      DB_AFTER_CONNECT_QUERY: "SET search_path TO _realtime"
+      DB_ENC_KEY: supabaserealtime
+      API_JWT_SECRET: your-super-secret-jwt-token-with-at-least-32-characters-long
+      FLY_ALLOC_ID: fly123
+      FLY_APP_NAME: realtime
+      SECRET_KEY_BASE: UpNVntn3cDxHJpq99YMc1T1AQgQpc8kfYTuRgBiYa15BLrx8etQoXz3gZv1/u2oq
+      ERL_AFLAGS: -proto_dist inet_tcp
+      ENABLE_TAILSCALE: "false"
+      DNS_NODES: "''"
+
 volumes:
   db_data:
     driver: local

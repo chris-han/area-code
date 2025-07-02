@@ -1,21 +1,33 @@
 {
+  "name": "with-vite",
+  "version": "0.0.0",
   "private": true,
-  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "services/*"
+  ],
   "scripts": {
+    "dev": "turbo run dev --filter vite-web-base --filter @workspace/transactional-base --filter @workspace/retrieval-base --filter sync-base",
+    "dev:all": "npm run dev",
+    "dev:web": "turbo run dev --filter vite-web-base",
+    "dev:services": "turbo run dev --filter @workspace/transactional-base --filter @workspace/retrieval-base --filter sync-base",
     "build": "turbo run build",
-    "dev": "turbo run dev",
-    "lint": "turbo run lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+    "clean": "turbo run clean",
+    "dev:turbo": "turbo",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "postinstall": "npm run setup:env",
+    "setup:env": "cd services/sync-base && node setup-env.js"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3.3.1",
-    "@tailwindcss/postcss": "^4.1.10",
-    "autoprefixer": "^10.4.21",
-    "eslint": "^9.30.0",
-    "postcss": "^8.5.6",
+    "@turbo/gen": "^1.13.4",
+    "eslint": "^8.57.0",
     "prettier": "^3.2.5",
-    "turbo": "^2.5.4"
+    "turbo": "^2.3.0",
+    "typescript": "^5.4.5"
   },
   "packageManager": "pnpm@8.15.6",
-  "name": "with-vite"
+  "engines": {
+    "node": ">=18"
+  }
 }

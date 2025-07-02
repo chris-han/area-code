@@ -361,3 +361,178 @@ moose workflow run cdcManagerWorkflow
 ---
 
 🎉 **Ready to sync data in real-time with robust, observable, and scalable CDC workflows!**
+
+# @workspace/sync-base
+
+Real-time data synchronization service that keeps the transactional-base (PostgreSQL) and retrieval-base (Elasticsearch) services in sync.
+
+## Overview
+
+This service listens to database changes in the transactional-base service via Supabase real-time subscriptions and automatically synchronizes those changes to the retrieval-base Elasticsearch indices.
+
+### What it does:
+
+- 🔄 **Real-time sync**: Monitors `foo` and `bar` tables for INSERT, UPDATE, DELETE operations
+- 🔍 **Search optimization**: Keeps Elasticsearch indices up-to-date for fast search and retrieval
+- ⚡ **Event-driven**: Uses Supabase real-time subscriptions for immediate data propagation
+- 🔧 **Error handling**: Graceful error handling with detailed logging
+
+## Setup
+
+### Prerequisites
+
+1. **Transactional-base service** running with Supabase
+2. **Retrieval-base service** running with Elasticsearch
+3. Both services should be accessible from this sync service
+
+### Installation
+
+```bash
+# Install dependencies
+pnpm install
+
+# Set up environment variables (see below)
+cp .env.example .env
+```
+
+### Environment Variables
+
+Create a `.env` file with the following variables:
+
+```bash
+# Supabase connection (from transactional-base)
+SUPABASE_URL=http://localhost:3001
+SUPABASE_ANON_KEY=your-supabase-anon-key
+
+# Elasticsearch connection (from retrieval-base)  
+ELASTICSEARCH_URL=http://localhost:9200
+```
+
+## Usage
+
+### Start the sync service
+
+```bash
+# Development mode with hot reload
+pnpm run sync
+
+# Or directly with moose CLI
+pnpm run dev
+```
+
+### Expected output:
+
+```
+🔄 Starting transactional-base → retrieval-base sync...
+📍 Supabase: http://localhost:3001
+🔍 Elasticsearch: http://localhost:9200
+📋 Syncing tables: foo, bar
+✅ Elasticsearch connection successful
+🔌 [foo] Subscription status: SUBSCRIBED
+✅ [foo] Successfully subscribed to changes
+🔌 [bar] Subscription status: SUBSCRIBED
+✅ [bar] Successfully subscribed to changes
+🎧 Real-time sync active! Monitoring for changes...
+   • Changes in transactional-base will be synced to retrieval-base
+   • Press Ctrl+C to stop
+```
+
+## Architecture
+
+```
+┌─────────────────┐    Real-time     ┌──────────────┐    Elasticsearch    ┌─────────────────┐
+│ transactional-  │    subscriptions │  sync-base   │    indexing         │ retrieval-base  │
+│ base            │ ───────────────► │              │ ──────────────────► │                 │
+│ (PostgreSQL)    │                  │ (This        │                     │ (Elasticsearch) │
+│                 │                  │  service)    │                     │                 │
+└─────────────────┘                  └──────────────┘                     └─────────────────┘
+```
+
+## Synchronized Data
+
+### Tables monitored:
+- **`foo`** → Elasticsearch index `foos`
+- **`bar`** → Elasticsearch index `bars`
+
+### Operations handled:
+- **INSERT**: Creates new documents in Elasticsearch
+- **UPDATE**: Updates existing documents in Elasticsearch  
+- **DELETE**: Removes documents from Elasticsearch
+
+### Field mapping:
+
+**Foo table** (PostgreSQL → Elasticsearch):
+```typescript
+{
+  id: record.id,
+  name: record.name,
+  description: record.description,
+  status: record.status,
+  priority: record.priority,
+  isActive: record.is_active,      // Snake case → camelCase
+  createdAt: record.created_at,    // Snake case → camelCase  
+  updatedAt: record.updated_at,    // Snake case → camelCase
+}
+```
+
+**Bar table** (PostgreSQL → Elasticsearch):
+```typescript
+{
+  id: record.id,
+  fooId: record.foo_id,           // Snake case → camelCase
+  value: record.value,
+  label: record.label,
+  notes: record.notes,
+  isEnabled: record.is_enabled,   // Snake case → camelCase
+  createdAt: record.created_at,   // Snake case → camelCase
+  updatedAt: record.updated_at,   // Snake case → camelCase
+}
+```
+
+## Troubleshooting
+
+### Connection Issues
+
+**Supabase connection failed:**
+- Verify `SUPABASE_URL` and `SUPABASE_ANON_KEY` are correct
+- Ensure transactional-base service is running
+- Check if real-time features are enabled in Supabase
+
+**Elasticsearch connection failed:**
+- Verify `ELASTICSEARCH_URL` is correct
+- Ensure retrieval-base service is running
+- Check Elasticsearch health: `curl http://localhost:9200/_health`
+
+### Sync Issues
+
+**Changes not syncing:**
+- Check console for error messages
+- Verify table names match exactly (`foo`, `bar`)
+- Ensure indices exist in Elasticsearch
+
+**Performance issues:**
+- Monitor Elasticsearch performance
+- Consider batching for high-volume changes
+- Check network latency between services
+
+## Development
+
+### Adding new tables:
+
+1. Add table name to the `tables` array in the config
+2. Create a new sync function (following `syncFooToElasticsearch` pattern)
+3. Add the new table case to the switch statement
+4. Ensure corresponding Elasticsearch index exists in retrieval-base
+
+### Testing:
+
+```bash
+# Test the listener functionality
+pnpm run test:listener
+```
+
+## Related Services
+
+- **[@workspace/transactional-base](../transactional-base)**: Source of truth for transactional data
+- **[@workspace/retrieval-base](../retrieval-base)**: Search and retrieval service with Elasticsearch
+- **[@workspace/models](../../packages/models)**: Shared data models and types

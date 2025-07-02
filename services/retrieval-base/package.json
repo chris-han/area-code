@@ -1,0 +1,36 @@
+{
+  "name": "@workspace/retrieval-base",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "npm run es:setup && npm run es:ensure-ready && PORT=8083 tsx watch src/server.ts",
+    "dev:server-only": "PORT=8083 tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "PORT=8083 node dist/server.js",
+    "lint": "eslint src/",
+    "es:setup": "docker compose up -d",
+    "es:stop": "docker compose down",
+    "es:reset": "docker compose down -v && docker compose up -d",
+    "es:ensure-ready": "sleep 10 && npm run es:init-indices",
+    "es:init-indices": "tsx src/scripts/init-indices.ts",
+    "es:seed": "tsx src/scripts/seed.ts"
+  },
+  "dependencies": {
+    "@elastic/elasticsearch": "^8.15.0",
+    "@fastify/cors": "^10.0.1",
+    "@fastify/swagger": "^9.5.1",
+    "@fastify/swagger-ui": "^5.2.3",
+    "@workspace/models": "workspace:*",
+    "fastify": "^5.4.0",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "^20.10.4",
+    "eslint": "^8.57.0",
+    "tsx": "^4.6.2",
+    "typescript": "^5.3.3"
+  }
+}
