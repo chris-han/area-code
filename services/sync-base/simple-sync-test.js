@@ -20,8 +20,7 @@ async function simpleSync() {
 
   const config = {
     postgrestUrl: process.env.SUPABASE_REST_URL || "http://localhost:3001",
-    realtimeUrl: process.env.SUPABASE_URL || "ws://localhost:4002",
-    jwtToken: process.env.SUPABASE_ANON_KEY || "your-anon-key",
+    realtimeUrl: process.env.REALTIME_URL || "ws://localhost:4002",
     elasticsearchUrl: process.env.ELASTICSEARCH_URL || "http://localhost:9200",
   };
 
@@ -29,6 +28,7 @@ async function simpleSync() {
   console.log(`   PostgREST: ${config.postgrestUrl}`);
   console.log(`   Real-time: ${config.realtimeUrl}`);
   console.log(`   Elasticsearch: ${config.elasticsearchUrl}`);
+  console.log(`   Auth: Disabled (simplified setup)`);
   console.log("");
 
   try {
@@ -52,11 +52,11 @@ async function simpleSync() {
     // Test WebSocket real-time connection
     console.log("3️⃣ Testing WebSocket real-time connection...");
 
-    const wsUrl =
-      config.realtimeUrl.replace("http://", "ws://") + "/socket/websocket";
+    const wsUrl = config.realtimeUrl + "/socket/websocket";
     console.log(`   Connecting to: ${wsUrl}`);
 
-    const ws = new WebSocket(wsUrl + `?apikey=${config.jwtToken}`);
+    // Connect without authentication
+    const ws = new WebSocket(wsUrl);
 
     ws.on("open", () => {
       console.log("✅ WebSocket connection opened");

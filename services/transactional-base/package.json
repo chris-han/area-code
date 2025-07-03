@@ -4,21 +4,23 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "npm run db:setup && npm run db:ensure-ready && tsx watch src/server.ts",
+    "dev": "npm run db:setup && npm run db:ensure-ready && npm run realtime:start && tsx watch src/server.ts",
     "dev:server-only": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
     "lint": "eslint src/",
     "db:setup": "docker compose up -d",
     "db:stop": "docker compose down",
-    "db:reset": "docker compose down -v && docker compose up -d",
-    "db:ensure-ready": "sleep 5 && npm run db:migrate && npm run db:setup-auth && npm run db:setup-realtime",
+    "db:reset": "docker compose down -v && docker compose up -d && npm run db:ensure-ready && npm run realtime:start",
+    "db:ensure-ready": "sleep 5 && npm run db:migrate && npm run db:setup-realtime",
     "db:generate": "drizzle-kit generate:pg",
     "db:migrate": "tsx src/scripts/migrate.ts",
-    "db:setup-auth": "tsx src/scripts/setup-auth.ts",
     "db:setup-realtime": "tsx src/scripts/setup-realtime.ts",
+    "db:setup-broadcast": "tsx src/scripts/setup-broadcast-example.ts",
     "db:seed": "tsx src/scripts/seed.ts",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "realtime:start": "docker compose --profile manual up -d realtime",
+    "realtime:stop": "docker compose stop realtime"
   },
   "dependencies": {
     "@fastify/cors": "^10.0.1",

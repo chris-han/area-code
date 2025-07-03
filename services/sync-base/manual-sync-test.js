@@ -3,83 +3,70 @@
 /**
  * Manual Sync Test Script
  *
- * This script manually tests the sync functionality without Moose framework
- * to verify that Supabase real-time and Elasticsearch connections work.
+ * This script tests the synchronization functionality by making direct API calls
+ * to insert/update/delete records and observing the sync behavior.
  */
 
 const { createClient } = require("@supabase/supabase-js");
 const { Client } = require("@elastic/elasticsearch");
+const axios = require("axios");
 
-async function testManualSync() {
-  console.log("🧪 Testing Manual Sync Functionality");
-  console.log("===================================");
+// Load environment variables
+require("dotenv").config();
 
-  // Configuration from .env
+async function manualSyncTest() {
+  console.log("🧪 Manual Sync Test");
+  console.log("===================");
+
   const config = {
-    supabaseRestUrl: process.env.SUPABASE_REST_URL || "http://localhost:3001", // PostgREST for queries
-    supabaseRealtimeUrl: process.env.SUPABASE_URL || "http://localhost:4002", // Real-time server for subscriptions
-    supabaseKey: process.env.SUPABASE_ANON_KEY || "your-anon-key",
+    supabaseUrl: process.env.SUPABASE_URL || "http://localhost:3001",
+    supabaseKey: "no-auth-needed", // No auth required
+    postgrestUrl: process.env.SUPABASE_REST_URL || "http://localhost:3001",
     elasticsearchUrl: process.env.ELASTICSEARCH_URL || "http://localhost:9200",
   };
 
   console.log("🔧 Configuration:");
-  console.log(`   Supabase REST: ${config.supabaseRestUrl}`);
-  console.log(`   Supabase Real-time: ${config.supabaseRealtimeUrl}`);
+  console.log(`   Supabase URL: ${config.supabaseUrl}`);
+  console.log(`   PostgREST URL: ${config.postgrestUrl}`);
   console.log(`   Elasticsearch: ${config.elasticsearchUrl}`);
+  console.log(`   Auth: Disabled (simplified setup)`);
   console.log("");
 
   try {
-    // Test Elasticsearch connection
+    // 1. Test Elasticsearch connection
     console.log("1️⃣ Testing Elasticsearch connection...");
     const esClient = new Client({ node: config.elasticsearchUrl });
+    await esClient.ping();
+    console.log("✅ Elasticsearch connection successful");
 
+    // 2. Test PostgREST API connection
+    console.log("2️⃣ Testing PostgREST API...");
     try {
-      await esClient.ping();
-      console.log("✅ Elasticsearch connection successful");
+      const response = await axios.get(`${config.postgrestUrl}/foo?limit=1`);
+      console.log("✅ PostgREST connection successful");
     } catch (error) {
-      console.error("❌ Elasticsearch connection failed:", error.message);
+      console.error("❌ PostgREST connection failed:", error.message);
       return;
     }
 
-    // Test Supabase connection
-    console.log("2️⃣ Testing Supabase connection...");
-    console.log(`   Using URL: ${config.supabaseRestUrl}`);
-    console.log(`   Using Key: ${config.supabaseKey.substring(0, 20)}...`);
-    const supabaseRest = createClient(
-      config.supabaseRestUrl,
-      config.supabaseKey
-    );
+    // 3. Create Supabase client for real-time
+    console.log("3️⃣ Setting up Supabase real-time client...");
+    const supabase = createClient(config.supabaseUrl, config.supabaseKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+      realtime: {
+        params: {
+          eventsPerSecond: 10,
+        },
+      },
+    });
 
-    // Try to fetch data from foo table to test connection
-    try {
-      const { data, error } = await supabaseRest
-        .from("foo")
-        .select("*")
-        .limit(1);
-
-      if (error) {
-        console.error("❌ Supabase query failed:", error.message);
-        console.error("   Error details:", error);
-        return;
-      }
-
-      console.log("✅ Supabase connection successful");
-      console.log(`   Found ${data?.length || 0} records in foo table`);
-    } catch (error) {
-      console.error("❌ Supabase connection failed:", error.message);
-      console.error("   Error details:", error);
-      return;
-    }
-
-    // Test real-time subscription
-    console.log("3️⃣ Testing Supabase real-time subscription...");
-    const supabaseRealtime = createClient(
-      config.supabaseRealtimeUrl,
-      config.supabaseKey
-    );
-
-    const channel = supabaseRealtime
-      .channel("manual-test-channel")
+    // 4. Subscribe to changes
+    let changesReceived = [];
+    const channel = supabase
+      .channel("test-changes")
       .on(
         "postgres_changes",
         {
@@ -88,102 +75,120 @@ async function testManualSync() {
           table: "foo",
         },
         (payload) => {
-          console.log("📡 Real-time event detected:", {
-            event: payload.eventType,
-            table: payload.table,
-            id: payload.new?.id || payload.old?.id,
-            timestamp: new Date().toISOString(),
-          });
-
-          // Sync to Elasticsearch
-          syncToElasticsearch(esClient, payload);
+          console.log("📡 Change detected:", payload.eventType);
+          changesReceived.push(payload);
         }
       )
-      .subscribe((status) => {
-        console.log(`🔌 Subscription status: ${status}`);
-        if (status === "SUBSCRIBED") {
-          console.log("✅ Real-time subscription active");
-          console.log("");
-          console.log(
-            "💡 Now create/update/delete records in the foo table to test sync!"
-          );
-          console.log(
-            '   Example: curl -X POST http://localhost:8081/api/foo -H "Content-Type: application/json" -d \'{"name": "Manual Test", "description": "Testing manual sync"}\''
-          );
-          console.log("");
-        } else if (status === "CHANNEL_ERROR") {
-          console.error("❌ Real-time subscription failed");
-        }
-      });
+      .subscribe();
 
-    // Keep running until interrupted
-    console.log("🎧 Listening for real-time changes... (Press Ctrl+C to stop)");
-    await new Promise((resolve) => {
-      process.on("SIGINT", () => {
-        console.log("\n🛑 Shutting down...");
-        channel.unsubscribe();
-        esClient.close();
-        console.log("✅ Manual sync test stopped");
-        resolve();
+    console.log("✅ Subscribed to real-time changes");
+
+    // Wait a bit for subscription to be ready
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    // 5. Create a test record
+    console.log("\n4️⃣ Creating test record...");
+    const testRecord = {
+      name: `Sync Test ${Date.now()}`,
+      description: "Testing real-time sync",
+      status: "active",
+      priority: 1,
+    };
+
+    const createResponse = await axios.post(
+      `${config.postgrestUrl}/foo`,
+      testRecord,
+      { headers: { "Content-Type": "application/json" } }
+    );
+
+    const createdId = createResponse.data[0].id;
+    console.log(`✅ Created record with ID: ${createdId}`);
+
+    // Wait for sync
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+
+    // 6. Check if synced to Elasticsearch
+    console.log("\n5️⃣ Checking Elasticsearch...");
+    try {
+      const esDoc = await esClient.get({
+        index: "foos",
+        id: createdId,
       });
+      console.log("✅ Document found in Elasticsearch!");
+      console.log(
+        `   Name: ${esDoc._source.name}, Status: ${esDoc._source.status}`
+      );
+    } catch (error) {
+      console.error("❌ Document not found in Elasticsearch");
+    }
+
+    // 7. Update the record
+    console.log("\n6️⃣ Updating test record...");
+    const updateResponse = await axios.patch(
+      `${config.postgrestUrl}/foo?id=eq.${createdId}`,
+      { status: "updated", priority: 2 },
+      { headers: { "Content-Type": "application/json" } }
+    );
+    console.log("✅ Record updated");
+
+    // Wait for sync
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+
+    // 8. Check if update synced
+    console.log("\n7️⃣ Checking updated document in Elasticsearch...");
+    try {
+      const esDoc = await esClient.get({
+        index: "foos",
+        id: createdId,
+      });
+      console.log("✅ Updated document found!");
+      console.log(
+        `   Status: ${esDoc._source.status}, Priority: ${esDoc._source.priority}`
+      );
+    } catch (error) {
+      console.error("❌ Updated document not found");
+    }
+
+    // 9. Delete the record
+    console.log("\n8️⃣ Deleting test record...");
+    await axios.delete(`${config.postgrestUrl}/foo?id=eq.${createdId}`);
+    console.log("✅ Record deleted");
+
+    // Wait for sync
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+
+    // 10. Check if deleted from Elasticsearch
+    console.log("\n9️⃣ Checking deletion in Elasticsearch...");
+    try {
+      await esClient.get({
+        index: "foos",
+        id: createdId,
+      });
+      console.error("❌ Document still exists in Elasticsearch!");
+    } catch (error) {
+      if (error.meta?.statusCode === 404) {
+        console.log("✅ Document successfully deleted from Elasticsearch!");
+      } else {
+        console.error("❌ Error checking document:", error.message);
+      }
+    }
+
+    // Summary
+    console.log("\n📊 Test Summary:");
+    console.log(`   Real-time changes received: ${changesReceived.length}`);
+    changesReceived.forEach((change, i) => {
+      console.log(`   ${i + 1}. ${change.eventType} event`);
     });
+
+    // Cleanup
+    channel.unsubscribe();
+    await esClient.close();
+
+    console.log("\n✅ Manual sync test completed!");
   } catch (error) {
-    console.error("❌ Manual sync test failed:", error);
+    console.error("❌ Test failed:", error);
   }
 }
-
-async function syncToElasticsearch(esClient, payload) {
-  try {
-    const { eventType, new: newRecord, old: oldRecord } = payload;
-    const record = newRecord || oldRecord;
-
-    if (!record) {
-      console.warn("⚠️ No record data available");
-      return;
-    }
-
-    console.log(`🔄 Syncing ${eventType} to Elasticsearch...`);
-
-    switch (eventType) {
-      case "INSERT":
-      case "UPDATE":
-        await esClient.index({
-          index: "foos",
-          id: record.id,
-          body: {
-            id: record.id,
-            name: record.name,
-            description: record.description,
-            status: record.status,
-            priority: record.priority,
-            isActive: record.is_active,
-            createdAt: record.created_at,
-            updatedAt: record.updated_at,
-          },
-          refresh: true,
-        });
-        console.log(`✅ Synced ${eventType} to Elasticsearch: ${record.id}`);
-        break;
-
-      case "DELETE":
-        await esClient.delete({
-          index: "foos",
-          id: record.id,
-          refresh: true,
-        });
-        console.log(`✅ Deleted from Elasticsearch: ${record.id}`);
-        break;
-
-      default:
-        console.log(`⚠️ Unknown event type: ${eventType}`);
-    }
-  } catch (error) {
-    console.error(`❌ Failed to sync to Elasticsearch:`, error);
-  }
-}
-
-// Load environment variables
-require("dotenv").config();
 
 // Run the test
-testManualSync().catch(console.error);
+manualSyncTest().catch(console.error);

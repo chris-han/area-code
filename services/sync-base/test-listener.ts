@@ -9,14 +9,10 @@ import { createClient } from "@supabase/supabase-js";
  * 1. Start transactional-base service first:
  *    cd services/transactional-base && pnpm db:setup && pnpm dev
  *
- * 2. Set environment variables (optional, defaults to local):
- *    export SUPABASE_URL="http://localhost:3001"
- *    export SUPABASE_ANON_KEY="your-anon-key"
- *
- * 3. Run this script:
+ * 2. Run this script:
  *    npx ts-node test-listener.ts
  *
- * 4. Make changes to foo, bar, or foo_bar tables to see events
+ * 3. Make changes to foo, bar, or foo_bar tables to see events
  */
 
 async function testSupabaseListener() {
@@ -25,13 +21,14 @@ async function testSupabaseListener() {
 
   const config = {
     supabaseUrl: process.env.SUPABASE_URL || "http://localhost:3001",
-    supabaseKey: process.env.SUPABASE_ANON_KEY || "your-anon-key",
+    supabaseKey: "no-auth-needed", // No auth required anymore
     tables: ["foo", "bar", "foo_bar"],
   };
 
   console.log("🔧 Configuration:");
   console.log(`  URL: ${config.supabaseUrl}`);
   console.log(`  Tables: ${config.tables?.join(", ") || "ALL"}`);
+  console.log(`  Auth: Disabled (simplified setup)`);
   console.log("");
 
   console.log("💡 To test this listener:");
@@ -43,18 +40,25 @@ async function testSupabaseListener() {
   console.log("");
 
   console.log(
-    "⚠️  Note: This requires Supabase Realtime service to be running"
-  );
-  console.log(
-    "   The current transactional-base setup may need additional configuration"
+    "⚠️  Note: This uses the simplified real-time setup (Postgres Changes)"
   );
   console.log("");
 
   try {
     console.log("🔥 Starting Supabase Realtime listener...");
 
-    // Create Supabase client
-    const supabase = createClient(config.supabaseUrl, config.supabaseKey);
+    // Create Supabase client without auth
+    const supabase = createClient(config.supabaseUrl, config.supabaseKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+      realtime: {
+        params: {
+          eventsPerSecond: 10,
+        },
+      },
+    });
 
     // Set up listeners for each table
     const tables = config.tables || ["foo", "bar", "foo_bar"];
@@ -88,6 +92,7 @@ async function testSupabaseListener() {
             console.log(`✅ [${table}] Successfully subscribed`);
           } else if (status === "CHANNEL_ERROR") {
             console.error(`❌ [${table}] Subscription error`);
+            console.error(`    Check that realtime is running on port 4002`);
           }
         });
 

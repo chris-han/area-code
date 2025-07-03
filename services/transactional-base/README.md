@@ -1,209 +1,127 @@
-# Transactional Base Service
+# Transactional Base Service - Supabase Setup
 
-A generic transactional service built with Node.js, TypeScript, Fastify, PostgreSQL, and Drizzle ORM. This service provides a foundation for building transactional applications with generic `foo` and `bar` data models.
+A Supabase deployment following official self-hosting best practices.
 
-## Features
+## Services
 
-- **Generic Data Models**: `foo`, `bar`, and `fooBar` entities that can be customized for specific use cases
-- **RESTful API**: Complete CRUD operations for all entities
-- **Relationship Management**: One-to-many (foo→bar) and many-to-many (foo↔bar) relationships
-- **Database Operations**: PostgreSQL with Drizzle ORM for type-safe database operations
-- **Data Validation**: Zod schemas for request validation
-- **Development Tools**: Hot reload, database migrations, seeding, and studio
+This setup includes the core Supabase services:
 
-## Data Models
+1. **PostgreSQL Database** - The core database with logical replication enabled
+2. **PostgREST** - RESTful API for your PostgreSQL database
+3. **Realtime** - WebSocket server for real-time database changes
 
-### Foo Entity
-- `id`: UUID primary key
-- `name`: Required string (255 chars max)
-- `description`: Optional text
-- `status`: String with default "active" (50 chars max)
-- `priority`: Integer with default 1
-- `isActive`: Boolean with default true
-- `createdAt`, `updatedAt`: Timestamps
+## Quick Start
 
-### Bar Entity
-- `id`: UUID primary key
-- `fooId`: Foreign key reference to Foo
-- `value`: Required integer
-- `label`: Optional string (100 chars max)
-- `notes`: Optional text
-- `isEnabled`: Boolean with default true
-- `createdAt`, `updatedAt`: Timestamps
-
-### FooBar Junction Table
-- `id`: UUID primary key
-- `fooId`: Foreign key reference to Foo
-- `barId`: Foreign key reference to Bar
-- `relationshipType`: String with default "default" (50 chars max)
-- `metadata`: Optional JSON string for additional data
-- `createdAt`: Timestamp
-
-## API Endpoints
-
-### Foo Routes
-- `GET /api/foo` - List all foo items
-- `GET /api/foo/:id` - Get foo by ID
-- `POST /api/foo` - Create new foo
-- `PUT /api/foo/:id` - Update foo
-- `DELETE /api/foo/:id` - Delete foo
-
-### Bar Routes
-- `GET /api/bar` - List all bar items with foo details
-- `GET /api/bar/:id` - Get bar by ID with foo details
-- `POST /api/bar` - Create new bar
-- `PUT /api/bar/:id` - Update bar
-- `DELETE /api/bar/:id` - Delete bar
-- `GET /api/foo/:fooId/bars` - Get all bars for a specific foo
-
-### FooBar Relationship Routes
-- `GET /api/foo-bar` - List all foo-bar relationships
-- `POST /api/foo-bar` - Create new foo-bar relationship
-- `DELETE /api/foo-bar/:id` - Delete foo-bar relationship
-- `GET /api/foo/:fooId/relationships` - Get relationships for a foo
-- `GET /api/bar/:barId/relationships` - Get relationships for a bar
-
-### Utility Routes
-- `GET /` - API information
-- `GET /health` - Health check
-
-## Getting Started
-
-### Prerequisites
-- Node.js (v18 or higher)
-- Docker and Docker Compose
-- pnpm (recommended)
-
-### Installation
-
-1. **Install dependencies**:
+1. Start all services:
    ```bash
-   pnpm install
+   docker-compose up -d
    ```
 
-2. **Start the database**:
+2. Check service health:
    ```bash
-   pnpm db:setup
+   docker-compose ps
    ```
 
-3. **Generate and run migrations**:
-   ```bash
-   pnpm db:generate
-   pnpm db:migrate
-   ```
+3. Access the services:
+   - PostgreSQL: `localhost:5434`
+   - REST API: `http://localhost:3001`
+   - Realtime: `ws://localhost:4002`
 
-4. **Seed the database** (optional):
-   ```bash
-   pnpm db:seed
-   ```
+## Database Access
 
-5. **Start the development server**:
-   ```bash
-   pnpm dev
-   ```
-
-The service will be available at `http://localhost:8081`.
-
-## Database Management
-
-### Available Scripts
-
-- `pnpm db:setup` - Start PostgreSQL with Docker
-- `pnpm db:stop` - Stop the database
-- `pnpm db:reset` - Reset database (removes all data!)
-- `pnpm db:generate` - Generate new migrations
-- `pnpm db:migrate` - Run pending migrations
-- `pnpm db:seed` - Seed database with sample data
-- `pnpm db:studio` - Open Drizzle Studio for database management
-
-### Database Configuration
-
-The service uses PostgreSQL running on port 5433 (to avoid conflicts with other services). You can modify the connection string in:
-- `drizzle.config.ts`
-- `src/database/connection.ts`
-- `docker-compose.yml`
-
-## Development
-
-### Project Structure
-
-```
-src/
-├── database/
-│   ├── connection.ts    # Database connection setup
-│   └── schema.ts        # Drizzle schema definitions
-├── routes/
-│   ├── foo.ts          # Foo entity routes
-│   ├── bar.ts          # Bar entity routes
-│   └── fooBar.ts       # FooBar relationship routes
-├── scripts/
-│   ├── migrate.ts      # Migration script
-│   └── seed.ts         # Database seeding script
-└── server.ts           # Main server file
-```
-
-### Adding New Fields
-
-1. Update the schema in `src/database/schema.ts`
-2. Generate migration: `pnpm db:generate`
-3. Run migration: `pnpm db:migrate`
-4. Update routes and validation schemas as needed
-
-### Environment Variables
-
-- `DATABASE_URL`: PostgreSQL connection string
-- `PORT`: Server port (default: 8081)
-- `HOST`: Server host (default: 0.0.0.0)
-- `NODE_ENV`: Environment (development/production)
-
-## Example Usage
-
-### Create a Foo
+Connect to PostgreSQL:
 ```bash
-curl -X POST http://localhost:8081/api/foo \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "My Foo",
-    "description": "A sample foo entity",
-    "status": "active",
-    "priority": 1
-  }'
+psql postgres://postgres:your-super-secret-and-long-postgres-password@localhost:5434/postgres
 ```
 
-### Create a Bar
+## API Access
+
+The REST API is available at `http://localhost:3001`. Example:
+
 ```bash
-curl -X POST http://localhost:8081/api/bar \
+# Get all tables
+curl http://localhost:3001/
+
+# Create a simple table
+psql postgres://postgres:your-super-secret-and-long-postgres-password@localhost:5434/postgres -c "
+CREATE TABLE items (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW()
+);"
+
+# Insert some data
+curl -X POST http://localhost:3001/items \
   -H "Content-Type: application/json" \
-  -d '{
-    "fooId": "uuid-of-foo",
-    "value": 42,
-    "label": "My Bar",
-    "notes": "A sample bar entity"
-  }'
+  -d '{"name": "Test Item"}'
+
+# Query data
+curl http://localhost:3001/items
 ```
 
-### Create a FooBar Relationship
+## Realtime Access
+
+The Realtime service provides WebSocket connections for live database updates. You can connect using the Supabase client libraries:
+
+```javascript
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient('http://localhost:3001', 'your-anon-key')
+
+// Subscribe to changes
+const channel = supabase
+  .channel('db-changes')
+  .on(
+    'postgres_changes',
+    { event: '*', schema: 'public', table: 'items' },
+    (payload) => console.log('Change received!', payload)
+  )
+  .subscribe()
+```
+
+## Environment Variables
+
+Create a `.env` file with the following variables:
+
+```env
+POSTGRES_PASSWORD=your-secure-password
+JWT_SECRET=your-jwt-secret-at-least-32-chars
+SECRET_KEY_BASE=your-secret-key-base
+```
+
+## Security Notes
+
+⚠️ **Important**: The default passwords and secrets are for development only. Always change them before deploying to production!
+
+## Stopping Services
+
 ```bash
-curl -X POST http://localhost:8081/api/foo-bar \
-  -H "Content-Type: application/json" \
-  -d '{
-    "fooId": "uuid-of-foo",
-    "barId": "uuid-of-bar",
-    "relationshipType": "special",
-    "metadata": "{\"strength\": \"strong\"}"
-  }'
+docker-compose down
 ```
 
-## Customization
+To also remove volumes:
+```bash
+docker-compose down -v
+```
 
-This service is designed to be generic and easily customizable:
+## Troubleshooting
 
-1. **Rename Entities**: Replace `foo` and `bar` with your domain-specific names
-2. **Add Fields**: Extend the schema with additional fields
-3. **Business Logic**: Add validation, business rules, and custom endpoints
-4. **Authentication**: Integrate with your authentication system
-5. **Permissions**: Add role-based access control
+If services fail to start:
+1. Check logs: `docker-compose logs [service-name]`
+2. Ensure ports 5434, 3001, and 4002 are not in use
+3. Verify the database is healthy before dependent services start
 
-## License
+### Realtime Connection Issues
 
-This project is licensed under the MIT License. 
+If the realtime service fails to connect:
+1. Check that the database has the `_realtime` schema
+2. Verify the `supabase_realtime` publication exists
+3. Ensure the database user has proper permissions
+
+## Next Steps
+
+To complete the Supabase stack, you would need to add:
+1. GoTrue for authentication
+2. Kong as an API gateway
+3. Storage API for file uploads
+4. Supabase Studio for a web interface 

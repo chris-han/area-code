@@ -94,10 +94,15 @@ pnpm install
 
 ### **2. Configure Environment**
 ```bash
-# .env
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=your-anon-key
-TRANSACTIONAL_DB_URL=postgresql://postgres:password@localhost:5433/postgres
+# Run the setup script to create .env file
+node setup-env.js
+
+# Or manually create .env with:
+SUPABASE_URL=http://localhost:3001
+SUPABASE_REST_URL=http://localhost:3001
+REALTIME_URL=ws://localhost:4002
+ELASTICSEARCH_URL=http://localhost:9200
+# No authentication keys needed anymore!
 ```
 
 ### **3. Start the Service**
@@ -170,9 +175,8 @@ moose workflow run syncMonitorWorkflow
 ### **Workflow Configuration**
 ```typescript
 export const initialSyncConfig: SyncWorkflowConfig = {
-  supabaseUrl: process.env.SUPABASE_URL || 'http://localhost:54321',
-  supabaseKey: process.env.SUPABASE_ANON_KEY || '',
-  transactionalDbUrl: process.env.TRANSACTIONAL_DB_URL || 'postgresql://...',
+  supabaseUrl: process.env.SUPABASE_URL || 'http://localhost:3001',
+  // No authentication key needed anymore!
   batchSize: 50,              // Events per batch
   syncInterval: '@every 2m',  // Monitor frequency
   tables: ['foo', 'bar', 'foo_bar'],
@@ -183,8 +187,7 @@ export const initialSyncConfig: SyncWorkflowConfig = {
 ```typescript
 const cdcConfig: CDCConfig = {
   supabaseUrl: config.supabaseUrl,
-  supabaseKey: config.supabaseKey,
-  transactionalDbUrl: config.transactionalDbUrl,
+  // No authentication key needed anymore!
   tables: config.tables,
   batchSize: config.batchSize,
   onBatch: processCDCEvents,    // Batch processor function
@@ -325,10 +328,12 @@ shutdownCDC(): Promise<void>
 ```bash
 # Check environment variables
 echo $SUPABASE_URL
-echo $SUPABASE_ANON_KEY
+echo $REALTIME_URL
+echo $ELASTICSEARCH_URL
 
-# Verify database connection
-psql $TRANSACTIONAL_DB_URL -c "SELECT 1;"
+# Verify services are running
+curl http://localhost:3001  # PostgREST
+curl http://localhost:9200  # Elasticsearch
 ```
 
 **No Events Being Processed**
@@ -377,35 +382,88 @@ This service listens to database changes in the transactional-base service via S
 - ⚡ **Event-driven**: Uses Supabase real-time subscriptions for immediate data propagation
 - 🔧 **Error handling**: Graceful error handling with detailed logging
 
+## Prerequisites
+
+Before starting, ensure you have:
+- Node.js 20+ (required for Moose)
+- Docker and Docker Compose
+- PostgreSQL configured for logical replication
+- All required services running (transactional-base, retrieval-base)
+
 ## Setup
 
-### Prerequisites
+### 1. Database Configuration
 
-1. **Transactional-base service** running with Supabase
-2. **Retrieval-base service** running with Elasticsearch
-3. Both services should be accessible from this sync service
-
-### Installation
+First, ensure the database is properly configured for Supabase Realtime according to the [official documentation](https://github.com/supabase/realtime#server-setup):
 
 ```bash
-# Install dependencies
-pnpm install
+# Start the database
+cd services/transactional-base
+docker-compose up -d db
 
-# Set up environment variables (see below)
-cp .env.example .env
+# Run the realtime setup
+pnpm setup:realtime
 ```
 
-### Environment Variables
+This configures:
+- ✅ WAL level set to 'logical'
+- ✅ Replication slots and WAL senders
+- ✅ Supabase publication with tracked tables
+- ✅ Tenant configuration for JWT authentication
+- ✅ Replica identity for real-time updates
 
-Create a `.env` file with the following variables:
+### 2. Verify Configuration
 
 ```bash
-# Supabase connection (from transactional-base)
+# Verify database is configured correctly
+cd services/sync-base
+pnpm verify:realtime
+```
+
+This verification script checks all required settings:
+- PostgreSQL replication settings
+- Publication and table configuration
+- Tenant and JWT setup
+- Replica identity settings
+
+### 3. Start Realtime Server
+
+The Realtime server must be running for WebSocket connections:
+
+```bash
+cd services/transactional-base
+docker-compose --profile manual up realtime
+```
+
+Wait for: `Realtime is listening on port 4000`
+
+### 4. Environment Setup
+
+Run the setup script to create a `.env` file:
+
+```bash
+cd services/sync-base
+node setup-env.js
+```
+
+This creates a `.env` file with:
+
+```bash
+# Transactional-base connection (simplified - no auth)
 SUPABASE_URL=http://localhost:3001
-SUPABASE_ANON_KEY=your-supabase-anon-key
+SUPABASE_REST_URL=http://localhost:3001
+
+# Real-time WebSocket URL
+REALTIME_URL=ws://localhost:4002
 
 # Elasticsearch connection (from retrieval-base)  
 ELASTICSEARCH_URL=http://localhost:9200
+```
+
+### 5. Install Dependencies
+
+```bash
+pnpm install
 ```
 
 ## Usage
@@ -494,9 +552,10 @@ pnpm run dev
 ### Connection Issues
 
 **Supabase connection failed:**
-- Verify `SUPABASE_URL` and `SUPABASE_ANON_KEY` are correct
+- Verify `SUPABASE_URL` is correct (default: http://localhost:3001)
 - Ensure transactional-base service is running
-- Check if real-time features are enabled in Supabase
+- Check if real-time server is running on port 4002
+- No authentication is required anymore (simplified setup)
 
 **Elasticsearch connection failed:**
 - Verify `ELASTICSEARCH_URL` is correct
@@ -536,3 +595,189 @@ pnpm run test:listener
 - **[@workspace/transactional-base](../transactional-base)**: Source of truth for transactional data
 - **[@workspace/retrieval-base](../retrieval-base)**: Search and retrieval service with Elasticsearch
 - **[@workspace/models](../../packages/models)**: Shared data models and types
+
+## Comprehensive Troubleshooting Guide
+
+### Common Issues and Solutions
+
+#### 1. **Realtime server not responding**
+
+**Symptoms:**
+- Test fails with "Realtime server is not responding"
+- WebSocket connection timeouts
+
+**Solutions:**
+```bash
+# Check if realtime container is running
+docker ps | grep realtime
+
+# If not running, start it
+cd services/transactional-base
+docker-compose --profile manual up realtime
+
+# Check realtime logs for errors
+docker logs transactional-base-realtime
+
+# Test WebSocket connectivity
+curl -i -N -H "Connection: Upgrade" -H "Upgrade: websocket" http://localhost:4002
+```
+
+#### 2. **Database configuration errors**
+
+**Symptoms:**
+- Verification script shows errors
+- No real-time events received
+
+**Solutions:**
+```bash
+# Run verification
+cd services/sync-base
+pnpm verify:realtime
+
+# Common fixes based on verification results:
+
+# Fix WAL level
+docker exec -it transactional-base-db psql -U postgres -c "ALTER SYSTEM SET wal_level = 'logical';"
+docker-compose restart db
+
+# Fix replication slots
+docker exec -it transactional-base-db psql -U postgres -c "ALTER SYSTEM SET max_replication_slots = 5;"
+docker exec -it transactional-base-db psql -U postgres -c "ALTER SYSTEM SET max_wal_senders = 5;"
+docker-compose restart db
+
+# Recreate publication
+cd services/transactional-base
+pnpm setup:realtime
+```
+
+#### 3. **No real-time events received**
+
+Based on [Supabase Realtime error codes](https://github.com/supabase/realtime#server-setup):
+
+**Error: UnableToSubscribeToPostgresChanges**
+```bash
+# Check if publication exists
+docker exec -it transactional-base-db psql -U postgres -c "SELECT * FROM pg_publication WHERE pubname = 'supabase_realtime';"
+
+# Check tables in publication
+docker exec -it transactional-base-db psql -U postgres -c "SELECT * FROM pg_publication_tables WHERE pubname = 'supabase_realtime';"
+```
+
+**Error: ReplicationSlotBeingUsed**
+```bash
+# Check active replication slots
+docker exec -it transactional-base-db psql -U postgres -c "SELECT * FROM pg_replication_slots;"
+
+# Drop stuck slot if needed
+docker exec -it transactional-base-db psql -U postgres -c "SELECT pg_drop_replication_slot('supabase_realtime_replication_slot');"
+```
+
+**Error: IncreaseConnectionPool**
+```bash
+# Increase max_connections
+docker exec -it transactional-base-db psql -U postgres -c "ALTER SYSTEM SET max_connections = 300;"
+docker-compose restart db
+```
+
+#### 4. **JWT Authentication errors**
+
+**Symptoms:**
+- "Unauthorized" errors
+- "JwtSignatureError" in logs
+
+**Solutions:**
+```bash
+# Verify JWT secret matches (minimum 32 characters)
+# Check docker-compose.yml:
+JWT_SECRET: your-super-secret-jwt-token-with-at-least-32-characters-long
+
+# Verify tenant configuration
+docker exec -it transactional-base-db psql -U postgres -c "SELECT external_id, jwt_secret FROM tenants WHERE external_id = 'localhost';"
+```
+
+#### 5. **Connection timeout issues**
+
+**Symptoms:**
+- "Subscription timeout after 30 seconds"
+- Intermittent connection drops
+
+**Solutions:**
+```javascript
+// Adjust timeout settings in test-simplified-sync.js
+realtime: {
+  heartbeatIntervalMs: 30000,  // Increase if network is slow
+  timeout: 10000,               // Increase connection timeout
+  reconnectAfterMs: function(tries) {
+    return Math.min(tries * 100, 30000);
+  }
+}
+```
+
+### Required PostgreSQL Settings
+
+Ensure these are set in `docker-compose.yml`:
+
+```yaml
+command: >
+  postgres
+  -c wal_level=logical                    # Required for CDC
+  -c max_replication_slots=5              # Minimum 5
+  -c max_wal_senders=5                   # Minimum 5
+  -c max_connections=200                  # Increase if needed
+  -c shared_preload_libraries=pg_stat_statements
+```
+
+### Database Objects Checklist
+
+Run `pnpm verify:realtime` to check:
+
+✅ **WAL level** = logical  
+✅ **max_replication_slots** >= 5  
+✅ **max_wal_senders** >= 5  
+✅ **tenants** table exists with localhost entry  
+✅ **supabase_realtime** publication exists  
+✅ Tables have **REPLICA IDENTITY FULL**  
+✅ JWT secret >= 32 characters  
+
+### Debug Commands
+
+```bash
+# Full system check
+cd services/sync-base
+pnpm verify:realtime
+
+# Check all containers
+docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+
+# View realtime server logs
+docker logs -f transactional-base-realtime --tail 100
+
+# Check database logs for replication issues
+docker logs transactional-base-db 2>&1 | grep -E "(replication|real|slot|wal)"
+
+# Test REST API
+curl http://localhost:3001/foo
+
+# Test WebSocket endpoint
+wscat -c ws://localhost:4002/socket/websocket
+
+# Check PostgreSQL replication status
+docker exec -it transactional-base-db psql -U postgres -c "SELECT * FROM pg_stat_replication;"
+```
+
+### Performance Tuning
+
+```bash
+# Monitor replication lag
+docker exec -it transactional-base-db psql -U postgres -c "SELECT slot_name, active, restart_lsn, confirmed_flush_lsn FROM pg_replication_slots;"
+
+# Check table sizes for performance impact
+docker exec -it transactional-base-db psql -U postgres -c "SELECT relname, pg_size_pretty(pg_total_relation_size(relid)) FROM pg_stat_user_tables ORDER BY pg_total_relation_size(relid) DESC;"
+```
+
+### Getting Help
+
+1. **Check the logs first** - Most issues are clearly indicated in logs
+2. **Run verification** - `pnpm verify:realtime` catches most config issues
+3. **Review Supabase docs** - https://github.com/supabase/realtime#server-setup
+4. **Check container health** - Ensure all services are running properly

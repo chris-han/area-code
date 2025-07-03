@@ -11,14 +11,19 @@ This guide will help you test the Supabase Realtime listener functionality in yo
 
 ### 2. Environment Variables
 
-Set your Supabase credentials as environment variables:
+Set up the environment variables:
 
 ```bash
-export SUPABASE_URL="https://your-project.supabase.co"
-export SUPABASE_ANON_KEY="your-anon-key-here"
+# Run the setup script
+node setup-env.js
+
+# Or manually set:
+export SUPABASE_URL="http://localhost:3001"
+export REALTIME_URL="ws://localhost:4002"
+export ELASTICSEARCH_URL="http://localhost:9200"
 ```
 
-You can find these in your Supabase project dashboard under Settings > API.
+Note: No authentication keys are needed anymore - the transactional-base service runs without auth!
 
 ### 3. Enable Realtime for Your Tables
 
@@ -129,8 +134,8 @@ Edit the test script or workflow configuration:
 
 ```typescript
 const config: SupabaseListenerConfig = {
-  supabaseUrl: process.env.SUPABASE_URL,
-  supabaseKey: process.env.SUPABASE_ANON_KEY,
+  supabaseUrl: process.env.SUPABASE_URL || 'http://localhost:3001',
+  supabaseKey: 'no-auth-needed', // No auth required anymore
   schema: 'public',
   table: 'todos', // Specify table name
 };

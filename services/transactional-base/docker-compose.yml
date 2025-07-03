@@ -1,101 +1,93 @@
-version: "3.8"
+# Simplified Supabase Docker Compose Configuration
+# Following official Supabase self-hosting best practices
 
 services:
   # Postgres Database
   db:
-    image: supabase/postgres:15.1.0.147
+    image: supabase/postgres:15.1.1.78
     container_name: transactional-base-db
     restart: unless-stopped
     ports:
       - "5434:5432"
     environment:
-      POSTGRES_DB: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-your-super-secret-and-long-postgres-password}
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: your-super-secret-and-long-postgres-password
-      POSTGRES_PORT: 5432
+      POSTGRES_DB: postgres
     volumes:
-      - ./volumes/db/data:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql/data
       - ./volumes/db/init:/docker-entrypoint-initdb.d
+    command: >
+      postgres
+      -c wal_level=logical
+      -c max_replication_slots=5
+      -c max_wal_senders=10
+      -c listen_addresses='*'
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  # PostgREST
+  # PostgREST API
   rest:
     image: postgrest/postgrest:v12.0.1
     container_name: transactional-base-rest
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     restart: unless-stopped
     ports:
       - "3001:3000"
     environment:
-      PGRST_DB_URI: postgresql://postgres:your-super-secret-and-long-postgres-password@db:5432/postgres
+      PGRST_DB_URI: postgres://postgres:${POSTGRES_PASSWORD:-your-super-secret-and-long-postgres-password}@db:5432/postgres
       PGRST_DB_SCHEMAS: public
       PGRST_DB_ANON_ROLE: anon
-      PGRST_JWT_SECRET: your-super-secret-jwt-token-with-at-least-32-characters-long
+      PGRST_JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-token-with-at-least-32-characters-long}
       PGRST_DB_USE_LEGACY_GUCS: "false"
-    command: postgrest
 
-  # Auth
-  auth:
-    image: supabase/gotrue:v2.132.3
-    container_name: transactional-base-auth
-    depends_on:
-      - db
-    restart: unless-stopped
-    ports:
-      - "9998:9999"
-    environment:
-      GOTRUE_API_HOST: 0.0.0.0
-      GOTRUE_API_PORT: 9999
-      API_EXTERNAL_URL: http://localhost:8001
-      GOTRUE_DB_DRIVER: postgres
-      GOTRUE_DB_DATABASE_URL: postgresql://postgres:your-super-secret-and-long-postgres-password@db:5432/postgres?search_path=auth
-      GOTRUE_SITE_URL: http://localhost:3001
-      GOTRUE_URI_ALLOW_LIST: "*"
-      GOTRUE_DISABLE_SIGNUP: "false"
-      GOTRUE_JWT_ADMIN_ROLES: service_role
-      GOTRUE_JWT_AUD: authenticated
-      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
-      GOTRUE_JWT_EXP: 3600
-      GOTRUE_JWT_SECRET: your-super-secret-jwt-token-with-at-least-32-characters-long
-      GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
-      GOTRUE_SMTP_ADMIN_EMAIL: admin@example.com
-      GOTRUE_SMTP_HOST: smtp.gmail.com
-      GOTRUE_SMTP_PORT: 587
-      GOTRUE_SMTP_USER: ""
-      GOTRUE_SMTP_PASS: ""
-      GOTRUE_SMTP_SENDER_NAME: ""
-      GOTRUE_MAILER_AUTOCONFIRM: "true"
-
-  # Real-time Server
+  # Realtime Server
   realtime:
-    image: supabase/realtime:v2.25.50
+    image: supabase/realtime:v2.30.34
     container_name: transactional-base-realtime
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     restart: unless-stopped
     ports:
-      - "4002:4002"
+      - "4002:4000"
     environment:
-      PORT: 4002
+      # Core configuration
+      PORT: 4000
       DB_HOST: db
       DB_PORT: 5432
       DB_USER: postgres
-      DB_PASSWORD: your-super-secret-and-long-postgres-password
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-your-super-secret-and-long-postgres-password}
       DB_NAME: postgres
       DB_AFTER_CONNECT_QUERY: "SET search_path TO _realtime"
       DB_ENC_KEY: supabaserealtime
-      API_JWT_SECRET: your-super-secret-jwt-token-with-at-least-32-characters-long
-      FLY_ALLOC_ID: fly123
-      FLY_APP_NAME: realtime
-      SECRET_KEY_BASE: UpNVntn3cDxHJpq99YMc1T1AQgQpc8kfYTuRgBiYa15BLrx8etQoXz3gZv1/u2oq
-      ERL_AFLAGS: -proto_dist inet_tcp
-      ENABLE_TAILSCALE: "false"
+
+      # JWT configuration
+      API_JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-token-with-at-least-32-characters-long}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE:-UpNVntn3cDxHJpq99YMc1T1AQgQpc8kfYTuRgBiYa15BLrx8etQoXz3gZv1/u2oq}
+
+      # Realtime specific settings
+      REPLICATION_MODE: RLS
+      REPLICATION_POLL_INTERVAL: 100
+      SECURE_CHANNELS: "true"
+      SLOT_NAME: supabase_realtime_rls
+      TEMPORARY_SLOT: "true"
+
+      # App configuration
+      APP_NAME: "realtime"
       DNS_NODES: "''"
+      RLIMIT_NOFILE: "10000"
+      SEED_SELF_HOST: "true"
+      LOG_LEVEL: "info"
+      ERL_AFLAGS: "-proto_dist inet_tcp"
+
+      # Janitor for cleanup
+      RUN_JANITOR: "true"
+      JANITOR_INTERVAL: "60000"
 
 volumes:
   db_data:
