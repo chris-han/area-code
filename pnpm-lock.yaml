@@ -131,7 +131,7 @@ importers:
     dependencies:
       '@514labs/moose-lib':
         specifier: latest
-        version: 0.4.264(@swc/core@1.12.7(@swc/helpers@0.5.17))(@swc/helpers@0.5.17)(@types/node@24.0.4)(ts-patch@3.3.0)(typia@7.6.4(@samchon/openapi@2.5.3)(typescript@5.5.4))
+        version: 0.4.275(@swc/core@1.12.7(@swc/helpers@0.5.17))(@swc/helpers@0.5.17)(@types/node@24.0.4)(ts-patch@3.3.0)(typia@7.6.4(@samchon/openapi@2.5.3)(typescript@5.5.4))
     devDependencies:
       '@repo/eslint-config':
         specifier: workspace:*
@@ -279,7 +279,7 @@ importers:
     dependencies:
       '@514labs/moose-lib':
         specifier: latest
-        version: 0.4.264(@swc/core@1.12.7(@swc/helpers@0.5.17))(@swc/helpers@0.5.17)(@types/node@20.19.2)(ts-patch@3.3.0)(typia@7.6.4(@samchon/openapi@2.5.3)(typescript@5.7.3))
+        version: 0.4.275(@swc/core@1.12.7(@swc/helpers@0.5.17))(@swc/helpers@0.5.17)(@types/node@20.19.2)(ts-patch@3.3.0)(typia@7.6.4(@samchon/openapi@2.5.3)(typescript@5.7.3))
       '@workspace/models':
         specifier: workspace:*
         version: link:../../packages/models
@@ -295,7 +295,7 @@ importers:
     devDependencies:
       '@514labs/moose-cli':
         specifier: latest
-        version: 0.4.264
+        version: 0.4.275
       '@types/node':
         specifier: ^20.12.12
         version: 20.19.2
@@ -347,7 +347,7 @@ importers:
     dependencies:
       '@514labs/moose-lib':
         specifier: latest
-        version: 0.4.264(@swc/core@1.12.7(@swc/helpers@0.5.17))(@swc/helpers@0.5.17)(@types/node@20.19.2)(ts-patch@3.3.0)(typia@7.6.4(@samchon/openapi@2.5.3)(typescript@5.7.3))
+        version: 0.4.275(@swc/core@1.12.7(@swc/helpers@0.5.17))(@swc/helpers@0.5.17)(@types/node@20.19.2)(ts-patch@3.3.0)(typia@7.6.4(@samchon/openapi@2.5.3)(typescript@5.7.3))
       '@elastic/elasticsearch':
         specifier: ^8.12.0
         version: 8.18.2
@@ -387,7 +387,7 @@ importers:
     devDependencies:
       '@514labs/moose-cli':
         specifier: latest
-        version: 0.4.264
+        version: 0.4.275
       '@types/node':
         specifier: ^20.19.2
         version: 20.19.2
@@ -488,6 +488,9 @@ importers:
       pg:
         specifier: ^8.11.3
         version: 8.16.3
+      pino-pretty:
+        specifier: ^13.0.0
+        version: 13.0.0
       ws:
         specifier: ^8.18.0
         version: 8.18.3
@@ -522,32 +525,32 @@ importers:
 
 packages:
 
-  '@514labs/moose-cli-darwin-arm64@0.4.264':
-    resolution: {integrity: sha512-x6ep7WxP6eYGCBYEzoVrsI/Qiwu0LPM/Ef+6gBy+lIsaLyf7YSKYNqqXFsOnyjeVASO2Ur2q+n/wpOdYZm95Ag==}
+  '@514labs/moose-cli-darwin-arm64@0.4.275':
+    resolution: {integrity: sha512-6pECb9f2bwILNpVig9P9phvgt5V2InvUOaxE6vfv1IPFemrpFFDDqwF1a9EkxXr8NbsUOveFfecIN3N76sWexw==}
     cpu: [arm64]
     os: [darwin]
 
-  '@514labs/moose-cli-darwin-x64@0.4.264':
-    resolution: {integrity: sha512-xyXCUW38AXuUbtni4Ap086pIWu5Oz1ZFBkqZkSGiyc2cVoIf2QpBwdhmY8zZ0mK/kIChI6Whr5Aw86LGz7D23g==}
+  '@514labs/moose-cli-darwin-x64@0.4.275':
+    resolution: {integrity: sha512-TKsCWwpAXHLDsBQRHI/+mSPMX0wMo3xnvH3eNAuKYQ+/LByUh+1jdxBv7g94DYFDYAiCKwxU1V00LyQOs396Vw==}
     cpu: [x64]
     os: [darwin]
 
-  '@514labs/moose-cli-linux-arm64@0.4.264':
-    resolution: {integrity: sha512-xSWDmZW2T3+Av3kT6c7B00shqbr4F5oTXUlbBeLZ6Gl70tEgrGOxcPh467fCMHrOtYmvJSFNNUHuEkt3WZq5Tg==}
+  '@514labs/moose-cli-linux-arm64@0.4.275':
+    resolution: {integrity: sha512-Cp+xKsH/EBZer7RvSMUKccb7pqDHwZr0P6o23gttZDYTav890RaEfIYn+FbykDf7fBXYI407wEGy1VFdSrbHFA==}
     cpu: [arm64]
     os: [linux]
 
-  '@514labs/moose-cli-linux-x64@0.4.264':
-    resolution: {integrity: sha512-HVkj9FYOqf5vHkdMjBBThsKjwcZBnuy00CRtgnfprfpbqt1ivm6dMw7StX9ctPFJdjM6uyeouZZkebQpnS9KlQ==}
+  '@514labs/moose-cli-linux-x64@0.4.275':
+    resolution: {integrity: sha512-PGC7t+K1mRNKwBhSYPH8U6MtOl2zeHkRbshjCL4FBlC5KbkboP1iGqDky2mHc3Rz01WZhNiLAMchHrgD5tWm3Q==}
     cpu: [x64]
     os: [linux]
 
-  '@514labs/moose-cli@0.4.264':
-    resolution: {integrity: sha512-oCbTKHYLQgx1EKWxNZ6krS8pLG03aaPR5SXhHXG5Sa0foz5nwBfYUMwsKGKRyQI4hhITpmax9va1YChrBt5HWw==}
+  '@514labs/moose-cli@0.4.275':
+    resolution: {integrity: sha512-YflHzhp8tCG713doUGCUy4OpXFlxBLO0VAtj4BQ9LgVaT2N1w9OGLWgqrxN7pSmYs+gddUm8O4Zw4SkJzrsvEw==}
     hasBin: true
 
-  '@514labs/moose-lib@0.4.264':
-    resolution: {integrity: sha512-P0Ui8UVmmz5NRKLB10OZ9/i5+9SCio7GAU+TRP9NLV04jl7+Iwe/O0r3wT9/739hrk/+CVNQyJ//j1gZsSBV4Q==}
+  '@514labs/moose-lib@0.4.275':
+    resolution: {integrity: sha512-XAPiv7M7/gL3Bb+jIlmHg8hShZ8AdUryaxl8om3dzyM3fgBF7gjmS+OXYpQcYMdMnzA25XCmgCMHRwW6WCITaA==}
     hasBin: true
     peerDependencies:
       ts-patch: ^3.3.0
@@ -3183,6 +3186,9 @@ packages:
   color-name@1.1.4:
     resolution: {integrity: sha512-dOy+3AuW3a2wNbZHIuMZpTcgjGuLU/uBL/ubcZF9OXbDo8ff4O8yVp5Bf0efS8uEoYo5q4Fx7dY9OgQGXgAsQA==}
 
+  colorette@2.0.20:
+    resolution: {integrity: sha512-IfEDxwoWIjkeXL1eXcDiow4UbKjhLdq6/EuSVR9GMN7KVH3r9gQ83e73hsz1Nd1T3ijd5xv1wcWRYO+D6kCI2w==}
+
   combined-stream@1.0.8:
     resolution: {integrity: sha512-FQN4MRfuJeHf7cBbBMJFXhKSDq+2kAArBlmRBvcvFE5BB1HZKXtSFASDhdlz9zOYwxh8lDdnvmMOe/+5cdoEdg==}
     engines: {node: '>= 0.8'}
@@ -3313,6 +3319,9 @@ packages:
   data-uri-to-buffer@6.0.2:
     resolution: {integrity: sha512-7hvf7/GW8e86rW0ptuwS3OcBGDjIi6SZva7hCyWC0yYry2cOPmLIjXAUHI6DK2HsnwJd9ifmt57i8eV2n4YNpw==}
     engines: {node: '>= 14'}
+
+  dateformat@4.6.3:
+    resolution: {integrity: sha512-2P0p0pFGzHS5EMnhdxQi7aJN+iMheud0UhG4dlE1DLAlvL8JHjJJTX/CSm4JXwV0Ka5nGk3zC5mcb5bUQUxxMA==}
 
   debug@4.4.1:
     resolution: {integrity: sha512-KcKCqiftBJcZr++7ykoDIEwSa3XWowTfNPo92BYxjXiyYEVrUQh2aLyhxBCwww+heortUFxEJYcRzosstTEBYQ==}
@@ -3512,6 +3521,9 @@ packages:
   emoji-regex@9.2.2:
     resolution: {integrity: sha512-L18DaJsXSUk2+42pv8mLs5jJT2hqFkFE4j21wOmgbUqsZ2hL72NsUU785g9RXgo3s0ZNgVl42TiHp3ZtOv/Vyg==}
 
+  end-of-stream@1.4.5:
+    resolution: {integrity: sha512-ooEGc6HP26xXq/N+GCGOT0JKCLDGrq2bQUZrQ7gyrJiZANJ/8YDTxTpQBXGMn+WbIQXNVpyWymm7KYVICQnyOg==}
+
   enhanced-resolve@5.18.2:
     resolution: {integrity: sha512-6Jw4sE1maoRJo3q8MsSIn2onJFbLTOjY9hlx4DZXmOKvLRd1Ok2kXmAGXaafL2+ijsJZ1ClYbl/pmqr9+k4iUQ==}
     engines: {node: '>=10.13.0'}
@@ -3705,6 +3717,9 @@ packages:
     resolution: {integrity: sha512-hMQ4CX1p1izmuLYyZqLMO/qGNw10wSv9QDCPfzXfyFrOaCSSoRfqE1Kf1s5an66J5JZC62NewG+mK49jOCtQew==}
     engines: {node: '>=4'}
 
+  fast-copy@3.0.2:
+    resolution: {integrity: sha512-dl0O9Vhju8IrcLndv2eU4ldt1ftXMqqfgN4H1cpmGV7P6jeB9FwpN9a2c8DPGE1Ys88rNUJVYDHq73CGAGOPfQ==}
+
   fast-decode-uri-component@1.0.1:
     resolution: {integrity: sha512-WKgKWg5eUxvRZGwW8FvfbaH7AXSh2cL+3j5fMGzUMCxWBJ3dV3a7Wz8y2f/uQ0e3B6WmodD3oS54jTQ9HVTIIg==}
 
@@ -3730,6 +3745,9 @@ packages:
   fast-redact@3.5.0:
     resolution: {integrity: sha512-dwsoQlS7h9hMeYUq1W++23NDcBLV4KqONnITDV9DjfS3q1SgDGVrBdvvTLUotWtPSD7asWDV9/CmsZPy8Hf70A==}
     engines: {node: '>=6'}
+
+  fast-safe-stringify@2.1.1:
+    resolution: {integrity: sha512-W+KJc2dmILlPplD/H4K9l9LcAHAfPtP6BY84uVLXQ6Evcz9Lcg33Y2z1IVblT6xdY54PXYVHEv+0Wpq8Io6zkA==}
 
   fast-uri@3.0.6:
     resolution: {integrity: sha512-Atfo14OibSv5wAp4VWNsFYE1AchQRTv9cBGWET4pZWHzYshFSS9NQI6I57rdKn9croWVMbYFbLhJ+yJvmZIIHw==}
@@ -3972,6 +3990,9 @@ packages:
   heap@0.2.7:
     resolution: {integrity: sha512-2bsegYkkHO+h/9MGbn6KWcE45cHZgPANo5LXF7EvWdT0yT2EguSVO1nDgU5c8+ZOPwp2vMNa7YFsJhVcDR9Sdg==}
 
+  help-me@5.0.0:
+    resolution: {integrity: sha512-7xgomUX6ADmcYzFik0HzAxh/73YlKR9bmFzf51CZwR+b6YtzU2m0u49hQCqV6SvlqIqsaxovfwdvbnsw3b/zpg==}
+
   hono@4.8.3:
     resolution: {integrity: sha512-jYZ6ZtfWjzBdh8H/0CIFfCBHaFL75k+KMzaM177hrWWm2TWL39YMYaJgB74uK/niRc866NMlH9B8uCvIo284WQ==}
     engines: {node: '>=16.9.0'}
@@ -4159,6 +4180,10 @@ packages:
 
   jose@5.9.2:
     resolution: {integrity: sha512-ILI2xx/I57b20sd7rHZvgiiQrmp2mcotwsAH+5ajbpFQbrYVQdNHYlQhoA5cFb78CgtBOxtC05TeA+mcgkuCqQ==}
+
+  joycon@3.1.1:
+    resolution: {integrity: sha512-34wB/Y7MW7bzjKRjUKTa46I2Z7eV62Rkhva+KkopW7Qvv/OSWBqvkSY7vusOPrNuZcUG3tApvdVgNB8POj3SPw==}
+    engines: {node: '>=10'}
 
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
@@ -4701,6 +4726,10 @@ packages:
   pino-abstract-transport@2.0.0:
     resolution: {integrity: sha512-F63x5tizV6WCh4R6RHyi2Ml+M70DNRXt/+HANowMflpgGFMAym/VKm6G7ZOQRjqN7XbGxK1Lg9t6ZrtzOaivMw==}
 
+  pino-pretty@13.0.0:
+    resolution: {integrity: sha512-cQBBIVG3YajgoUjo1FdKVRX6t9XPxwB9lcNJVD5GCnNM4Y6T12YYx8c6zEejxQsU0wrg9TwmDulcE9LR7qcJqA==}
+    hasBin: true
+
   pino-std-serializers@7.0.0:
     resolution: {integrity: sha512-e906FRY0+tV27iq4juKzSYPbUj2do2X2JX4EzSca1631EB2QJQUqGbDuERal7LCtOpxl6x3+nvo9NPZcmjkiFA==}
 
@@ -4760,6 +4789,9 @@ packages:
 
   proxy-from-env@1.1.0:
     resolution: {integrity: sha512-D+zkORCbA9f1tdWRK0RaCR3GPv50cMxcrz4X8k5LTSUD1Dkw47mKJEZQNunItRTkWwgtaUSo1RVFRIG9ZXiFYg==}
+
+  pump@3.0.3:
+    resolution: {integrity: sha512-todwxLMY7/heScKmntwQG8CXVkWUOdYxIvY2s0VWAAMh/nd8SoYiRaKjlr7+iCs984f2P8zvrfWcDDYVb73NfA==}
 
   punycode@2.3.1:
     resolution: {integrity: sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==}
@@ -4992,6 +5024,9 @@ packages:
   schema-utils@4.3.2:
     resolution: {integrity: sha512-Gn/JaSk/Mt9gYubxTtSn/QCV4em9mpAPiR1rqy/Ocu19u/G9J5WWdNoUT4SiV6mFC3y6cxyFcFwdzPM3FgxGAQ==}
     engines: {node: '>= 10.13.0'}
+
+  secure-json-parse@2.7.0:
+    resolution: {integrity: sha512-6aU+Rwsezw7VR8/nyvKTx8QpWH9FrcYiXXlqC4z5d5XQBDRqtbfsRjnwGyqbi3gddNtWHuEk9OANUotL26qKUw==}
 
   secure-json-parse@3.0.2:
     resolution: {integrity: sha512-H6nS2o8bWfpFEV6U38sOSjS7bTbdgbCGU9wEM6W14P5H0QOsz94KCusifV44GpHDTu2nqZbuDNhTzu+mjDSw1w==}
@@ -5633,26 +5668,26 @@ packages:
 
 snapshots:
 
-  '@514labs/moose-cli-darwin-arm64@0.4.264':
+  '@514labs/moose-cli-darwin-arm64@0.4.275':
     optional: true
 
-  '@514labs/moose-cli-darwin-x64@0.4.264':
+  '@514labs/moose-cli-darwin-x64@0.4.275':
     optional: true
 
-  '@514labs/moose-cli-linux-arm64@0.4.264':
+  '@514labs/moose-cli-linux-arm64@0.4.275':
     optional: true
 
-  '@514labs/moose-cli-linux-x64@0.4.264':
+  '@514labs/moose-cli-linux-x64@0.4.275':
     optional: true
 
-  '@514labs/moose-cli@0.4.264':
+  '@514labs/moose-cli@0.4.275':
     optionalDependencies:
-      '@514labs/moose-cli-darwin-arm64': 0.4.264
-      '@514labs/moose-cli-darwin-x64': 0.4.264
-      '@514labs/moose-cli-linux-arm64': 0.4.264
-      '@514labs/moose-cli-linux-x64': 0.4.264
+      '@514labs/moose-cli-darwin-arm64': 0.4.275
+      '@514labs/moose-cli-darwin-x64': 0.4.275
+      '@514labs/moose-cli-linux-arm64': 0.4.275
+      '@514labs/moose-cli-linux-x64': 0.4.275
 
-  '@514labs/moose-lib@0.4.264(@swc/core@1.12.7(@swc/helpers@0.5.17))(@swc/helpers@0.5.17)(@types/node@20.19.2)(ts-patch@3.3.0)(typia@7.6.4(@samchon/openapi@2.5.3)(typescript@5.7.3))':
+  '@514labs/moose-lib@0.4.275(@swc/core@1.12.7(@swc/helpers@0.5.17))(@swc/helpers@0.5.17)(@types/node@20.19.2)(ts-patch@3.3.0)(typia@7.6.4(@samchon/openapi@2.5.3)(typescript@5.7.3))':
     dependencies:
       '@clickhouse/client': 1.8.1
       '@clickhouse/client-web': 1.5.0
@@ -5681,7 +5716,7 @@ snapshots:
       - uglify-js
       - webpack-cli
 
-  '@514labs/moose-lib@0.4.264(@swc/core@1.12.7(@swc/helpers@0.5.17))(@swc/helpers@0.5.17)(@types/node@24.0.4)(ts-patch@3.3.0)(typia@7.6.4(@samchon/openapi@2.5.3)(typescript@5.5.4))':
+  '@514labs/moose-lib@0.4.275(@swc/core@1.12.7(@swc/helpers@0.5.17))(@swc/helpers@0.5.17)(@types/node@24.0.4)(ts-patch@3.3.0)(typia@7.6.4(@samchon/openapi@2.5.3)(typescript@5.5.4))':
     dependencies:
       '@clickhouse/client': 1.8.1
       '@clickhouse/client-web': 1.5.0
@@ -8284,6 +8319,8 @@ snapshots:
 
   color-name@1.1.4: {}
 
+  colorette@2.0.20: {}
+
   combined-stream@1.0.8:
     dependencies:
       delayed-stream: 1.0.0
@@ -8399,6 +8436,8 @@ snapshots:
       type: 2.7.3
 
   data-uri-to-buffer@6.0.2: {}
+
+  dateformat@4.6.3: {}
 
   debug@4.4.1:
     dependencies:
@@ -8542,6 +8581,10 @@ snapshots:
   emoji-regex@8.0.0: {}
 
   emoji-regex@9.2.2: {}
+
+  end-of-stream@1.4.5:
+    dependencies:
+      once: 1.4.0
 
   enhanced-resolve@5.18.2:
     dependencies:
@@ -8898,6 +8941,8 @@ snapshots:
       iconv-lite: 0.4.24
       tmp: 0.0.33
 
+  fast-copy@3.0.2: {}
+
   fast-decode-uri-component@1.0.1: {}
 
   fast-deep-equal@3.1.3: {}
@@ -8928,6 +8973,8 @@ snapshots:
       fast-decode-uri-component: 1.0.1
 
   fast-redact@3.5.0: {}
+
+  fast-safe-stringify@2.1.1: {}
 
   fast-uri@3.0.6: {}
 
@@ -9190,6 +9237,8 @@ snapshots:
 
   heap@0.2.7: {}
 
+  help-me@5.0.0: {}
+
   hono@4.8.3: {}
 
   hpagent@1.2.0: {}
@@ -9364,6 +9413,8 @@ snapshots:
   jiti@2.4.2: {}
 
   jose@5.9.2: {}
+
+  joycon@3.1.1: {}
 
   js-tokens@4.0.0: {}
 
@@ -9885,6 +9936,22 @@ snapshots:
     dependencies:
       split2: 4.2.0
 
+  pino-pretty@13.0.0:
+    dependencies:
+      colorette: 2.0.20
+      dateformat: 4.6.3
+      fast-copy: 3.0.2
+      fast-safe-stringify: 2.1.1
+      help-me: 5.0.0
+      joycon: 3.1.1
+      minimist: 1.2.8
+      on-exit-leak-free: 2.1.2
+      pino-abstract-transport: 2.0.0
+      pump: 3.0.3
+      secure-json-parse: 2.7.0
+      sonic-boom: 4.2.0
+      strip-json-comments: 3.1.1
+
   pino-std-serializers@7.0.0: {}
 
   pino@9.7.0:
@@ -9960,6 +10027,11 @@ snapshots:
       - supports-color
 
   proxy-from-env@1.1.0: {}
+
+  pump@3.0.3:
+    dependencies:
+      end-of-stream: 1.4.5
+      once: 1.4.0
 
   punycode@2.3.1: {}
 
@@ -10207,6 +10279,8 @@ snapshots:
       ajv: 8.17.1
       ajv-formats: 2.1.1(ajv@8.17.1)
       ajv-keywords: 5.1.0(ajv@8.17.1)
+
+  secure-json-parse@2.7.0: {}
 
   secure-json-parse@3.0.2: {}
 

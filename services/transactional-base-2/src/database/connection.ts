@@ -6,11 +6,31 @@ import { config as dotenvConfig } from "dotenv";
 // Load environment variables from .env.development
 dotenvConfig({ path: ".env.development" });
 
-// Use the pooler (Supavisor) for connection pooling
-// The pooler runs on port 6543 in transaction mode
-const connectionString =
-  process.env.DATABASE_URL ||
-  "postgresql://postgres:your-super-secret-and-long-postgres-password@localhost:6543/postgres";
+// According to Supabase docs:
+// - Supavisor is the connection pooler used in the Supabase stack
+// - Use postgres user with tenant ID for authentication
+// - Format: postgres.{tenant-id}:password@host:port/database
+const tenantId = process.env.POOLER_TENANT_ID || "dev";
+const password =
+  process.env.POSTGRES_PASSWORD ||
+  "your-super-secret-and-long-postgres-password";
+
+// Use session-based connection (port 5432) for migrations and direct operations
+// Use pooled transactional connections (port 6543) for runtime application usage via Supavisor
+const isMigrationScript = process.argv.some((arg) => arg.includes("migrate"));
+
+const connectionString = isMigrationScript
+  ? `postgresql://postgres.${tenantId}:${password}@localhost:5432/postgres`
+  : `postgresql://postgres.${tenantId}:${password}@localhost:6543/postgres`;
+
+const userType = "postgres";
+const portType = isMigrationScript
+  ? "session-based (5432)"
+  : "pooled via Supavisor (6543)";
+
+console.log(
+  `🔗 Connecting as ${userType}.${tenantId} via ${portType} connection`
+);
 
 const pool = new Pool({
   connectionString,
