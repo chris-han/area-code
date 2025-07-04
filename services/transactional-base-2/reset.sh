@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "WARNING: This will remove all containers and container data, and will reset the .env file. This action cannot be undone!"
+echo "WARNING: This will remove all containers, container data, and data volumes. This action cannot be undone!"
 read -p "Are you sure you want to proceed? (y/N) " -n 1 -r
 echo    # Move to a new line
 if [[ ! $REPLY =~ ^[Yy]$ ]]
@@ -9,10 +9,10 @@ then
     exit 1
 fi
 
-echo "Stopping and removing all containers..."
-docker compose -f docker-compose.yml -f ./dev/docker-compose.dev.yml down -v --remove-orphans
+echo "Stopping and removing all containers with volumes..."
+docker compose down -v --remove-orphans
 
-echo "Cleaning up bind-mounted directories..."
+echo "Cleaning up bind-mounted data directories..."
 BIND_MOUNTS=(
   "./volumes/db/data"
 )
@@ -22,23 +22,27 @@ for DIR in "${BIND_MOUNTS[@]}"; do
     echo "Deleting $DIR..."
     rm -rf "$DIR"
   else
-    echo "Directory $DIR does not exist. Skipping bind mount deletion step..."
+    echo "Directory $DIR does not exist. Skipping..."
   fi
 done
 
-echo "Resetting .env file..."
-if [ -f ".env" ]; then
-  echo "Removing existing .env file..."
-  rm -f .env
+echo "Removing named volumes (if any remain)..."
+docker volume prune -f
+
+echo "Regenerating JWT secrets..."
+if [ -f "generate-jwt.mjs" ]; then
+  echo "Generating new secrets..."
+  node generate-jwt.mjs > /tmp/new_secrets.txt
+  echo "New secrets generated. Please update your .env.development file with:"
+  cat /tmp/new_secrets.txt
+  rm /tmp/new_secrets.txt
 else
-  echo "No .env file found. Skipping .env removal step..."
+  echo "generate-jwt.mjs not found. Skipping secret regeneration..."
 fi
 
-if [ -f ".env.example" ]; then
-  echo "Copying .env.example to .env..."
-  cp .env.example .env
-else
-  echo ".env.example file not found. Skipping .env reset step..."
-fi
-
-echo "Cleanup complete!"
+echo ""
+echo "✅ Cleanup complete!"
+echo ""
+echo "Next steps:"
+echo "1. Update .env.development with new secrets (if generated)"
+echo "2. Run 'npm run dev' to start fresh"

@@ -11,7 +11,7 @@
  * Usage: node generate-jwt.js
  */
 
-const crypto = require("crypto");
+import crypto from "crypto";
 
 // Simple JWT implementation for generating tokens
 function base64URLEncode(str) {
@@ -137,12 +137,6 @@ if (majorVersion < 14) {
 }
 
 // Run the script
-if (require.main === module) {
-  main();
-}
+main();
 
-module.exports = {
-  generateJWT,
-  generateSecureSecret,
-  generateSecurePassword,
-};
+export { generateJWT, generateSecureSecret, generateSecurePassword };

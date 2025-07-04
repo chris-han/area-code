@@ -13,6 +13,10 @@
       "@workspace/models/*": ["../../packages/models/src/*"]
     }
   },
-  "include": ["src/**/*", "../../packages/models/src/**/*"],
+  "include": [
+    "src/**/*",
+    "../../packages/models/src/**/*",
+    "tests/test-realtime.ts"
+  ],
   "exclude": ["node_modules", "dist"]
 }
