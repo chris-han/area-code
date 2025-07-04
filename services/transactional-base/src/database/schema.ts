@@ -9,13 +9,13 @@ import {
 } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 // Import models from the shared package
-import type { 
-  Foo, 
-  CreateFoo, 
+import type {
+  Foo,
+  CreateFoo,
   UpdateFoo,
   Bar,
   CreateBar,
-  UpdateBar
+  UpdateBar,
 } from "@workspace/models";
 
 // Foo table - matches models package exactly
@@ -53,7 +53,9 @@ export const fooBar = pgTable("foo_bar", {
   barId: uuid("bar_id")
     .notNull()
     .references(() => bar.id),
-  relationshipType: varchar("relationship_type", { length: 50 }).default("default"),
+  relationshipType: varchar("relationship_type", { length: 50 }).default(
+    "default"
+  ),
   metadata: text("metadata"), // JSON string for additional data
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -79,4 +81,4 @@ export type DbBar = typeof bar.$inferSelect;
 export type NewDbBar = typeof bar.$inferInsert;
 
 export type FooBar = typeof fooBar.$inferSelect;
-export type NewFooBar = typeof fooBar.$inferInsert; 
+export type NewFooBar = typeof fooBar.$inferInsert;

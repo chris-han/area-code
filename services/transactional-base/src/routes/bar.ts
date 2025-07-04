@@ -87,7 +87,7 @@ export async function barRoutes(fastify: FastifyInstance) {
     async (request, reply) => {
       try {
         const validatedData = insertBarSchema.parse(request.body);
-        
+
         // Verify that foo exists
         const fooExists = await db
           .select()
@@ -96,13 +96,12 @@ export async function barRoutes(fastify: FastifyInstance) {
           .limit(1);
 
         if (fooExists.length === 0) {
-          return reply.status(400).send({ error: "Referenced foo does not exist" });
+          return reply
+            .status(400)
+            .send({ error: "Referenced foo does not exist" });
         }
 
-        const newBar = await db
-          .insert(bar)
-          .values(validatedData)
-          .returning();
+        const newBar = await db.insert(bar).values(validatedData).returning();
 
         return reply.status(201).send(newBar[0]);
       } catch (error) {
@@ -130,7 +129,9 @@ export async function barRoutes(fastify: FastifyInstance) {
           .limit(1);
 
         if (fooExists.length === 0) {
-          return reply.status(400).send({ error: "Referenced foo does not exist" });
+          return reply
+            .status(400)
+            .send({ error: "Referenced foo does not exist" });
         }
       }
 
@@ -157,10 +158,7 @@ export async function barRoutes(fastify: FastifyInstance) {
   }>("/bar/:id", async (request, reply) => {
     try {
       const { id } = request.params;
-      const deletedBar = await db
-        .delete(bar)
-        .where(eq(bar.id, id))
-        .returning();
+      const deletedBar = await db.delete(bar).where(eq(bar.id, id)).returning();
 
       if (deletedBar.length === 0) {
         return reply.status(404).send({ error: "Bar not found" });
@@ -186,8 +184,10 @@ export async function barRoutes(fastify: FastifyInstance) {
 
         return reply.send(bars);
       } catch (error) {
-        return reply.status(500).send({ error: "Failed to fetch bars for foo" });
+        return reply
+          .status(500)
+          .send({ error: "Failed to fetch bars for foo" });
       }
     }
   );
-} 
+}

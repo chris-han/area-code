@@ -1,135 +1,101 @@
-import { db, pool } from "../database/connection";
-import { foo, bar, fooBar } from "../database/schema";
-import type { CreateFoo, CreateBar } from "@workspace/models";
+#!/usr/bin/env tsx
 
-async function seedDatabase() {
-  console.log("🌱 Seeding database with sample data...");
+import { db, pool } from "../database/connection";
+import { foo, bar } from "../database/schema";
+import { config as dotenvConfig } from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
+
+// Get current directory in ES module
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load environment variables from .env file in parent directory
+dotenvConfig({ path: path.resolve(__dirname, "../../.env") });
+
+async function main() {
+  console.log("🌱 Seeding database...");
 
   try {
-    // Clean existing data
-    console.log("Cleaning existing data...");
-    await db.delete(fooBar);
+    // Clear existing data
+    console.log("🧹 Clearing existing data...");
     await db.delete(bar);
     await db.delete(foo);
 
-    // Create sample foo items
-    console.log("Creating sample foo items...");
-    const fooData: CreateFoo[] = [
-      {
-        name: "Alpha Foo",
-        description: "First sample foo entity",
-        status: "active",
-        priority: 1,
-      },
-      {
-        name: "Beta Foo",
-        description: "Second sample foo entity",
-        status: "pending",
-        priority: 2,
-      },
-      {
-        name: "Gamma Foo",
-        description: "Third sample foo entity",
-        status: "inactive",
-        priority: 3,
-        isActive: false,
-      },
-      {
-        name: "Delta Foo",
-        description: "Fourth sample foo entity",
-        status: "active",
-        priority: 1,
-      },
-    ];
-
-    const sampleFoos = await db
+    // Insert test foo items
+    console.log("📦 Creating foo items...");
+    const fooItems = await db
       .insert(foo)
-      .values(fooData)
+      .values([
+        {
+          name: "Test Foo 1",
+          description: "This is the first test foo item",
+          status: "active",
+          priority: 1,
+          isActive: true,
+        },
+        {
+          name: "Test Foo 2",
+          description: "This is the second test foo item",
+          status: "inactive",
+          priority: 2,
+          isActive: false,
+        },
+        {
+          name: "High Priority Foo",
+          description: "This is a high priority foo item",
+          status: "active",
+          priority: 5,
+          isActive: true,
+        },
+      ])
       .returning();
 
-    console.log(`✅ Created ${sampleFoos.length} foo items`);
+    console.log(`✅ Created ${fooItems.length} foo items`);
 
-    // Create sample bar items
-    console.log("Creating sample bar items...");
-    const barData: CreateBar[] = [
-      {
-        fooId: sampleFoos[0].id,
-        value: 100,
-        label: "First Bar",
-        notes: "Associated with Alpha Foo",
-      },
-      {
-        fooId: sampleFoos[0].id,
-        value: 200,
-        label: "Second Bar",
-        notes: "Also associated with Alpha Foo",
-      },
-      {
-        fooId: sampleFoos[1].id,
-        value: 150,
-        label: "Third Bar",
-        notes: "Associated with Beta Foo",
-      },
-      {
-        fooId: sampleFoos[1].id,
-        value: 300,
-        label: "Fourth Bar",
-        notes: "Another bar for Beta Foo",
-        isEnabled: false,
-      },
-      {
-        fooId: sampleFoos[3].id,
-        value: 250,
-        label: "Fifth Bar",
-        notes: "Associated with Delta Foo",
-      },
-    ];
-
-    const sampleBars = await db
+    // Insert test bar items
+    console.log("📊 Creating bar items...");
+    const barItems = await db
       .insert(bar)
-      .values(barData)
+      .values([
+        {
+          fooId: fooItems[0].id,
+          value: 100,
+          label: "First Bar",
+          notes: "This bar belongs to the first foo",
+          isEnabled: true,
+        },
+        {
+          fooId: fooItems[0].id,
+          value: 150,
+          label: "Second Bar",
+          notes: "This is another bar for the first foo",
+          isEnabled: true,
+        },
+        {
+          fooId: fooItems[1].id,
+          value: 200,
+          label: "Third Bar",
+          notes: "This bar belongs to the second foo",
+          isEnabled: false,
+        },
+        {
+          fooId: fooItems[2].id,
+          value: 500,
+          label: "High Value Bar",
+          notes: "This is a high value bar for high priority foo",
+          isEnabled: true,
+        },
+      ])
       .returning();
 
-    console.log(`✅ Created ${sampleBars.length} bar items`);
+    console.log(`✅ Created ${barItems.length} bar items`);
 
-    // Create sample foo-bar relationships (many-to-many)
-    console.log("Creating sample foo-bar relationships...");
-    await db.insert(fooBar).values([
-      {
-        fooId: sampleFoos[0].id,
-        barId: sampleBars[2].id, // Alpha Foo -> Third Bar (cross-reference)
-        relationshipType: "cross-link",
-        metadata: JSON.stringify({ strength: "weak", created_by: "system" }),
-      },
-      {
-        fooId: sampleFoos[1].id,
-        barId: sampleBars[0].id, // Beta Foo -> First Bar (cross-reference)
-        relationshipType: "cross-link",
-        metadata: JSON.stringify({ strength: "strong", created_by: "admin" }),
-      },
-      {
-        fooId: sampleFoos[3].id,
-        barId: sampleBars[1].id, // Delta Foo -> Second Bar
-        relationshipType: "special",
-        metadata: JSON.stringify({ strength: "medium", created_by: "user" }),
-      },
-    ]);
-
-    console.log("✅ Created 3 sample foo-bar relationships");
-
-    console.log("🎉 Database seeded successfully!");
-    console.log("");
-    console.log("Sample data created:");
-    console.log(`- ${sampleFoos.length} foo items`);
-    console.log(`- ${sampleBars.length} bar items`);
-    console.log("- 3 foo-bar relationships");
-    console.log("");
-    console.log("You can now test the API endpoints:");
-    console.log("- GET http://localhost:8081/api/foo");
-    console.log("- GET http://localhost:8081/api/bar");
-    console.log("- GET http://localhost:8081/api/foo-bar");
-    console.log("- GET http://localhost:8081/api/foo/:id/bars");
-    console.log("- GET http://localhost:8081/api/foo/:id/relationships");
+    console.log("🎉 Database seeding completed successfully!");
+    console.log("\n📊 Summary:");
+    console.log(`   Foo items: ${fooItems.length}`);
+    console.log(`   Bar items: ${barItems.length}`);
+    console.log("\n🚀 You can now start the server with: npm run dev");
   } catch (error) {
     console.error("❌ Seeding failed:", error);
     process.exit(1);
@@ -138,9 +104,4 @@ async function seedDatabase() {
   }
 }
 
-// Run if called directly
-if (import.meta.url === `file://${process.argv[1]}`) {
-  seedDatabase();
-}
-
-export { seedDatabase }; 
+main();

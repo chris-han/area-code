@@ -1,14 +1,16 @@
-import { defineConfig } from "drizzle-kit";
+import type { Config } from "drizzle-kit";
+import { config as dotenvConfig } from "dotenv";
 
-export default defineConfig({
+// Load environment variables from .env.development
+dotenvConfig({ path: ".env.development" });
+
+export default {
   schema: "./src/database/schema.ts",
   out: "./migrations",
   driver: "pg",
   dbCredentials: {
     connectionString:
       process.env.DATABASE_URL ||
-      "postgresql://postgres:your-super-secret-and-long-postgres-password@localhost:5433/postgres",
+      "postgresql://postgres:your-super-secret-and-long-postgres-password@localhost:6543/postgres",
   },
-  verbose: true,
-  strict: true,
-}); 
+} satisfies Config;

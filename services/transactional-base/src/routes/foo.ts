@@ -53,10 +53,7 @@ export async function fooRoutes(fastify: FastifyInstance) {
     async (request, reply) => {
       try {
         const validatedData = insertFooSchema.parse(request.body);
-        const newFoo = await db
-          .insert(foo)
-          .values(validatedData)
-          .returning();
+        const newFoo = await db.insert(foo).values(validatedData).returning();
 
         return reply.status(201).send(newFoo[0]);
       } catch (error) {
@@ -98,10 +95,7 @@ export async function fooRoutes(fastify: FastifyInstance) {
   }>("/foo/:id", async (request, reply) => {
     try {
       const { id } = request.params;
-      const deletedFoo = await db
-        .delete(foo)
-        .where(eq(foo.id, id))
-        .returning();
+      const deletedFoo = await db.delete(foo).where(eq(foo.id, id)).returning();
 
       if (deletedFoo.length === 0) {
         return reply.status(404).send({ error: "Foo not found" });
@@ -112,4 +106,4 @@ export async function fooRoutes(fastify: FastifyInstance) {
       return reply.status(500).send({ error: "Failed to delete foo" });
     }
   });
-} 
+}

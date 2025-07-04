@@ -8,9 +8,16 @@ import { fileURLToPath } from "url";
 import { dirname } from "path";
 import { fooRoutes } from "./routes/foo";
 import { barRoutes } from "./routes/bar";
-import { fooBarRoutes } from "./routes/fooBar";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+// Load environment variables from .env file in parent directory
+import { config as dotenvConfig } from "dotenv";
+import path from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load environment variables from .env file in parent directory
+dotenvConfig({ path: path.resolve(__dirname, "../.env") });
 
 const fastify = Fastify({
   logger: {
@@ -33,10 +40,10 @@ await fastify.register(cors, {
 await fastify.register(swagger, {
   openapi: {
     info: {
-      title: "Transactional Base Service API",
+      title: "Transactional Base 2 Service API",
       version: "1.0.0",
       description:
-        "RESTful API for generic transactional operations with foo and bar entities using PostgreSQL and Drizzle ORM",
+        "Self-hosted Supabase transactional service with foo and bar entities using PostgreSQL and Drizzle ORM",
     },
   },
 } as any);
@@ -53,15 +60,15 @@ fastify.get("/health", async (request, reply) => {
 // API info route
 fastify.get("/", async (request, reply) => {
   return {
-    name: "Transactional Base Service API",
+    name: "Transactional Base 2 Service API",
     version: "1.0.0",
     description:
-      "RESTful API for generic transactional operations with foo and bar entities using PostgreSQL and Drizzle ORM",
+      "Self-hosted Supabase transactional service with foo and bar entities using PostgreSQL and Drizzle ORM",
     endpoints: {
-      foo: "/foo",
-      bar: "/bar",
-      "foo-bar": "/foo-bar",
+      foo: "/api/foo",
+      bar: "/api/bar",
       health: "/health",
+      docs: "/docs",
     },
   };
 });
@@ -69,7 +76,6 @@ fastify.get("/", async (request, reply) => {
 // Register route plugins
 await fastify.register(fooRoutes, { prefix: "/api" });
 await fastify.register(barRoutes, { prefix: "/api" });
-await fastify.register(fooBarRoutes, { prefix: "/api" });
 
 // Manual OpenAPI documentation endpoints
 fastify.get("/documentation/json", async (request, reply) => {
@@ -103,7 +109,7 @@ fastify.setErrorHandler((error, request, reply) => {
 // Start server
 const start = async () => {
   try {
-    const port = parseInt(process.env.PORT || "8081");
+    const port = parseInt(process.env.PORT || "8082");
     const host = process.env.HOST || "0.0.0.0";
 
     // Ensure all routes are registered so Swagger captures them
@@ -118,7 +124,7 @@ const start = async () => {
     await fastify.listen({ port, host });
 
     fastify.log.info(
-      `🚀 Transactional Base service is running on http://${host}:${port}`
+      `🚀 Transactional Base 2 service is running on http://${host}:${port}`
     );
     fastify.log.info("📊 Available endpoints:");
     fastify.log.info("  GET  / - API information");
@@ -130,12 +136,10 @@ const start = async () => {
     fastify.log.info("  POST /api/foo - Create foo item");
     fastify.log.info("  GET  /api/bar - List all bar items");
     fastify.log.info("  POST /api/bar - Create bar item");
-    fastify.log.info("  GET  /api/foo-bar - List all foo-bar relationships");
-    fastify.log.info("  POST /api/foo-bar - Create foo-bar relationship");
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);
   }
 };
 
-start(); 
+start();
