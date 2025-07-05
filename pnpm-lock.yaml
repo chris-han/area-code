@@ -348,112 +348,30 @@ importers:
       '@514labs/moose-lib':
         specifier: latest
         version: 0.4.275(@swc/core@1.12.7(@swc/helpers@0.5.17))(@swc/helpers@0.5.17)(@types/node@20.19.2)(ts-patch@3.3.0)(typia@7.6.4(@samchon/openapi@2.5.3)(typescript@5.7.3))
-      '@elastic/elasticsearch':
-        specifier: ^8.12.0
-        version: 8.18.2
-      '@supabase/realtime-js':
-        specifier: ^2.12.0
-        version: 2.12.0
       '@supabase/supabase-js':
-        specifier: ^2.50.2
+        specifier: ^2.39.0
         version: 2.50.2
-      '@workspace/models':
-        specifier: workspace:*
-        version: link:../../packages/models
       axios:
-        specifier: ^1.10.0
+        specifier: ^1.7.7
         version: 1.10.0
       dotenv:
-        specifier: ^17.0.1
-        version: 17.0.1
-      jsonwebtoken:
-        specifier: ^9.0.2
-        version: 9.0.2
-      pg:
-        specifier: ^8.16.3
-        version: 8.16.3
+        specifier: ^16.3.1
+        version: 16.6.1
       ts-patch:
         specifier: ^3.3.0
         version: 3.3.0
       typia:
-        specifier: ^7.6.4
+        specifier: ^7.6.0
         version: 7.6.4(@samchon/openapi@2.5.3)(typescript@5.7.3)
-      ws:
-        specifier: ^8.18.3
-        version: 8.18.3
-      zod:
-        specifier: ^3.25.67
-        version: 3.25.67
     devDependencies:
       '@514labs/moose-cli':
         specifier: latest
         version: 0.4.275
       '@types/node':
-        specifier: ^20.19.2
+        specifier: ^20.12.12
         version: 20.19.2
-      '@types/pg':
-        specifier: ^8.15.4
-        version: 8.15.4
 
   services/transactional-base:
-    dependencies:
-      '@fastify/cors':
-        specifier: ^10.0.1
-        version: 10.1.0
-      '@fastify/swagger':
-        specifier: ^9.5.1
-        version: 9.5.1
-      '@fastify/swagger-ui':
-        specifier: ^5.2.3
-        version: 5.2.3
-      '@supabase/supabase-js':
-        specifier: ^2.39.1
-        version: 2.50.2
-      '@workspace/models':
-        specifier: workspace:*
-        version: link:../../packages/models
-      drizzle-orm:
-        specifier: ^0.29.1
-        version: 0.29.5(@opentelemetry/api@1.9.0)(@types/pg@8.15.4)(@types/react@19.1.8)(pg@8.16.2)(react@19.1.0)
-      drizzle-zod:
-        specifier: ^0.5.1
-        version: 0.5.1(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@types/pg@8.15.4)(@types/react@19.1.8)(pg@8.16.2)(react@19.1.0))(zod@3.25.67)
-      fastify:
-        specifier: ^5.4.0
-        version: 5.4.0
-      pg:
-        specifier: ^8.11.3
-        version: 8.16.2
-      zod:
-        specifier: ^3.22.4
-        version: 3.25.67
-    devDependencies:
-      '@repo/eslint-config':
-        specifier: workspace:*
-        version: link:../../packages/eslint-config
-      '@repo/typescript-config':
-        specifier: workspace:*
-        version: link:../../packages/typescript-config
-      '@types/node':
-        specifier: ^20.10.4
-        version: 20.19.1
-      '@types/pg':
-        specifier: ^8.10.9
-        version: 8.15.4
-      drizzle-kit:
-        specifier: ^0.20.7
-        version: 0.20.18
-      eslint:
-        specifier: ^8.57.0
-        version: 8.57.1
-      tsx:
-        specifier: ^4.6.2
-        version: 4.20.3
-      typescript:
-        specifier: ^5.3.3
-        version: 5.5.4
-
-  services/transactional-base-2:
     dependencies:
       '@fastify/cors':
         specifier: ^10.0.1
@@ -478,16 +396,16 @@ importers:
         version: 16.6.1
       drizzle-orm:
         specifier: ^0.29.1
-        version: 0.29.5(@opentelemetry/api@1.9.0)(@types/pg@8.15.4)(@types/react@19.1.8)(pg@8.16.3)(react@19.1.0)
+        version: 0.29.5(@opentelemetry/api@1.9.0)(@types/pg@8.15.4)(@types/react@19.1.8)(pg@8.16.2)(react@19.1.0)
       drizzle-zod:
         specifier: ^0.5.1
-        version: 0.5.1(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@types/pg@8.15.4)(@types/react@19.1.8)(pg@8.16.3)(react@19.1.0))(zod@3.25.67)
+        version: 0.5.1(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@types/pg@8.15.4)(@types/react@19.1.8)(pg@8.16.2)(react@19.1.0))(zod@3.25.67)
       fastify:
         specifier: ^5.4.0
         version: 5.4.0
       pg:
         specifier: ^8.11.3
-        version: 8.16.3
+        version: 8.16.2
       pino-pretty:
         specifier: ^13.0.0
         version: 13.0.0
@@ -2721,9 +2639,6 @@ packages:
     resolution: {integrity: sha512-zmPitbQ8+6zNutpwgcQuLcsEpn/Cj54Kbn7L5pX0Os5kdWplB7xPgEh/g+SWOB/qmows2gpuCaPyduq8ZZRnxA==}
     deprecated: This is a stub types definition. minimatch provides its own type definitions, so you do not need this installed.
 
-  '@types/node@20.19.1':
-    resolution: {integrity: sha512-jJD50LtlD2dodAEO653i3YF04NWak6jN3ky+Ri3Em3mGR39/glWiboM/IePaRbgwSfqM1TpGXfAg8ohn/4dTgA==}
-
   '@types/node@20.19.2':
     resolution: {integrity: sha512-9pLGGwdzOUBDYi0GNjM97FIA+f92fqSke6joWeBjWXllfNxZBs7qeMF7tvtOIsbY45xkWkxrdwUfUf3MnQa9gA==}
 
@@ -3064,9 +2979,6 @@ packages:
     resolution: {integrity: sha512-KGj0KoOMXLpSNkkEI6Z6mShmQy0bc1I+T7K9N81k4WWMrfz+6fQ6es80B/YLAeRoKvjYE1YSHHOW1qe9xIVzHw==}
     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
     hasBin: true
-
-  buffer-equal-constant-time@1.0.1:
-    resolution: {integrity: sha512-zRpUiDwd/xk6ADqPMATG8vc9VPrkck7T07OIx0gnjmJAnHnTVXNQG3vfvWNuiZIkwu9KrKdA1iJKfsfTVxE6NA==}
 
   buffer-from@1.1.2:
     resolution: {integrity: sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ==}
@@ -3409,10 +3321,6 @@ packages:
     resolution: {integrity: sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==}
     engines: {node: '>=12'}
 
-  dotenv@17.0.1:
-    resolution: {integrity: sha512-GLjkduuAL7IMJg/ZnOPm9AnWKJ82mSE2tzXLaJ/6hD6DhwGfZaXG77oB8qbReyiczNxnbxQKyh0OE5mXq0bAHA==}
-    engines: {node: '>=12'}
-
   drange@1.1.1:
     resolution: {integrity: sha512-pYxfDYpued//QpnLIm4Avk7rsNtAtQkUES2cwAYSvD/wd2pKD71gN2Ebj3e7klzXwjocvE8c5vx/1fxwpqmSxA==}
     engines: {node: '>=4'}
@@ -3508,9 +3416,6 @@ packages:
 
   eastasianwidth@0.2.0:
     resolution: {integrity: sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==}
-
-  ecdsa-sig-formatter@1.0.11:
-    resolution: {integrity: sha512-nagl3RYrbNv6kQkeJIpt6NJZy8twLB/2vtz6yN9Z4vRKHN4/QZJIEbqohALSgwKdnksuY3k5Addp5lg8sVoVcQ==}
 
   electron-to-chromium@1.5.176:
     resolution: {integrity: sha512-2nDK9orkm7M9ZZkjO3PjbEd3VUulQLyg5T9O3enJdFvUg46Hzd4DUvTvAuEgbdHYXyFsiG4A5sO9IzToMH1cDg==}
@@ -4238,16 +4143,6 @@ packages:
   jsonfile@6.1.0:
     resolution: {integrity: sha512-5dgndWOriYSm5cnYaJNhalLNDKOqFwyDB/rr1E9ZsGciGvKPs8R2xYGCacuf3z6K1YKDz182fd+fY3cn3pMqXQ==}
 
-  jsonwebtoken@9.0.2:
-    resolution: {integrity: sha512-PRp66vJ865SSqOlgqS8hujT5U4AOgMfhrwYIuIhfKaoSCZcirrmASQr8CX7cUg+RMih+hgznrjp99o+W4pJLHQ==}
-    engines: {node: '>=12', npm: '>=6'}
-
-  jwa@1.4.2:
-    resolution: {integrity: sha512-eeH5JO+21J78qMvTIDdBXidBd6nG2kZjg5Ohz/1fpa28Z4CcsWUzJ1ZZyFq/3z3N17aZy+ZuBoHljASbL1WfOw==}
-
-  jws@3.2.2:
-    resolution: {integrity: sha512-YHlZCB6lMTllWDtSPHz/ZXTsi8S00usEV6v1tjq8tOUZzw7DpSDWVXjXDre6ed1w/pd495ODpHZYSdkRTsa0HA==}
-
   kafkajs@2.2.4:
     resolution: {integrity: sha512-j/YeapB1vfPT2iOIUn/vxdyKEuhuY2PxMBvf5JWux6iSaukAccrMtXEY/Lb7OvavDhOWME589bpLrEdnVHjfjA==}
     engines: {node: '>=14.0.0'}
@@ -4345,29 +4240,8 @@ packages:
     resolution: {integrity: sha512-z+Uw/vLuy6gQe8cfaFWD7p0wVv8fJl3mbzXh33RS+0oW2wvUqiRXiQ69gLWSLpgB5/6sU+r6BlQR0MBILadqTQ==}
     deprecated: This package is deprecated. Use the optional chaining (?.) operator instead.
 
-  lodash.includes@4.3.0:
-    resolution: {integrity: sha512-W3Bx6mdkRTGtlJISOvVD/lbqjTlPPUDTMnlXZFnVwi9NKJ6tiAk6LVdlhZMm17VZisqhKcgzpO5Wz91PCt5b0w==}
-
-  lodash.isboolean@3.0.3:
-    resolution: {integrity: sha512-Bz5mupy2SVbPHURB98VAcw+aHh4vRV5IPNhILUCsOzRmsTmSQ17jIuqopAentWoehktxGd9e/hbIXq980/1QJg==}
-
-  lodash.isinteger@4.0.4:
-    resolution: {integrity: sha512-DBwtEWN2caHQ9/imiNeEA5ys1JoRtRfY3d7V9wkqtbycnAmTvRRmbHKDV4a0EYc678/dia0jrte4tjYwVBaZUA==}
-
-  lodash.isnumber@3.0.3:
-    resolution: {integrity: sha512-QYqzpfwO3/CWf3XP+Z+tkQsfaLL/EnUlXWVkIk5FUPc4sBdTehEqZONuyRt2P67PXAk+NXmTBcc97zw9t1FQrw==}
-
-  lodash.isplainobject@4.0.6:
-    resolution: {integrity: sha512-oSXzaWypCMHkPC3NvBEaPHf0KsA5mvPrOPgQWDsbg8n7orZ290M0BmC/jgRZ4vcJ6DTAhjrsSYgdsW/F+MFOBA==}
-
-  lodash.isstring@4.0.1:
-    resolution: {integrity: sha512-0wJxfxH1wgO3GrbuP+dTTk7op+6L41QCXbGINEmD+ny/G/eCqGzxyCsh7159S+mgDDcoarnBw6PC1PS5+wUGgw==}
-
   lodash.merge@4.6.2:
     resolution: {integrity: sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ==}
-
-  lodash.once@4.1.1:
-    resolution: {integrity: sha512-Sb487aTOCr9drQVL8pIxOzVhafOjZN9UU54hiN8PU3uAiSV7lx1yYNpbNmex2PK6dSJoNTSJUUswT651yww3Mg==}
 
   lodash.throttle@4.1.1:
     resolution: {integrity: sha512-wIkUCfVKpVsWo3JSZlc+8MB5it+2AN5W8J7YVMST30UrvcQNZ1Okbj+rbVniijTWE6FGYy4XJq/rHkas8qJMLQ==}
@@ -4693,15 +4567,6 @@ packages:
 
   pg@8.16.2:
     resolution: {integrity: sha512-OtLWF0mKLmpxelOt9BqVq83QV6bTfsS0XLegIeAKqKjurRnRKie1Dc1iL89MugmSLhftxw6NNCyZhm1yQFLMEQ==}
-    engines: {node: '>= 16.0.0'}
-    peerDependencies:
-      pg-native: '>=3.0.1'
-    peerDependenciesMeta:
-      pg-native:
-        optional: true
-
-  pg@8.16.3:
-    resolution: {integrity: sha512-enxc1h0jA/aq5oSDMvqyW3q89ra6XIIDZgCX9vkMrnz5DFTw/Ny3Li2lFQ+pt3L6MCgm/5o2o8HW9hiJji+xvw==}
     engines: {node: '>= 16.0.0'}
     peerDependencies:
       pg-native: '>=3.0.1'
@@ -7765,10 +7630,6 @@ snapshots:
     dependencies:
       minimatch: 10.0.3
 
-  '@types/node@20.19.1':
-    dependencies:
-      undici-types: 6.21.0
-
   '@types/node@20.19.2':
     dependencies:
       undici-types: 6.21.0
@@ -8185,8 +8046,6 @@ snapshots:
       node-releases: 2.0.19
       update-browserslist-db: 1.1.3(browserslist@4.25.1)
 
-  buffer-equal-constant-time@1.0.1: {}
-
   buffer-from@1.1.2: {}
 
   buffer@5.7.1:
@@ -8508,8 +8367,6 @@ snapshots:
 
   dotenv@16.6.1: {}
 
-  dotenv@17.0.1: {}
-
   drange@1.1.1: {}
 
   dreamopt@0.8.0:
@@ -8546,22 +8403,9 @@ snapshots:
       pg: 8.16.2
       react: 19.1.0
 
-  drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@types/pg@8.15.4)(@types/react@19.1.8)(pg@8.16.3)(react@19.1.0):
-    optionalDependencies:
-      '@opentelemetry/api': 1.9.0
-      '@types/pg': 8.15.4
-      '@types/react': 19.1.8
-      pg: 8.16.3
-      react: 19.1.0
-
   drizzle-zod@0.5.1(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@types/pg@8.15.4)(@types/react@19.1.8)(pg@8.16.2)(react@19.1.0))(zod@3.25.67):
     dependencies:
       drizzle-orm: 0.29.5(@opentelemetry/api@1.9.0)(@types/pg@8.15.4)(@types/react@19.1.8)(pg@8.16.2)(react@19.1.0)
-      zod: 3.25.67
-
-  drizzle-zod@0.5.1(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@types/pg@8.15.4)(@types/react@19.1.8)(pg@8.16.3)(react@19.1.0))(zod@3.25.67):
-    dependencies:
-      drizzle-orm: 0.29.5(@opentelemetry/api@1.9.0)(@types/pg@8.15.4)(@types/react@19.1.8)(pg@8.16.3)(react@19.1.0)
       zod: 3.25.67
 
   dunder-proto@1.0.1:
@@ -8571,10 +8415,6 @@ snapshots:
       gopd: 1.2.0
 
   eastasianwidth@0.2.0: {}
-
-  ecdsa-sig-formatter@1.0.11:
-    dependencies:
-      safe-buffer: 5.2.1
 
   electron-to-chromium@1.5.176: {}
 
@@ -9464,30 +9304,6 @@ snapshots:
     optionalDependencies:
       graceful-fs: 4.2.11
 
-  jsonwebtoken@9.0.2:
-    dependencies:
-      jws: 3.2.2
-      lodash.includes: 4.3.0
-      lodash.isboolean: 3.0.3
-      lodash.isinteger: 4.0.4
-      lodash.isnumber: 3.0.3
-      lodash.isplainobject: 4.0.6
-      lodash.isstring: 4.0.1
-      lodash.once: 4.1.1
-      ms: 2.1.3
-      semver: 7.7.2
-
-  jwa@1.4.2:
-    dependencies:
-      buffer-equal-constant-time: 1.0.1
-      ecdsa-sig-formatter: 1.0.11
-      safe-buffer: 5.2.1
-
-  jws@3.2.2:
-    dependencies:
-      jwa: 1.4.2
-      safe-buffer: 5.2.1
-
   kafkajs@2.2.4: {}
 
   keyv@4.5.4:
@@ -9562,21 +9378,7 @@ snapshots:
 
   lodash.get@4.4.2: {}
 
-  lodash.includes@4.3.0: {}
-
-  lodash.isboolean@3.0.3: {}
-
-  lodash.isinteger@4.0.4: {}
-
-  lodash.isnumber@3.0.3: {}
-
-  lodash.isplainobject@4.0.6: {}
-
-  lodash.isstring@4.0.1: {}
-
   lodash.merge@4.6.2: {}
-
-  lodash.once@4.1.1: {}
 
   lodash.throttle@4.1.1: {}
 
@@ -9886,10 +9688,6 @@ snapshots:
     dependencies:
       pg: 8.16.2
 
-  pg-pool@3.10.1(pg@8.16.3):
-    dependencies:
-      pg: 8.16.3
-
   pg-protocol@1.10.2: {}
 
   pg-protocol@1.10.3: {}
@@ -9907,16 +9705,6 @@ snapshots:
       pg-connection-string: 2.9.1
       pg-pool: 3.10.1(pg@8.16.2)
       pg-protocol: 1.10.2
-      pg-types: 2.2.0
-      pgpass: 1.0.5
-    optionalDependencies:
-      pg-cloudflare: 1.2.7
-
-  pg@8.16.3:
-    dependencies:
-      pg-connection-string: 2.9.1
-      pg-pool: 3.10.1(pg@8.16.3)
-      pg-protocol: 1.10.3
       pg-types: 2.2.0
       pgpass: 1.0.5
     optionalDependencies:

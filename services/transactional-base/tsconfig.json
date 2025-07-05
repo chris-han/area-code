@@ -16,7 +16,9 @@
   "include": [
     "src/**/*",
     "../../packages/models/src/**/*",
-    "tests/test-realtime.ts"
+    "tests/test-realtime.ts",
+    "tests/test-realtime-postgres-changes.ts",
+    "tests/test-simple-realtime.ts"
   ],
   "exclude": ["node_modules", "dist"]
 }

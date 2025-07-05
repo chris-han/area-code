@@ -15,9 +15,7 @@
     "build": "turbo run build",
     "clean": "turbo run clean",
     "dev:turbo": "turbo",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "postinstall": "npm run setup:env",
-    "setup:env": "cd services/sync-base && node setup-env.js"
+    "format": "prettier --write \"**/*.{ts,tsx,md}\""
   },
   "devDependencies": {
     "@turbo/gen": "^1.13.4",

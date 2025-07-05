@@ -23,7 +23,11 @@
     "db:seed": "npx tsx src/scripts/seed.ts",
     "db:studio": "drizzle-kit studio",
     "test:realtime": "node dist/test-realtime.js",
-    "test:realtime:dev": "npx tsx src/test-realtime.ts"
+    "test:realtime:dev": "npx tsx src/test-realtime.ts",
+    "test:postgres-changes": "node dist/test-realtime-postgres-changes.js",
+    "test:postgres-changes:dev": "npx tsx src/test-realtime-postgres-changes.ts",
+    "setup:replication": "npx tsx src/scripts/setup-replication.ts",
+    "setup:replication:status": "npx tsx src/scripts/setup-replication.ts --status"
   },
   "dependencies": {
     "@fastify/cors": "^10.0.1",
