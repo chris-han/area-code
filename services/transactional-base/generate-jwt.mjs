@@ -50,8 +50,16 @@ function generateSecureSecret(length = 40) {
 }
 
 function generateSecurePassword(length = 32) {
+  // Exclude characters that can cause issues in Docker Compose or URLs:
+  // - $ (environment variable substitution)
+  // - ` (command substitution)
+  // - ( ) { } (shell interpretation)
+  // - & (background processes)
+  // - : (URL delimiter)
+  // - # (comment character in shell)
+  // - @ (URL delimiter - though we include it for email-like complexity)
   const chars =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@%^*+-=_";
   let result = "";
   for (let i = 0; i < length; i++) {
     result += chars.charAt(Math.floor(Math.random() * chars.length));

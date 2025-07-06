@@ -1,5 +1,7 @@
 # Transactional Base 2 - Self-Hosted Supabase
 
+> WE CURRENTLY CAN'T CONFIGURE THIS DB ON ANYTHING OTHER THAN 5432 or else migrations will fail. Need to investigate
+
 A complete self-hosted Supabase setup for transactional workloads with Docker Compose.
 
 ## Contents

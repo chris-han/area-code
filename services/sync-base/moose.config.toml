@@ -30,7 +30,7 @@ main_branch_name = "main"
 [temporal_config]
 db_user = "temporal"
 db_password = "temporal"
-db_port = 5432
+db_port = 5433
 temporal_port = 7233
 temporal_version = "1.22.3"
 admin_tools_version = "1.22.3"

@@ -48,19 +48,28 @@ export async function fooRoutes(fastify: FastifyInstance) {
   );
 
   // Create new foo
-  fastify.post<{ Body: CreateFoo; Reply: Foo | { error: string } }>(
-    "/foo",
-    async (request, reply) => {
-      try {
-        const validatedData = insertFooSchema.parse(request.body);
-        const newFoo = await db.insert(foo).values(validatedData).returning();
+  fastify.post<{
+    Body: CreateFoo;
+    Reply: Foo | { error: string; details?: string; received?: any };
+  }>("/foo", async (request, reply) => {
+    try {
+      console.log(
+        "Received request body:",
+        JSON.stringify(request.body, null, 2)
+      );
+      const validatedData = insertFooSchema.parse(request.body);
+      const newFoo = await db.insert(foo).values(validatedData).returning();
 
-        return reply.status(201).send(newFoo[0]);
-      } catch (error) {
-        return reply.status(400).send({ error: "Invalid foo data" });
-      }
+      return reply.status(201).send(newFoo[0]);
+    } catch (error) {
+      console.error("Validation error:", error);
+      return reply.status(400).send({
+        error: "Invalid foo data",
+        details: error instanceof Error ? error.message : "Unknown error",
+        received: request.body,
+      });
     }
-  );
+  });
 
   // Update foo
   fastify.put<{

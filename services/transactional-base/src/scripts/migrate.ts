@@ -10,8 +10,9 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load environment variables from .env.development file in parent directory
-dotenvConfig({ path: path.resolve(__dirname, "../../.env.development") });
+// Load environment variables from .env file in the service root directory
+const serviceRoot = path.resolve(__dirname, "../..");
+dotenvConfig({ path: path.join(serviceRoot, ".env") });
 
 async function waitForDatabase(maxRetries = 30, delayMs = 1000) {
   console.log("🔗 Waiting for database connection...");
@@ -25,6 +26,7 @@ async function waitForDatabase(maxRetries = 30, delayMs = 1000) {
       console.log(
         `⏳ Attempt ${i + 1}/${maxRetries} - Database not ready yet...`
       );
+      console.error(error);
       if (i === maxRetries - 1) {
         throw new Error(
           `Failed to connect to database after ${maxRetries} attempts: ${error}`
@@ -42,8 +44,12 @@ async function main() {
     // Wait for database to be ready first
     await waitForDatabase();
 
+    // Use absolute path to migrations folder
+    const migrationsFolder = path.join(serviceRoot, "migrations");
+    console.log(`📁 Using migrations folder: ${migrationsFolder}`);
+
     // Run migrations
-    await migrate(db, { migrationsFolder: "./migrations" });
+    await migrate(db, { migrationsFolder });
     console.log("✅ Database migrations completed successfully");
   } catch (error) {
     console.error("❌ Migration failed:", error);

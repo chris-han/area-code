@@ -1,9 +1,7 @@
 ---
-description: 
-globs: services/analytical-base/**,services/sync-base/**
+description: Use this when working on or testing moose related services like those in /services/sync-base or /services/analytical-base
 alwaysApply: false
 ---
-
 # Moose Services Rules
 
 These rules apply to Moose-based services in the `services/` directory (analytical-base and sync-base).

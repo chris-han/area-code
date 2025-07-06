@@ -48,7 +48,7 @@ const config: SyncConfig = {
 // Enhanced logging function
 const logEvent = (event: string, table: string, payload: any) => {
   const timestamp = new Date().toISOString();
-  console.log(`\n[${timestamp}] ${event} event on ${table} table:`);
+  console.error(`\n[${timestamp}] ${event} event on ${table} table:`);
   console.log("Payload:", JSON.stringify(payload, null, 2));
   console.log("---");
 };

@@ -1,12 +1,6 @@
 ---
-description: 
-globs: apps/*-web-*/**
+description: apply when working on the web applications including any -web- systems
 alwaysApply: false
----
----
-paths:
-  - "apps/*-web-*/**"
-description: "Rules for web applications in the apps directory (folders containing '-web-')"
 ---
 
 # Web Application Rules

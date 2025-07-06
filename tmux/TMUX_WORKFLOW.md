@@ -28,7 +28,7 @@ This setup provides a structured way to manage development processes using tmux,
   - Sync Service  
   - Retrieval Service
   - Analytics Service
-- **Use for**: `npm run dev`, service monitoring, manual testing
+- **Use for**: `pnpm run dev`, service monitoring, manual testing
 
 ### 🤖 **agent-tasks** - Cursor Agent Domain
 - **Purpose**: Commands executed by the Cursor agent
@@ -63,8 +63,8 @@ This setup provides a structured way to manage development processes using tmux,
 
 # Start your services in user-services session
 ./tmux-dev-helper.sh user
-# In pane 1: cd services/transactional-base && npm run dev
-# In pane 2: cd services/sync-base && npm run dev
+# In pane 1: cd services/transactional-base && pnpm run dev
+# In pane 2: cd services/sync-base && pnpm run dev
 # etc.
 
 # Start infrastructure in separate session
@@ -73,10 +73,11 @@ This setup provides a structured way to manage development processes using tmux,
 ```
 
 ### Working with Cursor Agent
-- The agent will automatically use the `agent-tasks` session
+- The agent will automatically use the `agent-tasks` session via `tmux-agent-cmd.sh`
 - Your services keep running uninterrupted
 - Easy to monitor what the agent is doing
 - Agent commands are logged separately
+- See `CURSOR_AGENT_SETUP.md` for detailed configuration
 
 ### Monitoring Everything
 ```bash
@@ -145,10 +146,10 @@ cd services/analytical-base && moose dev
 ### Service Development
 ```bash
 # In user-services session, different panes
-cd services/transactional-base && npm run dev
-cd services/sync-base && npm run dev
-cd services/retrieval-base && npm run dev
-cd services/analytical-base && npm run dev
+cd services/transactional-base && pnpm run dev
+cd services/sync-base && pnpm run dev
+cd services/retrieval-base && pnpm run dev
+cd services/analytical-base && pnpm run dev
 ```
 
 ## Troubleshooting

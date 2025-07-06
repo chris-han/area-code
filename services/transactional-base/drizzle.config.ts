@@ -1,8 +1,14 @@
 import type { Config } from "drizzle-kit";
 import { config as dotenvConfig } from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 
-// Load environment variables from .env.development
-dotenvConfig({ path: ".env.development" });
+// Get current directory in ES module
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load environment variables from .env file in project root
+dotenvConfig({ path: path.resolve(__dirname, ".env") });
 
 export default {
   schema: "./src/database/schema.ts",
@@ -11,6 +17,6 @@ export default {
   dbCredentials: {
     connectionString:
       process.env.DATABASE_URL ||
-      "postgresql://postgres:your-super-secret-and-long-postgres-password@localhost:6543/postgres",
+      `postgresql://postgres.${process.env.POOLER_TENANT_ID}:${process.env.POSTGRES_PASSWORD}@localhost:5432/postgres`, // Supavisor session mode for migrations
   },
 } satisfies Config;

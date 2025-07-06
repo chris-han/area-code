@@ -2,15 +2,17 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import * as schema from "./schema";
 import { config as dotenvConfig } from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 
-// Load environment variables from .env.development
-dotenvConfig({ path: ".env.development" });
+// Get current directory in ES module
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// According to Supabase docs:
-// - Supavisor is the connection pooler used in the Supabase stack
-// - Use postgres user with tenant ID for authentication
-// - Format: postgres.{tenant-id}:password@host:port/database
-const tenantId = process.env.POOLER_TENANT_ID || "dev";
+// Load environment variables from .env file in project root
+dotenvConfig({ path: path.resolve(__dirname, "../../.env") });
+
+// Database connection configuration
 const password =
   process.env.POSTGRES_PASSWORD ||
   "your-super-secret-and-long-postgres-password";
@@ -19,18 +21,22 @@ const password =
 // Use pooled transactional connections (port 6543) for runtime application usage via Supavisor
 const isMigrationScript = process.argv.some((arg) => arg.includes("migrate"));
 
+// For migrations, use direct postgres connection
+// For runtime, use Supavisor pooled connection with tenant format
+const tenantId = process.env.POOLER_TENANT_ID || "dev";
+const DIRECT_PORT = process.env.POSTGRES_PORT || "5432";
+const POOLER_PORT = process.env.POSTGRES_PORT || "6542";
+
 const connectionString = isMigrationScript
-  ? `postgresql://postgres.${tenantId}:${password}@localhost:5432/postgres`
-  : `postgresql://postgres.${tenantId}:${password}@localhost:6543/postgres`;
+  ? `postgresql://postgres.${tenantId}:${password}@localhost:${DIRECT_PORT}/postgres`
+  : `postgresql://postgres.${tenantId}:${password}@localhost:${POOLER_PORT}/postgres`;
 
-const userType = "postgres";
+const userType = `postgres.${tenantId}`;
 const portType = isMigrationScript
-  ? "session-based (5432)"
-  : "pooled via Supavisor (6543)";
+  ? "Supavisor session mode (5432)"
+  : "Supavisor transaction mode (6543)";
 
-console.log(
-  `🔗 Connecting as ${userType}.${tenantId} via ${portType} connection`
-);
+console.log(`🔗 Connecting as ${userType} via ${portType} connection`);
 
 const pool = new Pool({
   connectionString,

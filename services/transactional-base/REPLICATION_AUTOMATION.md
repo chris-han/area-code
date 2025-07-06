@@ -6,7 +6,7 @@ This directory contains automated scripts to easily set up PostgreSQL realtime r
 
 ### 1. Setup Replication for All Tables
 ```bash
-npm run setup:replication
+pnpm run setup:replication
 ```
 
 This command automatically:
@@ -20,7 +20,7 @@ This command automatically:
 
 ### 2. Check Current Status
 ```bash
-npm run setup:replication:status
+pnpm run setup:replication:status
 ```
 
 This shows the current replication configuration for all tables.
@@ -29,9 +29,9 @@ This shows the current replication configuration for all tables.
 
 | Script | Command | Description |
 |--------|---------|-------------|
-| **Setup** | `npm run setup:replication` | Automatically configure replication for all tables |
-| **Status** | `npm run setup:replication:status` | Check current replication status |
-| **Test** | `npm run test:postgres-changes:dev` | Run realtime changes test |
+| **Setup** | `pnpm run setup:replication` | Automatically configure replication for all tables |
+| **Status** | `pnpm run setup:replication:status` | Check current replication status |
+| **Test** | `pnpm run test:postgres-changes:dev` | Run realtime changes test |
 | **Help** | `npx tsx src/scripts/setup-replication.ts --help` | Show detailed help |
 
 ## 🔧 How It Works
@@ -133,8 +133,8 @@ Setting up replication for public.bar:
 ✅ 3 tables configured for realtime replication
 
 🎯 Next Steps:
-1. Run the realtime test: npm run test:postgres-changes:dev
-2. Start your API server: npm run dev
+1. Run the realtime test: pnpm run test:postgres-changes:dev
+2. Start your API server: pnpm run dev
 3. Make changes to your tables to see realtime events
 ```
 
@@ -178,13 +178,13 @@ After running the setup, you can verify everything is working by:
 
 ### 1. Running the Test
 ```bash
-npm run test:postgres-changes:dev
+pnpm run test:postgres-changes:dev
 ```
 
 ### 2. Making API Changes
 ```bash
 # Start the API server
-npm run dev
+pnpm run dev
 
 # In another terminal, create a record
 curl -X POST http://localhost:8082/api/foo \
@@ -208,12 +208,12 @@ Timestamp: 2024-01-01T12:00:00.000Z
 
 #### 1. Container Not Running
 ```
-❌ Database container is not running. Please start it with: npm run db:start
+❌ Database container is not running. Please start it with: pnpm run db:start
 ```
 **Solution:** Start the database services:
 ```bash
-npm run db:start
-npm run db:status  # Verify they're running
+pnpm run db:start
+pnpm run db:status  # Verify they're running
 ```
 
 #### 2. SQL Script Errors
@@ -223,7 +223,7 @@ ERROR: relation "table_name" does not exist
 ```
 **Solution:** Make sure your database migrations have been run:
 ```bash
-npm run db:migrate
+pnpm run db:migrate
 ```
 
 #### 3. Permission Denied
@@ -237,7 +237,7 @@ npm run db:migrate
 Listeners connected but no events received
 ```
 **Solution:** 
-- Verify RLS policies with: `npm run setup:replication:status`
+- Verify RLS policies with: `pnpm run setup:replication:status`
 - Check that replica identity is set to FULL
 - Ensure publication includes your tables
 
@@ -285,9 +285,9 @@ This means you can:
 
 ## 🎯 Next Steps
 
-1. **Run the Setup**: `npm run setup:replication`
-2. **Verify Status**: `npm run setup:replication:status`
-3. **Test Realtime**: `npm run test:postgres-changes:dev`
+1. **Run the Setup**: `pnpm run setup:replication`
+2. **Verify Status**: `pnpm run setup:replication:status`
+3. **Test Realtime**: `pnpm run test:postgres-changes:dev`
 4. **Start Building**: Integrate realtime events into your application logic
 
 The automation takes care of all the complex setup details, so you can focus on building your realtime features! 
