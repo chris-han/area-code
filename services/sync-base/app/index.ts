@@ -190,12 +190,9 @@ export const supabaseListenerTask = new Task<null, void>("supabase-listener", {
     });
     console.log("✅ Supabase client created successfully");
 
-    // Set up channels for all tables
-    const channels: any[] = [];
-
-    // Listen to foo table changes
-    const fooChannel = supabase
-      .channel("foo-changes")
+    // Set up a single channel for all table changes
+    const channel = supabase
+      .channel("db-changes")
       .on(
         "postgres_changes",
         {
@@ -208,18 +205,6 @@ export const supabaseListenerTask = new Task<null, void>("supabase-listener", {
           handleFooChange(payload);
         }
       )
-      .subscribe((status) => {
-        console.log(`✅ Foo table listener status: ${status}`);
-        if (status === "SUBSCRIBED") {
-          console.log("🎉 Successfully connected to foo table!");
-        } else if (status === "CLOSED") {
-          console.log("❌ Connection to foo table closed");
-        }
-      });
-
-    // Listen to bar table changes
-    const barChannel = supabase
-      .channel("bar-changes")
       .on(
         "postgres_changes",
         {
@@ -232,18 +217,6 @@ export const supabaseListenerTask = new Task<null, void>("supabase-listener", {
           handleBarChange(payload);
         }
       )
-      .subscribe((status) => {
-        console.log(`✅ Bar table listener status: ${status}`);
-        if (status === "SUBSCRIBED") {
-          console.log("🎉 Successfully connected to bar table!");
-        } else if (status === "CLOSED") {
-          console.log("❌ Connection to bar table closed");
-        }
-      });
-
-    // Listen to foo_bar junction table changes
-    const fooBarChannel = supabase
-      .channel("foo-bar-changes")
       .on(
         "postgres_changes",
         {
@@ -256,25 +229,27 @@ export const supabaseListenerTask = new Task<null, void>("supabase-listener", {
           handleFooBarChange(payload);
         }
       )
-      .subscribe((status) => {
-        console.log(`✅ Foo_Bar junction table listener status: ${status}`);
+      .subscribe((status, error) => {
+        console.log(`✅ Database changes listener status: ${status}`);
+        if (error) {
+          console.error("Subscription error:", error);
+        }
         if (status === "SUBSCRIBED") {
-          console.log("🎉 Successfully connected to foo_bar table!");
+          console.log("🎉 Successfully connected to all database tables!");
+          console.log("   - foo table: ✅");
+          console.log("   - bar table: ✅");
+          console.log("   - foo_bar table: ✅");
         } else if (status === "CLOSED") {
-          console.log("❌ Connection to foo_bar table closed");
+          console.log("❌ Connection to database tables closed");
         }
       });
-
-    channels.push(fooChannel, barChannel, fooBarChannel);
 
     // Handle graceful shutdown
     const cleanup = () => {
-      console.log("\n🔄 Cleaning up Supabase subscriptions...");
-      channels.forEach((channel) => {
-        if (channel) {
-          channel.unsubscribe();
-        }
-      });
+      console.log("\n🔄 Cleaning up Supabase subscription...");
+      if (channel) {
+        channel.unsubscribe();
+      }
       console.log("✅ Cleanup complete");
     };
 
