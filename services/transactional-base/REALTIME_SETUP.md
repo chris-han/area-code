@@ -71,47 +71,69 @@ npm run db:seed
 
 ### 3. Enable Realtime for Tables
 
-Execute the realtime setup script:
+Execute the comprehensive realtime setup script:
 
 ```bash
-# Connect to the database
-docker exec -it transactional-base-db-1 psql -U postgres -d postgres
-
-# Run the setup script
-\i /path/to/src/scripts/setup-realtime.sql
-
-# Or run directly
-psql -U postgres -d postgres -f src/scripts/setup-realtime.sql
+# Run the setup script directly
+docker exec -i supabase-db psql -U postgres -d postgres < src/scripts/setup-realtime.sql
 ```
 
-This script will:
-- Enable Row Level Security (RLS) on both tables
-- Create appropriate access policies
+This comprehensive script will:
+- Enable Row Level Security (RLS) on all tables (foo, bar, foo_bar)
+- Create anonymous access policies (required for sync-base service)
+- Create authenticated user policies for all operations
 - Set replica identity to FULL (to receive old record data)
-- Create publication for realtime
+- Create publication for realtime replication
 - Set up automatic timestamp triggers
+- Grant proper permissions to all roles
+- Verify the complete setup
 
 ### 4. Verify Realtime Configuration
 
-Check if realtime is properly configured:
+The setup script automatically verifies the configuration and displays the results. You should see output like:
+
+```
+🔍 Verifying comprehensive realtime setup...
+
+         info         | schemaname | tablename | rls_status 
+----------------------+------------+-----------+------------
+ 📋 RLS Status:       | public     | bar       | ✅ Enabled
+ 📋 RLS Status:       | public     | foo       | ✅ Enabled
+ 📋 RLS Status:       | public     | foo_bar   | ✅ Enabled
+
+         info         | schemaname | tablename | replica_identity 
+----------------------+------------+-----------+------------------
+ 🔄 Replica Identity: | public     | bar       | ✅ FULL
+ 🔄 Replica Identity: | public     | foo       | ✅ FULL
+ 🔄 Replica Identity: | public     | foo_bar   | ✅ FULL
+
+          info          |      pubname      | schemaname | tablename 
+------------------------+-------------------+------------+-----------
+ 📡 Publication Status: | supabase_realtime | public     | bar
+ 📡 Publication Status: | supabase_realtime | public     | foo
+ 📡 Publication Status: | supabase_realtime | public     | foo_bar
+
+          info          | schemaname | tablename |            policyname             |      anon_access      
+------------------------+------------+-----------+-----------------------------------+----------------------
+ 🔐 Anonymous Policies: | public     | bar       | Allow anonymous access to bar     | ✅ Anon access enabled
+ 🔐 Anonymous Policies: | public     | foo       | Allow anonymous access to foo     | ✅ Anon access enabled
+ 🔐 Anonymous Policies: | public     | foo_bar   | Allow anonymous access to foo_bar | ✅ Anon access enabled
+```
+
+If you need to manually verify the setup later:
 
 ```sql
--- Check RLS status
-SELECT schemaname, tablename, rowsecurity, hasrls
-FROM pg_tables 
-WHERE tablename IN ('foo', 'bar');
-
--- Check replica identity
-SELECT schemaname, tablename, relreplident
-FROM pg_tables t
-JOIN pg_class c ON c.relname = t.tablename
-WHERE tablename IN ('foo', 'bar');
-
--- Check publications
+-- Check publication tables
 SELECT pubname, schemaname, tablename
 FROM pg_publication_tables
 WHERE pubname = 'supabase_realtime'
-AND tablename IN ('foo', 'bar');
+AND schemaname = 'public';
+
+-- Check anonymous policies
+SELECT schemaname, tablename, policyname
+FROM pg_policies 
+WHERE schemaname = 'public' 
+AND policyname LIKE '%anonymous%';
 ```
 
 ## Running the Test
