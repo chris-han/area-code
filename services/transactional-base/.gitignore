@@ -17,12 +17,13 @@ volumes/logs/data/
 
 # Build outputs
 dist/
-build/
+build/add
 .turbo/
 
 # Logs
 *.log
 logs/
+!volumes/logs/
 *.log.*
 
 # Node.js
