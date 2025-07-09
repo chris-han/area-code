@@ -8,7 +8,7 @@
  * 2. An 'anon' API key with minimal permissions
  * 3. A 'service_role' API key with full permissions
  *
- * Usage: node generate-jwt.js
+ * Usage: node generate-jwt.js [--quiet]
  */
 
 import crypto from "crypto";
@@ -67,12 +67,26 @@ function generateSecurePassword(length = 32) {
   return result;
 }
 
+// Parse command line arguments
+function parseArgs() {
+  const args = process.argv.slice(2);
+  return {
+    quiet: args.includes('--quiet')
+  };
+}
+
 function main() {
-  console.log("🔐 Generating Supabase JWT Secret and API Keys...\n");
+  const { quiet } = parseArgs();
+  
+  if (!quiet) {
+    console.log("🔐 Generating Supabase JWT Secret and API Keys...\n");
+  }
 
   // Generate JWT secret
   const jwtSecret = generateSecureSecret(40);
-  console.log("✅ Generated JWT Secret");
+  if (!quiet) {
+    console.log("✅ Generated JWT Secret");
+  }
 
   // Generate anon key (public, limited permissions)
   const anonPayload = {
@@ -83,7 +97,9 @@ function main() {
     exp: Math.floor(Date.now() / 1000) + 365 * 24 * 60 * 60, // 1 year
   };
   const anonKey = generateJWT(anonPayload, jwtSecret);
-  console.log("✅ Generated Anon Key");
+  if (!quiet) {
+    console.log("✅ Generated Anon Key");
+  }
 
   // Generate service role key (private, full permissions)
   const servicePayload = {
@@ -94,7 +110,9 @@ function main() {
     exp: Math.floor(Date.now() / 1000) + 365 * 24 * 60 * 60, // 1 year
   };
   const serviceKey = generateJWT(servicePayload, jwtSecret);
-  console.log("✅ Generated Service Role Key");
+  if (!quiet) {
+    console.log("✅ Generated Service Role Key");
+  }
 
   // Generate additional secure values
   const secretKeyBase = generateSecureSecret(64);
@@ -102,7 +120,10 @@ function main() {
   const postgresPassword = generateSecurePassword(32);
   const dashboardPassword = generateSecurePassword(16);
 
-  console.log("\n📋 Copy these values to your .env file:\n");
+  if (!quiet) {
+    console.log("\n📋 Copy these values to your .env file:\n");
+  }
+  
   console.log("# JWT Configuration");
   console.log(`JWT_SECRET=${jwtSecret}`);
   console.log(`ANON_KEY=${anonKey}`);
@@ -121,17 +142,20 @@ function main() {
   console.log("");
   console.log("# Pooler");
   console.log(`POOLER_TENANT_ID=your-tenant-id`);
-  console.log("");
-  console.log("⚠️  IMPORTANT:");
-  console.log(
-    "1. Keep these values secure and never commit them to version control"
-  );
-  console.log("2. Use a secrets manager in production");
-  console.log("3. Update SITE_URL and API_EXTERNAL_URL for your domain");
-  console.log("4. Configure SMTP settings for email functionality");
-  console.log("");
-  console.log("🚀 After updating .env, restart your services:");
-  console.log("   docker compose down && docker compose up -d");
+  
+  if (!quiet) {
+    console.log("");
+    console.log("⚠️  IMPORTANT:");
+    console.log(
+      "1. Keep these values secure and never commit them to version control"
+    );
+    console.log("2. Use a secrets manager in production");
+    console.log("3. Update SITE_URL and API_EXTERNAL_URL for your domain");
+    console.log("4. Configure SMTP settings for email functionality");
+    console.log("");
+    console.log("🚀 After updating .env, restart your services:");
+    console.log("   docker compose down && docker compose up -d");
+  }
 }
 
 // Validate Node.js version
