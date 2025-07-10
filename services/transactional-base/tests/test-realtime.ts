@@ -28,7 +28,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Load environment variables from .env file in parent directory
-dotenvConfig({ path: path.resolve(__dirname, "../.env.secrets") });
 dotenvConfig({ path: path.resolve(__dirname, "../.env") });
 
 // Configuration - Update these values based on your .env file

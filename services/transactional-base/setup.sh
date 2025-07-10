@@ -4,7 +4,7 @@
 # Global variables
 ########################################################
 
-ENV_FILES="--env-file .env --env-file .env.secrets"
+ENV_FILES="--env-file .env"
 DOCKER_COMPOSE_CMD="docker compose $ENV_FILES"
 
 ########################################################
@@ -78,24 +78,47 @@ setup_environment() {
         echo "✅ .env file already exists"
     fi
 
-    # Check if .env.secrets file exists, if not generate it
-    if [ ! -f ".env.secrets" ] || has_flag "--reset-secrets" "$@"; then
+    # Check if secrets need to be generated or updated
+    if has_flag "--reset-secrets" "$@" || ! grep -q "^JWT_SECRET=" .env 2>/dev/null || grep -q "your-super-secret-jwt-token" .env 2>/dev/null; then
         if [ -f "generate-jwt.mjs" ]; then
-            echo "🔐 .env.secrets file missing or --reset-secrets passed. Generating secrets..."
-            node generate-jwt.mjs -o .env.secrets
+            echo "🔐 Generating secrets and updating .env file..."
+            
+            # Generate secrets and capture output
+            SECRETS_OUTPUT=$(node generate-jwt.mjs --quiet 2>/dev/null)
             if [ $? -eq 0 ]; then
-                echo "✅ .env.secrets file generated successfully"
+                # Update .env file with generated secrets
+                while IFS= read -r line; do
+                    if [[ $line =~ ^[A-Z_]+= ]]; then
+                        # Extract variable name and value
+                        var_name=$(echo "$line" | cut -d'=' -f1)
+                        var_value=$(echo "$line" | cut -d'=' -f2-)
+                        
+                        # Update .env file using sed
+                        if grep -q "^${var_name}=" .env 2>/dev/null; then
+                            # Variable exists, update it
+                            sed -i.bak "s/^${var_name}=.*/${var_name}=${var_value}/" .env
+                        else
+                            # Variable doesn't exist, add it to the secrets section
+                            sed -i.bak "/^############$/a\\
+${var_name}=${var_value}" .env
+                        fi
+                    fi
+                done <<< "$SECRETS_OUTPUT"
+                
+                # Clean up backup file
+                rm -f .env.bak
+                echo "✅ Secrets generated and .env file updated successfully"
             else
-                echo "❌ Error: Failed to generate .env.secrets file"
+                echo "❌ Error: Failed to generate secrets"
                 return 1
             fi
         else
-            echo "❌ Error: .env.secrets file not found and generate-jwt.mjs does not exist"
+            echo "❌ Error: generate-jwt.mjs not found"
             echo "Please ensure generate-jwt.mjs is available to create secrets."
             return 1
         fi
     else
-        echo "✅ .env.secrets file already exists"
+        echo "✅ .env file already contains generated secrets"
     fi
     
     return 0
@@ -186,20 +209,20 @@ seed_database() {
 }
 
 display_dashboard_url() {
-    if [ -f ".env.secrets" ]; then
-        # Extract username and password from .env.secrets
-        DASHBOARD_USERNAME=$(grep -E '^DASHBOARD_USERNAME=' .env.secrets | cut -d '=' -f2-)
-        DASHBOARD_PASSWORD=$(grep -E '^DASHBOARD_PASSWORD=' .env.secrets | cut -d '=' -f2-)
+    if [ -f ".env" ]; then
+        # Extract username and password from .env
+        DASHBOARD_USERNAME=$(grep -E '^DASHBOARD_USERNAME=' .env | cut -d '=' -f2-)
+        DASHBOARD_PASSWORD=$(grep -E '^DASHBOARD_PASSWORD=' .env | cut -d '=' -f2-)
         if [ -n "$DASHBOARD_USERNAME" ] && [ -n "$DASHBOARD_PASSWORD" ]; then
             echo ""
             echo "🔗 Supabase Studio URL:"
             echo "    http://$DASHBOARD_USERNAME:$DASHBOARD_PASSWORD@localhost:8000"
             echo ""
         else
-            echo "⚠️  Could not find DASHBOARD_USERNAME or DASHBOARD_PASSWORD in .env.secrets"
+            echo "⚠️  Could not find DASHBOARD_USERNAME or DASHBOARD_PASSWORD in .env"
         fi
     else
-        echo "⚠️  .env.secrets file not found, cannot print Supabase Studio URL"
+        echo "⚠️  .env file not found, cannot print Supabase Studio URL"
     fi
 }
 
@@ -211,7 +234,7 @@ show_help() {
     echo "  --stop              Stop all running containers"
     echo "  --restart           Stop and restart all containers"
     echo "  --reset             Reset environment (stop, remove volumes, delete data)"
-    echo "  --reset-secrets     Regenerate .env.secrets file"
+    echo "  --reset-secrets     Regenerate secrets in .env file"
     echo "  --status            Show status of all containers"
     echo "  --logs              Show logs for supavisor service"
     echo "  --seed              Seed the database with initial data"
@@ -272,7 +295,7 @@ main() {
     fi
 
     # Handle reset flags
-    if has_flag "--reset" "$@" || has_flag "--reset-secrets" "$@"; then
+    if has_flag "--reset" "$@"; then
         reset_environment
     fi
 
