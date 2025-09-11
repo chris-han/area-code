@@ -1,11 +1,47 @@
-import { ConsumptionApi } from "@514labs/moose-lib";
-import { FooPipeline } from "../../../index";
-import {
-  GetFooCubeAggregationsParams,
-  GetFooCubeAggregationsResponse,
-} from "@workspace/models";
+import { Api } from "@514labs/moose-lib";
+import { FooTable } from "../../../externalModels";
 
-export const fooCubeAggregationsApi = new ConsumptionApi<
+export type GetFooCubeAggregationsParams = {
+  months?: number;
+  status?: string;
+  tag?: string;
+  priority?: number;
+  limit?: number;
+  offset?: number;
+  sortBy?:
+    | "month"
+    | "status"
+    | "tag"
+    | "priority"
+    | "n"
+    | "avgScore"
+    | "p50"
+    | "p90";
+  sortOrder?: "ASC" | "DESC" | "asc" | "desc";
+};
+
+export type FooCubeAggregationRow = {
+  month: string | null;
+  status: string | null;
+  tag: string | null;
+  priority: number | null;
+  n: number;
+  avgScore: number;
+  p50: number;
+  p90: number;
+};
+
+export type GetFooCubeAggregationsResponse = {
+  data: FooCubeAggregationRow[];
+  queryTime: number;
+  pagination: {
+    limit: number;
+    offset: number;
+    total: number;
+  };
+};
+
+export const fooCubeAggregationsApi = new Api<
   GetFooCubeAggregationsParams,
   GetFooCubeAggregationsResponse
 >(
@@ -75,14 +111,13 @@ export const fooCubeAggregationsApi = new ConsumptionApi<
         priority,
         count() AS n,
         avg(score) AS avgScore,
-        quantileTDigest(0.5)(score) AS p50,
-        quantileTDigest(0.9)(score) AS p90,
+        quantileTDigest(0.5)(toFloat64(score)) AS p50,
+        quantileTDigest(0.9)(toFloat64(score)) AS p90,
         COUNT() OVER() AS total
-      FROM ${FooPipeline.table!}
+      FROM ${FooTable}
       WHERE toDate(created_at) >= toDate(${startDateStr})
         AND toDate(created_at) <= toDate(${endDateStr})
         AND score IS NOT NULL
-        AND cdc_operation != 'DELETE'
         ${statusFilter}
         ${priorityFilter}
       GROUP BY month, status, tag, priority

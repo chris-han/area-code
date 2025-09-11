@@ -1,14 +1,41 @@
-import { ConsumptionApi } from "@514labs/moose-lib";
-import {
-  Foo,
-  FooWithCDCForConsumption,
-  GetFoosWithCDCParams,
-  GetFoosWithCDCForConsumptionResponse,
-} from "@workspace/models";
-import { FooPipeline } from "../../../index";
+import { Api } from "@514labs/moose-lib";
+import { foo } from "../../../externalModels"
+
+export type GetFoosParams = {
+  limit?: number;
+  offset?: number;
+  sortBy?: keyof foo;
+  sortOrder?: "ASC" | "DESC" | "asc" | "desc";
+};
+
+export type FooWithCDCForConsumption = Omit<foo, "status"> & {
+  status: string;
+};
+
+export type GetFoosWithCDCParams = Omit<GetFoosParams, "sortBy"> & {
+  sortBy?: keyof foo;
+};
+
+export type GetFoosResponse = {
+  data: foo[];
+  pagination: {
+    limit: number;
+    offset: number;
+    total: number;
+    hasMore: boolean;
+  };
+  queryTime: number;
+};
+
+export type GetFoosWithCDCForConsumptionResponse = Omit<
+  GetFoosResponse,
+  "data"
+> & {
+  data: FooWithCDCForConsumption[];
+};
 
 // Consumption API following Moose documentation pattern
-export const fooConsumptionApi = new ConsumptionApi<
+export const fooConsumptionApi = new Api<
   GetFoosWithCDCParams,
   GetFoosWithCDCForConsumptionResponse
 >(
@@ -17,7 +44,7 @@ export const fooConsumptionApi = new ConsumptionApi<
     {
       limit = 10,
       offset = 0,
-      sortBy = "cdc_timestamp",
+      sortBy = "created_at",
       sortOrder = "DESC",
     }: GetFoosWithCDCParams,
     { client, sql }
@@ -27,7 +54,7 @@ export const fooConsumptionApi = new ConsumptionApi<
 
     const countQuery = sql`
       SELECT count() as total
-      FROM ${FooPipeline.table!}
+      FROM foo
     `;
 
     const countResultSet = await client.query.execute<{
@@ -42,12 +69,9 @@ export const fooConsumptionApi = new ConsumptionApi<
 
     // Build dynamic query including CDC fields
     const query = sql`
-      SELECT *,
-             cdc_id,
-             cdc_operation,
-             cdc_timestamp
-      FROM ${FooPipeline.table!}
-      ORDER BY ${sortBy === "cdc_operation" || sortBy === "cdc_timestamp" ? sql([sortBy]) : FooPipeline.columns[sortBy as keyof Foo]!} ${upperSortOrder}
+      SELECT *
+      FROM foo
+      ORDER BY ${sortBy} ${upperSortOrder}
       LIMIT ${limit}
       OFFSET ${offset}
     `;

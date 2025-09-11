@@ -1,12 +1,33 @@
-import { ConsumptionApi } from "@514labs/moose-lib";
-import {
-  BarWithCDC,
-  GetBarsWithCDCParams,
-  GetBarsWithCDCResponse,
-} from "@workspace/models";
-import { BarPipeline } from "../../../index";
+import { Api } from "@514labs/moose-lib";
+import { bar, BarTable } from "../../../externalModels";
 
-export const barConsumptionApi = new ConsumptionApi<
+export type GetBarsParams = {
+  limit?: number;
+  offset?: number;
+  sortBy?: keyof bar;
+  sortOrder?: "ASC" | "DESC" | "asc" | "desc";
+};
+
+export type GetBarsWithCDCParams = Omit<GetBarsParams, "sortBy"> & {
+  sortBy?: keyof bar;
+};
+
+export type GetBarsResponse = {
+  data: bar[];
+  pagination: {
+    limit: number;
+    offset: number;
+    total: number;
+    hasMore: boolean;
+  };
+  queryTime: number;
+};
+
+export type GetBarsWithCDCResponse = Omit<GetBarsResponse, "data"> & {
+  data: bar[];
+};
+
+export const barConsumptionApi = new Api<
   GetBarsWithCDCParams,
   GetBarsWithCDCResponse
 >(
@@ -15,9 +36,9 @@ export const barConsumptionApi = new ConsumptionApi<
     {
       limit = 10,
       offset = 0,
-      sortBy = "cdc_timestamp",
+      sortBy = "created_at",
       sortOrder = "DESC",
-    }: GetBarsWithCDCParams,
+    }: GetBarsParams,
     { client, sql }
   ) => {
     // Convert sortOrder to uppercase for consistency
@@ -25,7 +46,7 @@ export const barConsumptionApi = new ConsumptionApi<
 
     const countQuery = sql`
       SELECT count() as total
-      FROM ${BarPipeline.table!}
+      FROM ${BarTable}
     `;
 
     const countResultSet = await client.query.execute<{
@@ -40,18 +61,15 @@ export const barConsumptionApi = new ConsumptionApi<
 
     // Build dynamic query including CDC fields
     const query = sql`
-      SELECT *,
-             cdc_id,
-             cdc_operation,
-             cdc_timestamp
-      FROM ${BarPipeline.table!}
-      ORDER BY ${sortBy === "cdc_operation" || sortBy === "cdc_timestamp" ? sql([sortBy]) : BarPipeline.columns[sortBy as keyof BarWithCDC]!} ${upperSortOrder}
+      SELECT *
+      FROM ${BarTable}
+      ORDER BY ${sortBy} ${upperSortOrder}
       LIMIT ${limit}
       OFFSET ${offset}
     `;
 
-    const resultSet = await client.query.execute<BarWithCDC>(query);
-    const results = (await resultSet.json()) as BarWithCDC[];
+    const resultSet = await client.query.execute<bar>(query);
+    const results = (await resultSet.json()) as bar[];
 
     const queryTime = Date.now() - startTime;
 

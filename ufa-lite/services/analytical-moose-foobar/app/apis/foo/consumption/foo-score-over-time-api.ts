@@ -1,13 +1,22 @@
-import { ConsumptionApi } from "@514labs/moose-lib";
-import { FooPipeline } from "../../../index";
-import {
-  FoosScoreOverTimeDataPoint,
-  GetFoosScoreOverTimeParams,
-  GetFoosScoreOverTimeResponse,
-} from "@workspace/models";
+import { Api } from "@514labs/moose-lib";
+
+export type FoosScoreOverTimeDataPoint = {
+  date: string;
+  averageScore: number;
+  totalCount: number;
+};
+
+export type GetFoosScoreOverTimeParams = {
+  days?: number;
+};
+
+export type GetFoosScoreOverTimeResponse = {
+  data: FoosScoreOverTimeDataPoint[];
+  queryTime: number;
+};
 
 // Score over time consumption API
-export const scoreOverTimeApi = new ConsumptionApi<
+export const scoreOverTimeApi = new Api<
   GetFoosScoreOverTimeParams,
   GetFoosScoreOverTimeResponse
 >(
@@ -31,7 +40,7 @@ export const scoreOverTimeApi = new ConsumptionApi<
         toDate(created_at) as date,
         AVG(score) as averageScore,
         COUNT(*) as totalCount
-      FROM ${FooPipeline.table!}
+      FROM foo
       WHERE toDate(created_at) >= toDate(${startDateStr})
         AND toDate(created_at) <= toDate(${endDateStr})
         AND score IS NOT NULL

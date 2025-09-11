@@ -1,11 +1,16 @@
-import { ConsumptionApi } from "@514labs/moose-lib";
-import { FooPipeline } from "../../../index";
-import {
-  GetFooFiltersValuesParams,
-  GetFooFiltersValuesResponse,
-} from "@workspace/models";
+import { Api } from "@514labs/moose-lib";
 
-export const fooFiltersValuesApi = new ConsumptionApi<
+export type GetFooFiltersValuesParams = {
+  months?: number;
+};
+
+export type GetFooFiltersValuesResponse = {
+  status: string[];
+  tags: string[];
+  priorities: number[];
+};
+
+export const fooFiltersValuesApi = new Api<
   GetFooFiltersValuesParams,
   GetFooFiltersValuesResponse
 >(
@@ -25,31 +30,28 @@ export const fooFiltersValuesApi = new ConsumptionApi<
 
     const statusQuery = sql`
       SELECT DISTINCT status
-      FROM ${FooPipeline.table!}
+      FROM foo
       WHERE toDate(created_at) >= toDate(${startDateStr})
         AND toDate(created_at) <= toDate(${endDateStr})
         AND status IS NOT NULL
-        AND cdc_operation != 'DELETE'
       ORDER BY status
     `;
 
     const tagsQuery = sql`
       SELECT DISTINCT arrayJoin(tags) AS tag
-      FROM ${FooPipeline.table!}
+      FROM foo
       WHERE toDate(created_at) >= toDate(${startDateStr})
         AND toDate(created_at) <= toDate(${endDateStr})
         AND tags IS NOT NULL
-        AND cdc_operation != 'DELETE'
       ORDER BY tag
     `;
 
     const prioritiesQuery = sql`
       SELECT DISTINCT priority
-      FROM ${FooPipeline.table!}
+      FROM foo
       WHERE toDate(created_at) >= toDate(${startDateStr})
         AND toDate(created_at) <= toDate(${endDateStr})
         AND priority IS NOT NULL
-        AND cdc_operation != 'DELETE'
       ORDER BY priority
     `;
 
