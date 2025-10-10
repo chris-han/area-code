@@ -4,18 +4,18 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "pnpm es:start && PORT=8083 tsx watch src/server.ts",
-    "ufa:dev": "NODE_ENV=development pnpm es:start && PORT=8083 tsx watch src/server.ts",
+    "dev": "bun run es:start && PORT=8083 bunx tsx watch src/server.ts",
+    "ufa:dev": "NODE_ENV=development bun run es:start && PORT=8083 bunx tsx watch src/server.ts",
     "ufa:prod:seed": "./database/scripts/prod-migration.sh",
-    "dev:server-only": "SKIP_ES_WAIT=true PORT=8083 tsx watch src/server.ts",
-    "ufa:dev:clean": "pnpm es:stop",
+    "dev:server-only": "SKIP_ES_WAIT=true PORT=8083 bunx tsx watch src/server.ts",
+    "ufa:dev:clean": "bun run es:stop",
     "build": "tsup src/server.ts --format esm --clean --out-dir dist",
     "lint": "eslint src/",
-    "es:start": "docker compose up -d && ./scripts/es-wait.sh && pnpm es:init-indices",
+    "es:start": "docker compose up -d && ./scripts/es-wait.sh && bun run es:init-indices",
     "es:stop": "docker compose down || echo 'Note: docker compose down failed (may not be running)'",
-    "es:reset": "docker compose down -v && docker compose up -d && ./scripts/es-wait.sh && pnpm es:init-indices",
+    "es:reset": "docker compose down -v && docker compose up -d && ./scripts/es-wait.sh && bun run es:init-indices",
     "es:status": "./scripts/es-status.sh",
-    "es:init-indices": "tsx src/scripts/init-indices.ts"
+    "es:init-indices": "bunx tsx src/scripts/init-indices.ts"
   },
   "dependencies": {
     "@elastic/elasticsearch": "^8.15.0",

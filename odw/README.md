@@ -16,10 +16,10 @@ Get up and running in minutes with our automated setup:
 # 1. Ensure Docker Desktop is running
 
 # 2. Install dependencies & start development environment
-pnpm odw:dev
+bun run odw:dev
 
 # 3. Seed databases with sample data
-pnpm odw:dev:seed
+bun run odw:dev:seed
 
 # 4. Open the data warehouse frontend
 http://localhost:8501/
@@ -37,13 +37,13 @@ This will:
 
 ```bash
 # Development
-pnpm odw:dev              # Start all services
-pnpm odw:dev:clean        # Clean all services
+bun run odw:dev              # Start all services
+bun run odw:dev:clean        # Clean all services
 
 # Individual services
-pnpm --filter dw-frontend dev           # Frontend only
-pnpm --filter data-warehouse dev        # Data Warehouse only
-pnpm --filter kafdrop dev               # Kafdrop only
+bun run --filter dw-frontend dev           # Frontend only
+bun run --filter data-warehouse dev        # Data Warehouse only
+bun run --filter kafdrop dev               # Kafdrop only
 ```
 
 ## 🏗️ Tech Stack

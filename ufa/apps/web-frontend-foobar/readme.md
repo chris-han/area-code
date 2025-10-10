@@ -6,13 +6,13 @@ A React dashboard application for managing and visualizing Foo and Bar entities 
 
 ```bash
 # Development
-pnpm dev        # Start development server with Vite
-pnpm ufa:dev    # Alias for dev script used in monorepo context
+bun run dev        # Start development server with Vite
+bun run ufa:dev    # Alias for dev script used in monorepo context
 
 # Production
-pnpm build      # Build for production (TypeScript + Vite build)
-pnpm preview    # Preview production build locally
+bun run build      # Build for production (TypeScript + Vite build)
+bun run preview    # Preview production build locally
 
 # Code quality
-pnpm lint       # Run ESLint on TypeScript source files
+bun run lint       # Run ESLint on TypeScript source files
 ```

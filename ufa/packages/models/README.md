@@ -15,7 +15,7 @@ This package provides TypeScript interfaces and types for the core data models u
 This package is private to the workspace and is installed via:
 
 ```bash
-pnpm add @workspace/models
+bun add @workspace/models
 ```
 
 ## Usage

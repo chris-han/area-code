@@ -118,10 +118,10 @@ cleanup_existing_workflows() {
     log_message "Stopping existing workflows before seeding"
     
     cd "$PROJECT_ROOT/services/sync-supabase-moose-foobar" || true
-    if command -v pnpm >/dev/null 2>&1; then
+    if command -v bun >/dev/null 2>&1; then
         if [ "$VERBOSE_MODE" = "true" ]; then
             echo "Stopping supabase-listener workflow..."
-            pnpm dev:workflow:stop || true
+            bun run dev:workflow:stop || true
             
             # Force kill any remaining workflow processes
             echo "⏳ Ensuring all workflow processes are terminated..."
@@ -130,15 +130,15 @@ cleanup_existing_workflows() {
             sleep 3
             
             # Double check - if workflow still exists, force terminate it
-            if pnpm moose workflow list 2>/dev/null | grep -q "supabase-listener"; then
+            if bun run moose workflow list 2>/dev/null | grep -q "supabase-listener"; then
                 echo "⚠️  Workflow still running, force terminating..."
-                pnpm dev:workflow:stop || true
+                bun run dev:workflow:stop || true
                 sleep 2
             fi
             echo "✅ Workflow stop command completed"
         else
             echo "Stopping supabase-listener workflow..."
-            pnpm dev:workflow:stop >> "$SEED_LOG" 2>&1 || true
+            bun run dev:workflow:stop >> "$SEED_LOG" 2>&1 || true
             
             # Force kill any remaining workflow processes (silent mode)
             echo "⏳ Ensuring all workflow processes are terminated..."
@@ -147,15 +147,15 @@ cleanup_existing_workflows() {
             sleep 3
             
             # Double check - if workflow still exists, force terminate it
-            if pnpm moose workflow list 2>/dev/null | grep -q "supabase-listener"; then
-                pnpm dev:workflow:stop >> "$SEED_LOG" 2>&1 || true
+            if bun run moose workflow list 2>/dev/null | grep -q "supabase-listener"; then
+                bun run dev:workflow:stop >> "$SEED_LOG" 2>&1 || true
                 sleep 2
             fi
             echo "✅ Workflow stop command completed"
         fi
     else
-        echo "⚠️  pnpm not found, skipping workflow stop"
-        log_message "pnpm not found, skipping workflow stop"
+        echo "⚠️  Bun not found, skipping workflow stop"
+        log_message "Bun not found, skipping workflow stop"
     fi
     cd "$PROJECT_ROOT"
     
@@ -170,32 +170,32 @@ restart_workflows() {
     # Workflow will handle its own realtime replication setup
     
     cd "$PROJECT_ROOT/services/sync-supabase-moose-foobar" || true
-    if command -v pnpm >/dev/null 2>&1; then
+    if command -v bun >/dev/null 2>&1; then
         # Start the workflow in background to not block the script
         if [ "$VERBOSE_MODE" = "true" ]; then
             echo "Starting supabase-listener workflow..."
             # Check if workflow is already running before starting
-            if pnpm moose workflow list 2>/dev/null | grep -q "supabase-listener"; then
+            if bun run moose workflow list 2>/dev/null | grep -q "supabase-listener"; then
                 echo "⚠️  Workflow already exists, terminating it first..."
-                pnpm dev:workflow:stop || true
+                bun run dev:workflow:stop || true
                 sleep 2
             fi
-            pnpm dev:workflow &
+            bun run dev:workflow &
             WORKFLOW_PID=$!
         else
             # Check if workflow is already running before starting (silent)
-            if pnpm moose workflow list 2>/dev/null | grep -q "supabase-listener"; then
-                pnpm dev:workflow:stop >> "$SEED_LOG" 2>&1 || true
+            if bun run moose workflow list 2>/dev/null | grep -q "supabase-listener"; then
+                bun run dev:workflow:stop >> "$SEED_LOG" 2>&1 || true
                 sleep 2
             fi
-            nohup pnpm dev:workflow >> "$SEED_LOG" 2>&1 &
+            nohup bun run dev:workflow >> "$SEED_LOG" 2>&1 &
             WORKFLOW_PID=$!
         fi
         echo "✅ Workflows restarted with realtime enabled (PID: $WORKFLOW_PID)"
         log_message "supabase-listener workflow started in background (PID: $WORKFLOW_PID)"
     else
-        echo "⚠️  pnpm not found, skipping workflow restart"
-        log_message "pnpm not found, skipping workflow restart"
+        echo "⚠️  Bun not found, skipping workflow restart"
+        log_message "Bun not found, skipping workflow restart"
     fi
     cd "$PROJECT_ROOT"
 }

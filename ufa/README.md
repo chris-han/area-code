@@ -29,13 +29,13 @@ Get up and running in minutes with our automated setup:
 
 ```bash
 # 1. Install dependencies
-pnpm install
+bun install
 
 # 2. Start development environment
-pnpm ufa:dev
+bun run ufa:dev
 
 # 3. Seed databases with sample data (in a new terminal)
-pnpm ufa:dev:seed
+bun run ufa:dev:seed
 
 # 4. Open front-end
 http://localhost:5173/
@@ -52,15 +52,15 @@ This will:
 
 ```bash
 # Development
-pnpm ufa:dev              # Start all services
-pnpm ufa:dev:clean        # Clean all services
-pnpm ufa:dev:seed         # Seed databases with sample data
+bun run ufa:dev              # Start all services
+bun run ufa:dev:clean        # Clean all services
+bun run ufa:dev:seed         # Seed databases with sample data
 
 # Individual services
-pnpm --filter web-frontend-foobar dev          # Frontend only
-pnpm --filter transactional-supabase-foobar dev      # Transactional API only
-pnpm --filter analytical-moose-foobar dev         # Analytical API only
-pnpm --filter retrieval-elasticsearch-foobar dev          # Search API only
+bun run --filter web-frontend-foobar dev          # Frontend only
+bun run --filter transactional-supabase-foobar dev      # Transactional API only
+bun run --filter analytical-moose-foobar dev         # Analytical API only
+bun run --filter retrieval-elasticsearch-foobar dev          # Search API only
 ```
 
 ## 🏗️ Tech Stack
@@ -75,7 +75,7 @@ pnpm --filter retrieval-elasticsearch-foobar dev          # Search API only
 | **API Framework**    | Fastify (transactional), Moose (analytical)         |
 | **Search**           | Elasticsearch                                       |
 | **Real-time**        | Supabase Realtime                                   |
-| **Build Tool**       | Turborepo, pnpm                                     |
+| **Build Tool**       | Turborepo, Bun                                      |
 
 ## 🏛️ Reference Architecture
 
@@ -169,10 +169,10 @@ We're working on a production deployment strategy that will be available soon.
 
 ```bash
 # Clean all services
-pnpm ufa:dev:clean
+bun run ufa:dev:clean
 
 # Restart development
-pnpm ufa:dev
+bun run ufa:dev
 ```
 
 ## 📚 Resources

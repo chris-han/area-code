@@ -13,7 +13,7 @@
     "./styles.css": "./src/styles/globals.css"
   },
   "scripts": {
-    "ui": "pnpm dlx shadcn@latest",
+    "ui": "bunx shadcn@latest",
     "lint": "eslint . --max-warnings 0"
   },
   "devDependencies": {

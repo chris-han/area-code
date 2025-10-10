@@ -24,20 +24,20 @@ VITE_SUPABASE_ANON_KEY=dev-anon-key
 ### Start
 1) Install deps (Node 20):
 ```
-pnpm -w install
+bun install
 ```
 
 2) Seed (optional; uses local containers, no psql required):
 ```
-pnpm -w run ufa-lite:dev:seed
+bun run ufa-lite:dev:seed
 # Or target a service:
-pnpm -w run ufa-lite:dev:seed:transactional-supabase-foobar
-pnpm -w run ufa-lite:dev:seed:analytical-moose-foobar
+bun run ufa-lite:dev:seed:transactional-supabase-foobar
+bun run ufa-lite:dev:seed:analytical-moose-foobar
 ```
 
 3) Dev (Turbo UI):
 ```
-pnpm -w run ufa-lite:dev
+bun run ufa-lite:dev
 ```
 
 ### Notes
@@ -45,5 +45,4 @@ pnpm -w run ufa-lite:dev
 - Uses the same local containers as UFA (Supabase Postgres, ClickHouse, Redpanda, Temporal). No local Postgres install needed.
 - ClickHouse DB name: `local`; Redis prefix: `MSLITE`.
 - Temporal/Redpanda are shared; avoid cross-stack workflow/topic collisions.
-
 

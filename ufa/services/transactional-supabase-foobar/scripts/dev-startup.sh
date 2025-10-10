@@ -15,7 +15,7 @@ start_supabase() {
     echo "Supabase is not started"
     echo "Starting Supabase services..."
     
-    if ! pnpm db:start; then
+    if ! bun run db:start; then
         echo "Failed to start Supabase services"
         exit 1
     fi
@@ -23,7 +23,7 @@ start_supabase() {
     # Wait for services to be ready using supabase status
     echo "Waiting for services to be ready..."
     for i in {1..30}; do
-        if pnpm supabase status --workdir database > /dev/null 2>&1; then
+        if bun run supabase status --workdir database > /dev/null 2>&1; then
             echo "Supabase services are ready"
             break
         fi
@@ -40,7 +40,7 @@ start_supabase() {
 run_migrations() {
     echo "Checking database migrations..."
     
-    if ! pnpm run dev:migrate; then
+    if ! bun run dev:migrate; then
         echo "Failed to run database migrations"
         exit 1
     fi
@@ -52,7 +52,7 @@ start_server() {
     echo "Starting Fastify server..."
     
     # Start server with .env file watching
-    NODE_ENV=development pnpm dev:fastify
+    NODE_ENV=development bun run dev:fastify
 }
 
 # Main execution

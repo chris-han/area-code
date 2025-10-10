@@ -12,7 +12,7 @@
     "ufa:dev": "tsc --watch",
     "build": "tsc",
     "clean": "rm -rf dist",
-    "postinstall": "pnpm build"
+    "postinstall": "bun run build"
   },
   "dependencies": {
     "@514labs/moose-lib": "latest"

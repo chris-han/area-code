@@ -112,7 +112,7 @@ For a high-level architectural overview of the system, see [high-level-overview.
 
 | Command              | Description        |
 | -------------------- | ------------------ |
-| `pnpm odw:dev:clean` | Clean all services |
+| `bun run odw:dev:clean` | Clean all services |
 
 ## Installing Aurora AI Support
 

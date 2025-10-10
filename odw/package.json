@@ -3,14 +3,14 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "odw:dev": "cd .. && pnpm odw:dev",
-    "odw:dev:clean": "cd .. && pnpm odw:dev:clean",
-    "odw:dev:seed": "cd .. && pnpm odw:dev:seed"
+    "odw:dev": "cd .. && bun run odw:dev",
+    "odw:dev:clean": "cd .. && bun run odw:dev:clean",
+    "odw:dev:seed": "cd .. && bun run odw:dev:seed"
   },
   "dependencies": {
     "supabase": "^2.48.3"
   },
-  "packageManager": "pnpm@10.18.1",
+  "packageManager": "bun@1.2.21",
   "engines": {
     "node": ">=18"
   }

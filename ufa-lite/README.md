@@ -33,7 +33,7 @@
 REMOTE_CLICKHOUSE_CONNECTION_STRING='https://read_only_user:Ufa-Lite-123!@swtrnxdyro.us-central1.gcp.clickhouse.cloud:8443/test_supabase_cdc'
 ```
 
-**Note:** These are read-only credentials. You can view data but cannot create/modify records. This is so you can run `pnpm seed-foo` and `pnpm seed-bar` to seed the local ClickHouse instance with the data from the remote ClickHouse instance.
+**Note:** These are read-only credentials. You can view data but cannot create/modify records. This is so you can run `bun run seed-foo` and `bun run seed-bar` to seed the local ClickHouse instance with the data from the remote ClickHouse instance.
 
 ## For Your Own Production Data
 
@@ -46,27 +46,27 @@ REMOTE_CLICKHOUSE_CONNECTION_STRING='https://read_only_user:Ufa-Lite-123!@swtrnx
 
 ## Quick Start (Reference Playground)
 
-**Prerequisites:** Node.js 20.x, pnpm, Docker
+**Prerequisites:** Node.js 20.x, Bun, Docker
 
 ```bash
 # Install
-pnpm install
+bun install
 
 # Start everything with real data
-pnpm ufa-lite:dev
+bun run ufa-lite:dev
 ```
 
 **Or start individually:**
 
 ```bash
 # Analytical service (MooseStack + ClickHouse)
-cd services/analytical-moose-foobar && pnpm dev
+cd services/analytical-moose-foobar && bun run dev
 
 # Transactional API (remote Supabase)
 cd services/transactional-supabase-remote && vercel dev
 
 # React frontend
-cd apps/web-frontend-foobar && pnpm dev
+cd apps/web-frontend-foobar && bun run dev
 ```
 
 **Result:** You'll have a working app with real production data, perfect for experimenting with MooseStack + ClickHouse patterns.

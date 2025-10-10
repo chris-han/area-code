@@ -7,14 +7,31 @@ export function findWorkspaceRoot(startPath: string): string {
   while (currentPath !== path.dirname(currentPath)) {
     // Check for workspace markers
     const packageJsonPath = path.join(currentPath, "package.json");
-    const pnpmWorkspacePath = path.join(currentPath, "pnpm-workspace.yaml");
+    const bunLockPath = path.join(currentPath, "bun.lock");
+    const bunLockBinaryPath = path.join(currentPath, "bun.lockb");
     const turboJsonPath = path.join(currentPath, "turbo.json");
 
-    if (
-      fs.existsSync(packageJsonPath) &&
-      fs.existsSync(pnpmWorkspacePath) &&
-      fs.existsSync(turboJsonPath)
-    ) {
+    const hasPackageJson = fs.existsSync(packageJsonPath);
+    const hasTurboConfig = fs.existsSync(turboJsonPath);
+    const hasBunLock =
+      fs.existsSync(bunLockPath) || fs.existsSync(bunLockBinaryPath);
+
+    let hasWorkspaces = false;
+
+    if (hasPackageJson) {
+      try {
+        const packageJson = JSON.parse(
+          fs.readFileSync(packageJsonPath, { encoding: "utf-8" })
+        );
+        const workspaces = packageJson.workspaces;
+        hasWorkspaces =
+          Array.isArray(workspaces) || typeof workspaces === "object";
+      } catch {
+        hasWorkspaces = false;
+      }
+    }
+
+    if (hasPackageJson && hasTurboConfig && (hasBunLock || hasWorkspaces)) {
       return currentPath;
     }
 
@@ -22,7 +39,7 @@ export function findWorkspaceRoot(startPath: string): string {
   }
 
   throw new Error(
-    "Could not find workspace root. Looking for directory with package.json, pnpm-workspace.yaml, and turbo.json"
+    "Could not find workspace root. Looking for directory with package.json (with workspaces), turbo.json, and optionally bun.lock"
   );
 }
 

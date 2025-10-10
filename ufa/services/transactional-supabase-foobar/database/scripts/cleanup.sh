@@ -11,7 +11,7 @@ echo "🧹 Starting Supabase cleanup for project: $PROJECT_NAME"
 
 # Step 1: Try Supabase CLI stop (ignore errors if already stopped)
 echo "📦 Attempting graceful Supabase stop..."
-pnpm supabase stop --no-backup 2>/dev/null || echo "⚠️  Supabase CLI stop failed or containers already down"
+bun run supabase stop --no-backup 2>/dev/null || echo "⚠️  Supabase CLI stop failed or containers already down"
 
 # Step 2: Force remove any remaining containers
 echo "🐳 Removing any remaining Supabase containers..."
@@ -49,4 +49,4 @@ docker container prune -f --filter "label=com.supabase.cli.project" 2>/dev/null 
 docker volume prune -f --filter "label=com.supabase.cli.project" 2>/dev/null || true
 
 echo "✅ Cleanup completed successfully!"
-echo "💡 You can now run 'pnpm dev:start' to start fresh Supabase containers" 
+echo "💡 You can now run 'bun run dev:start' to start fresh Supabase containers"

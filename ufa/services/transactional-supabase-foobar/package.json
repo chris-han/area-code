@@ -6,21 +6,21 @@
   "type": "module",
   "scripts": {
     "ufa:dev": "NODE_ENV=development ./scripts/dev-startup.sh",
-    "ufa:dev:clean": "pnpm db:stop",
+    "ufa:dev:clean": "bun run db:stop",
     "build": "tsup src/server.ts --format esm --clean --out-dir dist",
     "ufa:prod:seed": "./database/scripts/run-sql-seed-external.sh",
     "build:copy-env": "[ -f .env.production ] && cp .env.production dist/ || echo 'Warning: .env.production file is missing. Ensure it exists if required.'",
     "dev": "./scripts/dev-startup.sh",
-    "dev:fastify": "pnpm tsx watch src/server.ts",
-    "dev:migrate": "pnpm run db:migrate",
+    "dev:fastify": "bunx tsx watch src/server.ts",
+    "dev:migrate": "bun run db:migrate",
     "clean": "rm -rf dist",
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "pnpm supabase migration up --workdir database",
+    "db:migrate": "bun run supabase migration up --workdir database",
     "db:migrate:check": "drizzle-kit check",
-    "db:start": "pnpm supabase start --workdir database",
-    "db:stop": "pnpm supabase stop --workdir database || echo 'Note: supabase stop failed (may not be running)'",
-    "db:status": "pnpm supabase status --workdir database"
+    "db:start": "bun run supabase start --workdir database",
+    "db:stop": "bun run supabase stop --workdir database || echo 'Note: supabase stop failed (may not be running)'",
+    "db:status": "bun run supabase status --workdir database"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "2.0.0-beta.10",

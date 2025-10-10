@@ -20,7 +20,7 @@ host = "localhost"
 port = 4410
 management_port = 5411
 proxy_port = 4411
-on_reload_complete_script="pnpm generate-sdk"
+on_reload_complete_script="bun run generate-sdk"
 
 [redis_config]
 key_prefix = "MSLITE"
@@ -55,7 +55,7 @@ olap = true
 ddl_plan = false
 
 [typescript_config]
-package_manager = "pnpm"
+package_manager = "bun"
 
 [authentication]
 admin_api_key = "199d13d8201f7418054de884f3a955c928122ab3"

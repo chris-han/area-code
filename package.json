@@ -32,17 +32,10 @@
     "turbo": "^2.5.4",
     "typescript": "5.9.2"
   },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "supabase"
-    ],
-    "ignoredBuiltDependencies": [
-      "@swc/core",
-      "core-js-pure",
-      "esbuild"
-    ]
+  "catalog": {
+    "typescript": "5.9.2"
   },
-  "packageManager": "pnpm@10.14.0",
+  "packageManager": "bun@1.2.21",
   "engines": {
     "node": ">=18"
   }
