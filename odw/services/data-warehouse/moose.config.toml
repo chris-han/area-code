@@ -53,10 +53,10 @@ api_key = ""
 [s3_config]
 # S3/MinIO configuration for unstructured data storage
 endpoint_url = ""  # MinIO endpoint, set to empty string for AWS S3
-access_key_id = "<your-access-key-id>"
-secret_access_key = "<your-secret-access-key>"
-region_name = "us-east-2"
-bucket_name = "yl-billing-data"
+access_key_id = { from_env = "MOOSE_S3_ACCESS_KEY_ID" }
+secret_access_key = { from_env = "MOOSE_S3_SECRET_ACCESS_KEY" }
+region_name = { from_env = "MOOSE_S3_REGION_NAME", default = "us-east-2" }
+bucket_name = { from_env = "MOOSE_S3_BUCKET_NAME", default = "yl-billing-data" }
 signature_version = "s3v4"
 
 [features]

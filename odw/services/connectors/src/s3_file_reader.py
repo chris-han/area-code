@@ -1,12 +1,15 @@
+import base64
+import mimetypes
+import os
+from pathlib import Path
+from typing import Tuple
+
 import boto3
+import toml
 from botocore.client import Config
 from botocore.exceptions import ClientError, NoCredentialsError
-from typing import Tuple
-from pathlib import Path
-import mimetypes
-import toml
-import os
-import base64
+from dotenv import load_dotenv
+
 from moose_lib import cli_log, CliLogData
 
 class S3FileReader:
@@ -28,21 +31,30 @@ class S3FileReader:
     def _load_s3_config(self, config_path: str) -> dict:
         """Load S3 configuration from moose.config.toml"""
         try:
-            if os.path.exists(config_path):
-                with open(config_path, 'r') as f:
-                    config = toml.load(f)
-                    s3_config = config.get('s3_config', {})
-                    
-                    # Validate required configuration
-                    required_keys = ['access_key_id', 'secret_access_key', 'region_name']
-                    missing_keys = [key for key in required_keys if not s3_config.get(key)]
-                    
-                    if missing_keys:
-                        raise ValueError(f"Missing required S3 configuration keys: {missing_keys}")
-                    
-                    return s3_config
-            else:
+            config_file = Path(config_path)
+            if not config_file.exists():
                 raise FileNotFoundError(f"Configuration file not found: {config_path}")
+
+            # Load companion .env file (if present) so environment-backed values resolve automatically
+            load_dotenv(dotenv_path=config_file.with_name(".env"), override=False)
+
+            with config_file.open('r') as f:
+                config = toml.load(f)
+                raw_s3_config = config.get('s3_config', {})
+
+            resolved_config = {
+                key: self._resolve_config_value(value, key)
+                for key, value in raw_s3_config.items()
+            }
+
+            # Validate required configuration
+            required_keys = ['access_key_id', 'secret_access_key', 'region_name']
+            missing_keys = [key for key in required_keys if not resolved_config.get(key)]
+
+            if missing_keys:
+                raise ValueError(f"Missing required S3 configuration keys: {missing_keys}")
+
+            return resolved_config
         except Exception as e:
             cli_log(CliLogData(
                 action="S3FileReader",
@@ -50,6 +62,28 @@ class S3FileReader:
                 message_type="Error"
             ))
             raise
+
+    @staticmethod
+    def _resolve_config_value(value, key: str):
+        """
+        Expand environment-backed configuration entries.
+        
+        Supports TOML blocks like:
+            access_key_id = { from_env = "MOOSE_S3_ACCESS_KEY_ID", default = "optional-default" }
+        """
+        if isinstance(value, dict):
+            env_var = value.get("from_env") or value.get("env")
+            default = value.get("default")
+
+            if env_var:
+                resolved = os.getenv(env_var)
+                if resolved:
+                    return resolved
+                if default is not None:
+                    return default
+                raise ValueError(f"Environment variable '{env_var}' not set for '{key}'")
+
+        return value
     
     def _create_s3_client(self):
         """Create and configure S3 client"""

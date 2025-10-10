@@ -12,16 +12,18 @@ Usage:
     python seed-data.py
 """
 
-import os
 import glob
-import random
 import logging
-import toml
+import os
+import random
 import boto3
 from datetime import datetime, timedelta
+from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 import textwrap
+import toml
 from botocore.exceptions import ClientError, NoCredentialsError
+from dotenv import load_dotenv
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -485,6 +487,23 @@ def convert_memos_to_images():
 # S3 UPLOAD FUNCTIONS
 # ============================================================================
 
+def _resolve_s3_config_value(value, key: str):
+    """Resolve S3 configuration entries that reference environment variables."""
+    if isinstance(value, dict):
+        env_var = value.get("from_env") or value.get("env")
+        default = value.get("default")
+
+        if env_var:
+            resolved = os.getenv(env_var)
+            if resolved:
+                return resolved
+            if default is not None:
+                return default
+            raise ValueError(f"Environment variable '{env_var}' not set for '{key}'")
+
+    return value
+
+
 def load_moose_config(config_path="../services/data-warehouse/moose.config.toml"):
     """
     Load S3 configuration from moose.config.toml file.
@@ -496,11 +515,21 @@ def load_moose_config(config_path="../services/data-warehouse/moose.config.toml"
         dict: S3 configuration dictionary
     """
     try:
-        with open(config_path, 'r') as f:
+        config_file = Path(config_path)
+        if not config_file.exists():
+            raise FileNotFoundError
+
+        load_dotenv(dotenv_path=config_file.with_name(".env"), override=False)
+
+        with config_file.open('r') as f:
             config = toml.load(f)
-        
-        s3_config = config.get('s3_config', {})
-        return s3_config
+
+        raw_s3_config = config.get('s3_config', {})
+        resolved_config = {
+            key: _resolve_s3_config_value(value, key)
+            for key, value in raw_s3_config.items()
+        }
+        return resolved_config
     except FileNotFoundError:
         logger.error(f"Config file not found: {config_path}")
         return None

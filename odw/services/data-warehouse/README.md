@@ -182,13 +182,23 @@ The S3 configuration section has been added to `moose.config.toml`:
 ```toml
 [s3_config]
 # S3/MinIO configuration for unstructured data storage
-endpoint_url = "http://localhost:9500"  # MinIO endpoint, set to empty string for AWS S3
-access_key_id = "minioadmin"
-secret_access_key = "minioadmin"
-region_name = "us-east-1"
-bucket_name = "unstructured-data"
+endpoint_url = ""  # MinIO endpoint, set to empty string for AWS S3
+access_key_id = { from_env = "MOOSE_S3_ACCESS_KEY_ID" }
+secret_access_key = { from_env = "MOOSE_S3_SECRET_ACCESS_KEY" }
+region_name = { from_env = "MOOSE_S3_REGION_NAME", default = "us-east-2" }
+bucket_name = { from_env = "MOOSE_S3_BUCKET_NAME", default = "unstructured-data" }
 signature_version = "s3v4"
 ```
+
+> ℹ️ **Environment-backed values**  
+> Sensitive credentials now live in `.env`. Populate the following variables (a template is provided in `env.example`):
+> 
+> ```bash
+> MOOSE_S3_ACCESS_KEY_ID=...
+> MOOSE_S3_SECRET_ACCESS_KEY=...
+> MOOSE_S3_REGION_NAME=...
+> MOOSE_S3_BUCKET_NAME=...
+> ```
 
 ### Setup for Different Storage Types
 
