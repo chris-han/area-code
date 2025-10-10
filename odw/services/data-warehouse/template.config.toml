@@ -9,10 +9,10 @@ post_install_print = """
     $ source .venv/bin/activate
 
 📦 Install Dependencies:
-    $ pip install -r ./requirements.txt
+    $ uv pip install -r ./requirements.txt
 
 🤖 Set up LLM Integration (optional):
-    $ export ANTHROPIC_API_KEY="your-api-key-here"
+    $ export ANTHROPIC_API_KEY="<your-anthropic-api-key>"
     
     Note: LLM features enable intelligent unstructured data extraction.
     Get your API key at: https://console.anthropic.com

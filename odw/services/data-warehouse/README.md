@@ -17,7 +17,9 @@
 **Full Setup**:
 
 ```bash
-pnpm odw:dev
+bun add -g turbo
+bun install
+bun odw:dev
 ```
 
 This will:

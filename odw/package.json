@@ -7,7 +7,10 @@
     "odw:dev:clean": "cd .. && pnpm odw:dev:clean",
     "odw:dev:seed": "cd .. && pnpm odw:dev:seed"
   },
-  "packageManager": "pnpm@9.9.0",
+  "dependencies": {
+    "supabase": "^2.48.3"
+  },
+  "packageManager": "pnpm@10.18.1",
   "engines": {
     "node": ">=18"
   }

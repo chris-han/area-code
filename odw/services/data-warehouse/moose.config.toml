@@ -7,13 +7,13 @@ retention_ms = 30000
 replication_factor = 1
 
 [clickhouse_config]
-db_name = "local"
-user = "panda"
-password = "pandapass"
-use_ssl = false
-host = "localhost"
-host_port = 18123
-native_port = 9000
+db_name = "dbo"
+user = "finops"
+password = "cU2f947&9T{6d"
+use_ssl = true
+host = "ck.mightytech.cn"
+host_port = 8443
+native_port = 8443
 
 [http_server_config]
 host = "localhost"
@@ -38,7 +38,7 @@ temporal_version = "1.22.3"
 admin_tools_version = "1.22.3"
 ui_version = "2.21.3"
 ui_port = 8080
-ui_cors_origins = "http://localhost:3000"
+ui_cors_origins = "http://localhost:3008"
 config_path = "config/dynamicconfig/development-sql.yaml"
 postgresql_version = "13"
 client_cert = ""
@@ -52,11 +52,11 @@ api_key = ""
 
 [s3_config]
 # S3/MinIO configuration for unstructured data storage
-endpoint_url = "http://localhost:9500"  # MinIO endpoint, set to empty string for AWS S3
-access_key_id = "minioadmin"
-secret_access_key = "minioadmin"
-region_name = "us-east-1"
-bucket_name = "unstructured-data"
+endpoint_url = ""  # MinIO endpoint, set to empty string for AWS S3
+access_key_id = "<your-access-key-id>"
+secret_access_key = "<your-secret-access-key>"
+region_name = "us-east-2"
+bucket_name = "yl-billing-data"
 signature_version = "s3v4"
 
 [features]

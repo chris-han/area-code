@@ -4,12 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-catalogs:
-  default:
-    typescript:
-      specifier: 5.9.2
-      version: 5.9.2
-
 importers:
 
   .:
@@ -29,6 +23,12 @@ importers:
       typescript:
         specifier: 5.9.2
         version: 5.9.2
+
+  odw:
+    dependencies:
+      supabase:
+        specifier: ^2.34.3
+        version: 2.34.3
 
   odw/apps/dw-frontend: {}
 
