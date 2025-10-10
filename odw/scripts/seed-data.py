@@ -16,14 +16,16 @@ import glob
 import logging
 import os
 import random
-import boto3
+import textwrap
 from datetime import datetime, timedelta
 from pathlib import Path
-from PIL import Image, ImageDraw, ImageFont
-import textwrap
+from typing import Any
+
+import boto3
 import toml
 from botocore.exceptions import ClientError, NoCredentialsError
 from dotenv import load_dotenv
+from PIL import Image, ImageDraw, ImageFont
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -487,21 +489,51 @@ def convert_memos_to_images():
 # S3 UPLOAD FUNCTIONS
 # ============================================================================
 
-def _resolve_s3_config_value(value, key: str):
-    """Resolve S3 configuration entries that reference environment variables."""
+def _resolve_config_value(value, key: str):
+    """Resolve configuration entries that reference environment variables."""
     if isinstance(value, dict):
         env_var = value.get("from_env") or value.get("env")
         default = value.get("default")
 
         if env_var:
-            resolved = os.getenv(env_var)
-            if resolved:
-                return resolved
+            resolved_raw = os.getenv(env_var)
+            if resolved_raw not in (None, ""):
+                try:
+                    return _coerce_env_value(resolved_raw, default, value)
+                except ValueError as exc:
+                    raise ValueError(f"Invalid value for '{env_var}': {exc}") from exc
             if default is not None:
                 return default
             raise ValueError(f"Environment variable '{env_var}' not set for '{key}'")
 
     return value
+
+
+def _coerce_env_value(raw: str, default: Any, metadata: dict):
+    """Coerce environment-derived value into the expected type."""
+    type_hint = (metadata.get("type") or "").lower()
+
+    if type_hint == "bool" or isinstance(default, bool):
+        lowered = raw.strip().lower()
+        if lowered in {"1", "true", "yes", "on"}:
+            return True
+        if lowered in {"0", "false", "no", "off"}:
+            return False
+        raise ValueError(f"expected boolean but received '{raw}'")
+
+    if type_hint == "int" or isinstance(default, int):
+        try:
+            return int(raw.strip())
+        except ValueError as exc:
+            raise ValueError(f"expected integer but received '{raw}'") from exc
+
+    if type_hint == "float" or isinstance(default, float):
+        try:
+            return float(raw.strip())
+        except ValueError as exc:
+            raise ValueError(f"expected float but received '{raw}'") from exc
+
+    return raw
 
 
 def load_moose_config(config_path="../services/data-warehouse/moose.config.toml"):
@@ -526,7 +558,7 @@ def load_moose_config(config_path="../services/data-warehouse/moose.config.toml"
 
         raw_s3_config = config.get('s3_config', {})
         resolved_config = {
-            key: _resolve_s3_config_value(value, key)
+            key: _resolve_config_value(value, key)
             for key, value in raw_s3_config.items()
         }
         return resolved_config

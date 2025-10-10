@@ -2,7 +2,7 @@ import base64
 import mimetypes
 import os
 from pathlib import Path
-from typing import Tuple
+from typing import Any, Tuple
 
 import boto3
 import toml
@@ -76,14 +76,44 @@ class S3FileReader:
             default = value.get("default")
 
             if env_var:
-                resolved = os.getenv(env_var)
-                if resolved:
-                    return resolved
+                resolved_raw = os.getenv(env_var)
+                if resolved_raw not in (None, ""):
+                    try:
+                        return S3FileReader._coerce_env_value(resolved_raw, default, value)
+                    except ValueError as exc:
+                        raise ValueError(f"Invalid value for '{env_var}': {exc}") from exc
                 if default is not None:
                     return default
                 raise ValueError(f"Environment variable '{env_var}' not set for '{key}'")
 
         return value
+
+    @staticmethod
+    def _coerce_env_value(raw: str, default: Any, metadata: dict):
+        """Coerce environment-derived value into the expected type."""
+        type_hint = (metadata.get("type") or "").lower()
+
+        if type_hint == "bool" or isinstance(default, bool):
+            lowered = raw.strip().lower()
+            if lowered in {"1", "true", "yes", "on"}:
+                return True
+            if lowered in {"0", "false", "no", "off"}:
+                return False
+            raise ValueError(f"expected boolean but received '{raw}'")
+
+        if type_hint == "int" or isinstance(default, int):
+            try:
+                return int(raw.strip())
+            except ValueError as exc:
+                raise ValueError(f"expected integer but received '{raw}'") from exc
+
+        if type_hint == "float" or isinstance(default, float):
+            try:
+                return float(raw.strip())
+            except ValueError as exc:
+                raise ValueError(f"expected float but received '{raw}'") from exc
+
+        return raw
     
     def _create_s3_client(self):
         """Create and configure S3 client"""

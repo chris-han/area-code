@@ -200,6 +200,23 @@ signature_version = "s3v4"
 > MOOSE_S3_BUCKET_NAME=...
 > ```
 
+### ClickHouse Connection Settings
+
+ClickHouse credentials are also sourced from environment variables:
+
+```toml
+[clickhouse_config]
+db_name = "dbo"
+user = { from_env = "MOOSE_CLICKHOUSE_USER" }
+password = { from_env = "MOOSE_CLICKHOUSE_PASSWORD" }
+use_ssl = { from_env = "MOOSE_CLICKHOUSE_USE_SSL", default = true }
+host = { from_env = "MOOSE_CLICKHOUSE_HOST" }
+host_port = { from_env = "MOOSE_CLICKHOUSE_HOST_PORT", default = 8443 }
+native_port = { from_env = "MOOSE_CLICKHOUSE_NATIVE_PORT", default = 8443 }
+```
+
+Populate the corresponding variables in `.env` (see `env.example` for placeholders). Boolean variables such as `MOOSE_CLICKHOUSE_USE_SSL` accept values like `true/false`, `1/0`, or `yes/no`.
+
 ### Setup for Different Storage Types
 
 **For MinIO (Development/Testing):**

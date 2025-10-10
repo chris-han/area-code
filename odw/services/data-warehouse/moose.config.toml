@@ -8,12 +8,12 @@ replication_factor = 1
 
 [clickhouse_config]
 db_name = "dbo"
-user = "finops"
-password = "cU2f947&9T{6d"
-use_ssl = true
-host = "ck.mightytech.cn"
-host_port = 8443
-native_port = 8443
+user = { from_env = "MOOSE_CLICKHOUSE_USER" }
+password = { from_env = "MOOSE_CLICKHOUSE_PASSWORD" }
+use_ssl = { from_env = "MOOSE_CLICKHOUSE_USE_SSL", default = true }
+host = { from_env = "MOOSE_CLICKHOUSE_HOST" }
+host_port = { from_env = "MOOSE_CLICKHOUSE_HOST_PORT", default = 8443 }
+native_port = { from_env = "MOOSE_CLICKHOUSE_NATIVE_PORT", default = 8443 }
 
 [http_server_config]
 host = "localhost"
