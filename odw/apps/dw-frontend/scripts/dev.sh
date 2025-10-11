@@ -32,6 +32,16 @@ print_error() {
     echo -e "${RED}[DW-FRONTEND]${NC} $1"
 }
 
+ensure_static_directory() {
+    local static_dir="$APP_DIR/static"
+
+    if [ ! -d "$static_dir" ]; then
+        print_status "Creating static asset directory at $static_dir"
+        mkdir -p "$static_dir"
+        touch "$static_dir/.keep"
+    fi
+}
+
 # Port configuration
 DW_FRONTEND_PORT=8501
 
@@ -124,6 +134,8 @@ install_dependencies() {
     pip install -r requirements.txt
     print_success "Data Warehouse dashboard dependencies installed successfully in virtual environment"
 
+    ensure_static_directory
+
     # Check streamlit
     if ! command -v streamlit &> /dev/null; then
         print_error "streamlit is not installed."
@@ -146,6 +158,8 @@ start_dw_frontend_service() {
 
     print_status "Starting Data Warehouse dashboard with Streamlit..."
     print_status "Dashboard will be available at http://localhost:$DW_FRONTEND_PORT"
+
+    ensure_static_directory
 
     exec streamlit run main.py --server.port $DW_FRONTEND_PORT
 }

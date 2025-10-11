@@ -27,6 +27,17 @@ from botocore.exceptions import ClientError, NoCredentialsError
 from dotenv import load_dotenv
 from PIL import Image, ImageDraw, ImageFont
 
+try:
+    from boto3.s3.transfer import TransferConfig
+except ImportError:  # pragma: no cover
+    TransferConfig = None
+
+S3_TRANSFER_CONFIG = TransferConfig(
+    multipart_threshold=8 * 1024 * 1024,
+    multipart_chunksize=4 * 1024 * 1024,
+    max_concurrency=2
+) if TransferConfig else None
+
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -580,13 +591,21 @@ def create_s3_client(s3_config):
         boto3.client: S3 client
     """
     try:
+        endpoint_url = s3_config.get('endpoint_url')
+        if isinstance(endpoint_url, str) and not endpoint_url.strip():
+            endpoint_url = None
+
+        region_name = s3_config.get('region_name')
+        if isinstance(region_name, str) and not region_name.strip():
+            region_name = None
+
         # Create S3 client with configuration
         s3_client = boto3.client(
             's3',
-            endpoint_url=s3_config.get('endpoint_url'),
+            endpoint_url=endpoint_url,
             aws_access_key_id=s3_config.get('access_key_id'),
             aws_secret_access_key=s3_config.get('secret_access_key'),
-            region_name=s3_config.get('region_name'),
+            region_name=region_name,
             config=boto3.session.Config(signature_version=s3_config.get('signature_version', 's3v4'))
         )
         
@@ -629,12 +648,17 @@ def upload_file_to_s3(s3_client, bucket_name, file_path, s3_key):
             content_type = 'image/gif'
         
         # Upload file
-        s3_client.upload_file(
-            file_path,
-            bucket_name,
-            s3_key,
-            ExtraArgs={'ContentType': content_type}
-        )
+        upload_kwargs = {
+            'Filename': file_path,
+            'Bucket': bucket_name,
+            'Key': s3_key,
+            'ExtraArgs': {'ContentType': content_type}
+        }
+
+        if S3_TRANSFER_CONFIG:
+            upload_kwargs['Config'] = S3_TRANSFER_CONFIG
+
+        s3_client.upload_file(**upload_kwargs)
         
         return True
         
@@ -683,14 +707,18 @@ def upload_memo_files():
     successful_uploads = []
     failed_uploads = 0
     
-    for file_path in sorted(memo_files):
+    total_files = len(memo_files)
+
+    for index, file_path in enumerate(sorted(memo_files), start=1):
         # Create S3 key (path in bucket)
         filename = os.path.basename(file_path)
         s3_key = filename
-        
+
         # Upload file
         if upload_file_to_s3(s3_client, bucket_name, file_path, s3_key):
             successful_uploads.append(file_path)
+            if index == 1 or index % 50 == 0 or index == total_files:
+                logger.info(f"Uploaded {index}/{total_files} files (last: {filename})")
         else:
             failed_uploads += 1
     

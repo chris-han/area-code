@@ -32,6 +32,33 @@ print_error() {
     echo -e "${RED}[MINIO]${NC} $1"
 }
 
+configure_docker_timeouts() {
+    export DOCKER_CLIENT_TIMEOUT="${DOCKER_CLIENT_TIMEOUT:-900}"
+    export COMPOSE_HTTP_TIMEOUT="${COMPOSE_HTTP_TIMEOUT:-900}"
+    print_status "Docker timeouts set to ${DOCKER_CLIENT_TIMEOUT}s (client) / ${COMPOSE_HTTP_TIMEOUT}s (compose)"
+}
+
+pull_minio_image() {
+    local image="minio/minio"
+    local max_attempts=5
+    local attempt=1
+
+    while [ $attempt -le $max_attempts ]; do
+        print_status "Pulling $image (attempt $attempt/$max_attempts)..."
+        if docker pull "$image"; then
+            print_success "Successfully pulled $image"
+            return 0
+        fi
+
+        print_warning "Failed to pull $image (attempt $attempt). Retrying in 10 seconds..."
+        attempt=$((attempt + 1))
+        sleep 10
+    done
+
+    print_error "Unable to pull $image after $max_attempts attempts"
+    return 1
+}
+
 # MinIO configuration
 MINIO_CONTAINER_NAME="data-warehouse-minio"
 MINIO_API_PORT=9500
@@ -112,11 +139,16 @@ start_minio() {
         exit 1
     fi
 
+    if ! pull_minio_image; then
+        exit 1
+    fi
+
     print_status "Starting MinIO..."
 
     docker run -d \
         --name "$MINIO_CONTAINER_NAME" \
         --rm \
+        --pull never \
         -p $MINIO_API_PORT:9000 \
         -p $MINIO_CONSOLE_PORT:9001 \
         -e MINIO_ROOT_USER="$MINIO_ROOT_USER" \
@@ -138,6 +170,7 @@ start_minio() {
 
 main() {
     print_status "Starting MinIO service..."
+    configure_docker_timeouts
     start_minio
 }
 

@@ -10,17 +10,21 @@ Area Code ODW is a production-ready starter repository with all the necessary bu
 
 ## 🚀 Quick Start
 
+### Prerequisites
+
+- [uv](https://docs.astral.sh/uv/) CLI for Python environment management (`curl -LsSf https://astral.sh/uv/install.sh | sh`)
+- `envsubst` from GNU gettext (Ubuntu: `sudo apt-get install -y gettext-base`)
+
 Get up and running in minutes with our automated setup:
 
 ```bash
 # 1. Ensure Docker Desktop is running
+# 2. Seed databases with sample data
 
-# 2. Install dependencies & start development environment
-bun run odw:dev
-
-# 3. Seed databases with sample data
+GRANT ALL PRIVILEGES ON `finops-odw`.* TO finops;
 bun run odw:dev:seed
-
+# 3. Install dependencies & start development environment
+bun run odw:dev
 # 4. Open the data warehouse frontend
 http://localhost:8501/
 ```
@@ -75,7 +79,7 @@ area-code/
 │   │   │   │   ├── logs/    # Log data extraction workflows
 │   │   │   │   └── views/   # Materialized views for analytics
 │   │   │   ├── docs/        # Documentation and walkthrough guides
-│   │   │   ├── setup.sh     # Setup and management script
+│   │   │   ├── scripts/     # Service management scripts
 │   │   │   ├── moose.config.toml # Moose framework configuration
 │   │   │   └── requirements.txt # Python dependencies
 │   │   └── connectors/      # External data source connectors
@@ -163,10 +167,14 @@ We're working on a production deployment strategy that will be available soon.
 cd odw/services/data-warehouse
 
 # Clean and restart
-./setup.sh reset
+./scripts/clean.sh
 
-# Check status
-./setup.sh status
+# Start services
+bun run odw:dev
+
+# shows Moose services, pipelines, and external dependencies 
+ moose-cli status 
+ # Run it from odw/services/data-warehouse
 ```
 
 ## 📚 Resources

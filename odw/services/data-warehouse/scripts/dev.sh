@@ -32,6 +32,159 @@ print_error() {
     echo -e "${RED}[DATA-WAREHOUSE]${NC} $1"
 }
 
+configure_docker_timeouts() {
+    export DOCKER_CLIENT_TIMEOUT="${DOCKER_CLIENT_TIMEOUT:-900}"
+    export COMPOSE_HTTP_TIMEOUT="${COMPOSE_HTTP_TIMEOUT:-900}"
+    local base_compose="$SERVICE_DIR/.moose/docker-compose.yml"
+    local override_compose="$SERVICE_DIR/.moose/docker-compose.override.yml"
+
+    local clickhouse_host=""
+    local temporal_host=""
+    local temporal_db_host=""
+    if [[ -f "$SERVICE_DIR/.env" ]]; then
+        set -a
+        # shellcheck disable=SC1090
+        source "$SERVICE_DIR/.env"
+        set +a
+        clickhouse_host="${MOOSE_CLICKHOUSE_HOST:-}"
+        temporal_host="${MOOSE_TEMPORAL_HOST:-}"
+        temporal_db_host="${TEMPORAL_DB_HOST:-}"
+    fi
+
+    if [[ -f "$override_compose" ]]; then
+        export COMPOSE_FILE="$base_compose:$override_compose"
+        print_status "Using Docker Compose files: $COMPOSE_FILE"
+    else
+        export COMPOSE_FILE="$base_compose"
+        print_status "Using Docker Compose file: $COMPOSE_FILE"
+    fi
+
+    local profiles=()
+
+    local include_clickhouse=true
+    if [[ -n "$clickhouse_host" ]]; then
+        case "$clickhouse_host" in
+            localhost|127.*|clickhousedb)
+                include_clickhouse=true
+                ;;
+            *)
+                include_clickhouse=false
+                ;;
+        esac
+    fi
+
+    if [[ "$include_clickhouse" == true ]]; then
+        profiles+=(clickhouse)
+        print_status "Local ClickHouse container enabled"
+    else
+        print_status "Skipping local ClickHouse container; using external host: ${clickhouse_host:-remote}"
+    fi
+
+    local include_temporal=true
+    if [[ -n "$temporal_host" ]]; then
+        case "$temporal_host" in
+            localhost|127.*|temporal)
+                include_temporal=true
+                ;;
+            *)
+                include_temporal=false
+                ;;
+        esac
+    fi
+
+    if [[ "$include_temporal" == true ]]; then
+        profiles+=(temporal)
+        print_status "Local Temporal services enabled"
+    else
+        print_status "Skipping local Temporal services; using external host: ${temporal_host:-remote}"
+    fi
+
+    local include_temporal_db=true
+    if [[ -n "$temporal_db_host" ]]; then
+        case "$temporal_db_host" in
+            localhost|127.*|postgresql|temporal-postgresql)
+                include_temporal_db=true
+                ;;
+            *)
+                include_temporal_db=false
+                ;;
+        esac
+    fi
+
+    if [[ "$include_temporal_db" == true ]]; then
+        profiles+=(temporal-db)
+        print_status "Local Temporal PostgreSQL enabled"
+    else
+        print_status "Skipping local Temporal PostgreSQL; using external host: ${temporal_db_host:-remote}"
+    fi
+
+    if [[ ${#profiles[@]} -gt 0 ]]; then
+        local profiles_joined
+        profiles_joined="$(IFS=,; echo "${profiles[*]}")"
+        export COMPOSE_PROFILES="$profiles_joined"
+        print_status "Docker Compose profiles enabled: $COMPOSE_PROFILES"
+    else
+        unset COMPOSE_PROFILES
+        print_status "No optional Docker Compose profiles enabled"
+    fi
+
+    print_status "Docker timeouts set to ${DOCKER_CLIENT_TIMEOUT}s (client) / ${COMPOSE_HTTP_TIMEOUT}s (compose)"
+}
+
+docker_compose_command() {
+    if docker compose version >/dev/null 2>&1; then
+        echo "docker compose"
+    elif command -v docker-compose >/dev/null 2>&1; then
+        echo "docker-compose"
+    else
+        return 1
+    fi
+}
+
+pre_pull_images() {
+    local compose_base="$SERVICE_DIR/.moose/docker-compose.yml"
+    if [ ! -f "$compose_base" ]; then
+        print_warning "Compose file not found at $compose_base; skipping pre-pull"
+        return
+    fi
+
+    local compose_cmd
+    if ! compose_cmd="$(docker_compose_command)"; then
+        print_warning "Docker Compose CLI not available; skipping image pre-pull"
+        return
+    fi
+
+    local pull_args=(pull --no-parallel)
+    if [ "$compose_cmd" = "docker compose" ]; then
+        pull_args+=(--progress plain)
+    fi
+
+    print_status "Pre-pulling Docker images (serial download for slow connections)..."
+    if ! $compose_cmd "${pull_args[@]}"; then
+        print_warning "Docker image pre-pull encountered errors. Containers will retry during startup."
+    else
+        print_success "Docker images pulled successfully"
+    fi
+}
+
+# Render moose.config.toml from template
+render_moose_config() {
+    local renderer="$SERVICE_DIR/scripts/render-config.sh"
+
+    if [ ! -x "$renderer" ]; then
+        print_error "Config renderer not found or not executable: $renderer"
+        exit 1
+    fi
+
+    print_status "Rendering moose.config.toml from template..."
+    if "$renderer" >/dev/null; then
+        print_success "moose.config.toml generated"
+    else
+        print_error "Failed to render moose.config.toml"
+        exit 1
+    fi
+}
+
 # Port configuration
 DATA_WAREHOUSE_PORT=4200
 
@@ -123,6 +276,8 @@ install_dependencies() {
     pip install .
     print_success "Data warehouse dependencies installed successfully in virtual environment"
 
+    render_moose_config
+
     # Check Moose CLI
     if ! command -v moose-cli &> /dev/null; then
         print_error "Moose CLI is not installed."
@@ -135,6 +290,8 @@ install_dependencies() {
 
 start_data_warehouse_service() {
     ensure_venv_activated
+
+    render_moose_config
 
     # Check if port is in use
     if is_port_in_use $DATA_WAREHOUSE_PORT; then
@@ -153,7 +310,9 @@ main() {
     print_status "Starting Data Warehouse service..."
 
     check_environment
+    configure_docker_timeouts
     install_dependencies
+    pre_pull_images
     start_data_warehouse_service
 }
 

@@ -34,3 +34,6 @@ nohup.out
 services/*/temp_migration/
 services/*/dev-*.log
 services/*/.moose/
+odw/scripts/__pycache__/seed-data.cpython-312.pyc
+odw/scripts/memo_*
+odw/services/data-warehouse/moose.config.toml

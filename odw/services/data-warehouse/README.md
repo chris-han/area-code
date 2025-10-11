@@ -88,7 +88,7 @@ odw/
 │   │   │   ├── views/          # Materialized views for analytics
 │   │   │   └── main.py         # Main Moose application entry point
 │   │   ├── docs/               # Documentation and walkthrough guides
-│   │   ├── setup.sh            # Setup and management script
+│   │   ├── scripts/            # Setup and management scripts
 │   │   ├── moose.config.toml   # Moose framework configuration
 │   │   └── requirements.txt    # Python dependencies
 │   └── connectors/             # External data source connectors

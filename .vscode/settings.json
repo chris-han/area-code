@@ -41,5 +41,6 @@
       "driver": "ClickHouse",
       "name": "moose"
     }
-  ]
+  ],
+  "python.defaultInterpreterPath": "/home/chris/repo/area-code/odw/services/data-warehouse/venv/bin/python"
 }
