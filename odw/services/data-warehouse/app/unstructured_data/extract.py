@@ -2,7 +2,7 @@ from app.ingest.models import Medical, UnstructuredData, UnstructuredDataSource
 from app.utils.llm_service import get_llm_service
 from connectors.connector_factory import ConnectorFactory, ConnectorType
 from connectors.s3_connector import S3ConnectorConfig, S3FileContent
-from moose_lib import Task, TaskConfig, Workflow, WorkflowConfig, cli_log, CliLogData
+from moose_lib import Task, TaskConfig, Workflow, WorkflowConfig, cli_log, CliLogData, TaskContext
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 from datetime import datetime
@@ -96,7 +96,7 @@ def create_dlq_record(file_path: str, error_message: str) -> UnstructuredDataSou
         processing_instructions=f"Failed: {error_message}"
     )
 
-def stage_1_s3_to_unstructured(input: UnstructuredDataExtractParams) -> List[str]:
+def stage_1_s3_to_unstructured(context: TaskContext[UnstructuredDataExtractParams]) -> List[str]:
     """
     Stage 1: Extract files from S3 and create UnstructuredData staging records.
     Each file gets a unique ID that will be shared with the Medical record.
@@ -109,26 +109,26 @@ def stage_1_s3_to_unstructured(input: UnstructuredDataExtractParams) -> List[str
 
     cli_log(CliLogData(
         action="UnstructuredDataWorkflow",
-        message=f"🔍 S3 PATTERN: '{input.source_file_pattern}'",
+        message=f"🔍 S3 PATTERN: '{context.input.source_file_pattern}'",
         message_type="Info"
     ))
 
     cli_log(CliLogData(
         action="UnstructuredDataWorkflow",
-        message=f"DEBUG: Processing instructions: '{input.processing_instructions}'",
+        message=f"DEBUG: Processing instructions: '{context.input.processing_instructions}'",
         message_type="Info"
     ))
 
     # Create S3 connector to extract files from pattern
     cli_log(CliLogData(
         action="UnstructuredDataWorkflow",
-        message=f"DEBUG: Creating S3 connector with pattern: {input.source_file_pattern}",
+        message=f"DEBUG: Creating S3 connector with pattern: {context.input.source_file_pattern}",
         message_type="Info"
     ))
 
     connector = ConnectorFactory[S3FileContent].create(
         ConnectorType.S3,
-        S3ConnectorConfig(s3_pattern=input.source_file_pattern)
+        S3ConnectorConfig(s3_pattern=context.input.source_file_pattern)
     )
 
     cli_log(CliLogData(
@@ -149,7 +149,7 @@ def stage_1_s3_to_unstructured(input: UnstructuredDataExtractParams) -> List[str
     if len(files) == 0:
         cli_log(CliLogData(
             action="UnstructuredDataWorkflow",
-            message=f"⚠️ S3 ISSUE: No files found matching pattern '{input.source_file_pattern}'. Pattern may not match any files.",
+            message=f"⚠️ S3 ISSUE: No files found matching pattern '{context.input.source_file_pattern}'. Pattern may not match any files.",
             message_type="Warning"
         ))
     else:
@@ -183,7 +183,7 @@ def stage_1_s3_to_unstructured(input: UnstructuredDataExtractParams) -> List[str
                 source_file_path=file_content.file_path,
                 extracted_data=file_content.content,  # Store raw file content for LLM processing
                 processed_at=datetime.now().isoformat(),
-                processing_instructions=input.processing_instructions,
+                processing_instructions=context.input.processing_instructions,
                 transform_timestamp=datetime.now().isoformat()
             )
             
@@ -271,7 +271,7 @@ def stage_1_s3_to_unstructured(input: UnstructuredDataExtractParams) -> List[str
     return created_record_ids
 
 
-def stage_2_unstructured_to_medical(input: UnstructuredDataExtractParams, record_ids_to_process: List[str]) -> None:
+def stage_2_unstructured_to_medical(context: TaskContext[UnstructuredDataExtractParams], record_ids_to_process: List[str]) -> None:
     """
     Stage 2: Process specific UnstructuredData records (created by Stage 1) and create Medical records.
     Uses the same ID from UnstructuredData for the Medical record to maintain relationship.
@@ -698,16 +698,16 @@ def stage_2_unstructured_to_medical(input: UnstructuredDataExtractParams, record
         message_type="Info"
     ))
 
-def run_task(input: UnstructuredDataExtractParams) -> None:
+def run_task(context: TaskContext[UnstructuredDataExtractParams]) -> None:
     cli_log(CliLogData(action="UnstructuredDataWorkflow", message="Running UnstructuredData task...", message_type="Info"))
 
     # Stage 1: Extract files from S3 and create UnstructuredData staging records
     cli_log(CliLogData(action="UnstructuredDataWorkflow", message="🔵 Starting Stage 1: S3 to UnstructuredData", message_type="Info"))
-    record_ids_created = stage_1_s3_to_unstructured(input)
+    record_ids_created = stage_1_s3_to_unstructured(context)
     
     # Stage 2: Process UnstructuredData records to create Medical records using LLM
     cli_log(CliLogData(action="UnstructuredDataWorkflow", message="🟢 Starting Stage 2: UnstructuredData to Medical", message_type="Info"))
-    stage_2_unstructured_to_medical(input, record_ids_created)
+    stage_2_unstructured_to_medical(context, record_ids_created)
     
     cli_log(CliLogData(action="UnstructuredDataWorkflow", message="✅ Completed both stages of UnstructuredData workflow", message_type="Info"))
 

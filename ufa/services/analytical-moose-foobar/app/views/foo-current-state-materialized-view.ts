@@ -1,4 +1,5 @@
-import { MaterializedView, ClickHouseEngines, sql } from "@514labs/moose-lib";
+import { MaterializedView, sql } from "@514labs/moose-lib";
+import { ReplacingMergeTreeEngine } from "@514labs/moose-lib/blocks";
 import { FooPipeline } from "../index";
 import { FooWithCDC } from "@workspace/models";
 
@@ -30,6 +31,6 @@ export const FooCurrentStateView = new MaterializedView<FooCurrentStateSchema>({
   selectTables: [FooPipeline.table!],
   tableName: "foo_current_state",
   materializedViewName: "foo_current_state_mv",
-  engine: ClickHouseEngines.ReplacingMergeTree,
+  engine: ReplacingMergeTreeEngine(),
   orderByFields: ["id"],
 });

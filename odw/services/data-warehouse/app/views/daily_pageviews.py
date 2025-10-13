@@ -1,4 +1,4 @@
-from moose_lib import MaterializedView, MaterializedViewOptions, ClickHouseEngines, AggregateFunction
+from moose_lib import MaterializedView, MaterializedViewOptions, AggregateFunction
 from pydantic import BaseModel
 from typing import Annotated
 from app.ingest.models import eventModel
@@ -28,7 +28,7 @@ daily_pageviews_mv = MaterializedView[DailyPageViewsSchema](
         table_name="daily_pageviews_table",
         materialized_view_name="daily_pageviews_mv",
         select_tables=[eventModel.get_table()],
-        engine=ClickHouseEngines.AggregatingMergeTree,
+        engine="AggregatingMergeTree",
         order_by_fields=["view_date"]
     )
 ) 

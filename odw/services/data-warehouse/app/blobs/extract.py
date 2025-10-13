@@ -2,7 +2,7 @@ from app.ingest.models import BlobSource
 from app.utils.simulator import simulate_failures
 from connectors.connector_factory import ConnectorFactory, ConnectorType
 from connectors.blob_connector import BlobConnectorConfig
-from moose_lib import Task, TaskConfig, Workflow, WorkflowConfig, cli_log, CliLogData
+from moose_lib import Task, TaskConfig, Workflow, WorkflowConfig, cli_log, CliLogData, TaskContext
 from pydantic import BaseModel
 from typing import Optional
 import requests
@@ -20,13 +20,13 @@ class BlobExtractParams(BaseModel):
     batch_size: Optional[int] = 100
     fail_percentage: Optional[int] = 0
 
-def run_task(input: BlobExtractParams) -> None:
+def run_task(context: TaskContext[BlobExtractParams]) -> None:
     cli_log(CliLogData(action="BlobWorkflow", message="Running Blob task...", message_type="Info"))
 
     # Create a connector to extract data from Blob
     connector = ConnectorFactory[BlobSource].create(
         ConnectorType.Blob,
-        BlobConnectorConfig(batch_size=input.batch_size)
+        BlobConnectorConfig(batch_size=context.input.batch_size)
     )
 
     # Extract data from Blob
@@ -38,11 +38,11 @@ def run_task(input: BlobExtractParams) -> None:
         message_type="Info"
     ))
 
-    failed_count = simulate_failures(data, input.fail_percentage)
+    failed_count = simulate_failures(data, context.input.fail_percentage)
     if failed_count > 0:
         cli_log(CliLogData(
             action="BlobWorkflow",
-            message=f"Marked {failed_count} items ({input.fail_percentage}%) as failed",
+            message=f"Marked {failed_count} items ({context.input.fail_percentage}%) as failed",
             message_type="Info"
         ))
 

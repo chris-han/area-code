@@ -140,7 +140,7 @@ The connector pages use the same Moose patterns shown in the Landing Page sectio
 
 *MaterializedView for pre-aggregated analytics:*
 ```python
-from moose_lib import MaterializedView, AggregateFunction
+from moose_lib import MaterializedView, MaterializedViewOptions, AggregateFunction
 
 class DailyPageViewsSchema(BaseModel):
     view_date: str
@@ -160,7 +160,11 @@ query = """
 daily_pageviews_mv = MaterializedView[DailyPageViewsSchema](
     MaterializedViewOptions(
         select_statement=query,
-        engine=ClickHouseEngines.AggregatingMergeTree
+        table_name="daily_pageviews_table",
+        materialized_view_name="daily_pageviews_mv",
+        select_tables=[eventModel.get_table()],
+        engine="AggregatingMergeTree",
+        order_by_fields=["view_date"]
     )
 )
 ```

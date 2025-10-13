@@ -2,7 +2,7 @@ from app.ingest.models import EventSource
 from app.utils.simulator import simulate_failures
 from connectors.connector_factory import ConnectorFactory, ConnectorType
 from connectors.events_connector import EventsConnectorConfig
-from moose_lib import Task, TaskConfig, Workflow, WorkflowConfig, cli_log, CliLogData
+from moose_lib import Task, TaskConfig, Workflow, WorkflowConfig, cli_log, CliLogData, TaskContext
 from pydantic import BaseModel
 from typing import Optional
 import requests
@@ -20,13 +20,13 @@ class EventsExtractParams(BaseModel):
     batch_size: Optional[int] = 100
     fail_percentage: Optional[int] = 0
 
-def run_task(input: EventsExtractParams) -> None:
+def run_task(context: TaskContext[EventsExtractParams]) -> None:
     cli_log(CliLogData(action="EventsWorkflow", message="Running Events task...", message_type="Info"))
 
     # Create a connector to extract data from Events
     connector = ConnectorFactory[EventSource].create(
         ConnectorType.Events,
-        EventsConnectorConfig(batch_size=input.batch_size)
+        EventsConnectorConfig(batch_size=context.input.batch_size)
     )
 
     # Extract data from Events
@@ -38,11 +38,11 @@ def run_task(input: EventsExtractParams) -> None:
         message_type="Info"
     ))
 
-    failed_count = simulate_failures(data, input.fail_percentage)
+    failed_count = simulate_failures(data, context.input.fail_percentage)
     if failed_count > 0:
         cli_log(CliLogData(
             action="EventsWorkflow",
-            message=f"Marked {failed_count} items ({input.fail_percentage}%) as failed",
+            message=f"Marked {failed_count} items ({context.input.fail_percentage}%) as failed",
             message_type="Info"
         ))
 
