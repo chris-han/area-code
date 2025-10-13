@@ -7,6 +7,9 @@ setup(
     packages=["connectors"],
     python_requires=">=3.12",
     install_requires=[
-        # Add your dependencies here
+        "pydantic>=2.0.0",
+        "requests>=2.25.0",
+        "polars>=0.20.0",  # For data processing in future tasks
+        "moose_lib",
     ],
 )

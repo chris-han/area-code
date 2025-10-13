@@ -1,5 +1,5 @@
 from typing import List, TypeVar, Generic, Optional
-from .random import random_blob_source, BlobSource
+from mock_data_generators import random_blob_source, BlobSource
 
 T = TypeVar('T')
 

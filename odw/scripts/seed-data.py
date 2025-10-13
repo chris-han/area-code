@@ -3,7 +3,7 @@
 Complete seed data pipeline for memo generation, image conversion, and S3 upload.
 
 This script combines three operations:
-1. Generate 50 professional, varied memo text files
+1. Generate 10 professional, varied memo text files
 2. Convert memo text files to JPEG images
 3. Upload both text and image files to S3
 4. Clean up local files after successful upload
@@ -352,7 +352,7 @@ Feel free to reach out if you have any questions.
     return template(data)
 
 def generate_memos():
-    """Generate 50 professional varied memo files."""
+    """Generate 10 professional varied memo files."""
     logger.info("Step 1: Generating professional varied memo files...")
 
     # Remove old files
@@ -366,9 +366,9 @@ def generate_memos():
 
     output_dir = "."
 
-    logger.info(f"Generating 50 professional, varied memo files in {output_dir}/...")
+    logger.info(f"Generating 10 professional, varied memo files in {output_dir}/...")
 
-    for i in range(1, 51):
+    for i in range(1, 11):
         memo_content = generate_professional_memo()
         filename = f"memo_{i:04d}.txt"
         filepath = os.path.join(output_dir, filename)
@@ -379,7 +379,7 @@ def generate_memos():
         if i % 10 == 0:
             logger.info(f"Generated {i} professional files...")
 
-    logger.info(f"✅ Successfully generated 50 professional memo files")
+    logger.info(f"✅ Successfully generated 10 professional memo files")
 
 # ============================================================================
 # IMAGE CONVERSION FUNCTIONS
@@ -768,7 +768,7 @@ def main():
     logger.info("Seed Data Pipeline")
     logger.info("=" * 50)
     logger.info("This will:")
-    logger.info("1. Generate 50 professional varied memo text files")
+    logger.info("1. Generate 10 professional varied memo text files")
     logger.info("2. Convert memo text files to JPEG images")
     logger.info("3. Upload both text and image files to S3")
     logger.info("4. Clean up local files after successful upload")
