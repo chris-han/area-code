@@ -51,41 +51,42 @@ class UnstructuredDataSource(BaseModel):
     processed_at: str
     processing_instructions: Optional[str] = None
 
-class AzureBillingDetailSource(BaseModel):
-    """Source model for Azure billing detail records from API"""
-    id: Key[str]
-    account_owner_id: Optional[str] = None
-    account_name: Optional[str] = None
-    service_administrator_id: Optional[str] = None
-    subscription_id: Optional[int] = None
-    subscription_guid: Optional[str] = None
-    subscription_name: Optional[str] = None
-    date: Union[date, None] = None
-    month: Optional[int] = None
-    day: Optional[int] = None
-    year: Optional[int] = None
-    product: Optional[str] = None
-    meter_id: Optional[str] = None
-    meter_category: Optional[str] = None
-    meter_sub_category: Optional[str] = None
-    meter_region: Optional[str] = None
-    meter_name: Optional[str] = None
-    consumed_quantity: Optional[float] = None
-    resource_rate: Optional[float] = None
-    extended_cost: Optional[float] = None
-    resource_location: Optional[str] = None
-    consumed_service: Optional[str] = None
-    instance_id: str  # Required field
-    service_info1: Optional[str] = None
-    service_info2: Optional[str] = None
-    additional_info: Optional[str] = None  # JSON string from API
-    tags: Optional[str] = None  # JSON string from API
-    store_service_identifier: Optional[str] = None
-    department_name: Optional[str] = None
-    cost_center: Optional[str] = None
-    unit_of_measure: Optional[str] = None
-    resource_group: Optional[str] = None
-    month_date: date  # Required field
+# Temporarily commented out to debug NoneType issue
+# class AzureBillingDetailSource(BaseModel):
+#     """Source model for Azure billing detail records from API"""
+#     id: Key[str]
+#     account_owner_id: Optional[str] = None
+#     account_name: Optional[str] = None
+#     service_administrator_id: Optional[str] = None
+#     subscription_id: Optional[int] = None
+#     subscription_guid: Optional[str] = None
+#     subscription_name: Optional[str] = None
+#     date: Optional[date] = None
+#     month: Optional[int] = None
+#     day: Optional[int] = None
+#     year: Optional[int] = None
+#     product: Optional[str] = None
+#     meter_id: Optional[str] = None
+#     meter_category: Optional[str] = None
+#     meter_sub_category: Optional[str] = None
+#     meter_region: Optional[str] = None
+#     meter_name: Optional[str] = None
+#     consumed_quantity: Optional[float] = None
+#     resource_rate: Optional[float] = None
+#     extended_cost: Optional[float] = None
+#     resource_location: Optional[str] = None
+#     consumed_service: Optional[str] = None
+#     instance_id: str  # Required field
+#     service_info1: Optional[str] = None
+#     service_info2: Optional[str] = None
+#     additional_info: Optional[str] = None  # JSON string from API
+#     tags: Optional[str] = None  # JSON string from API
+#     store_service_identifier: Optional[str] = None
+#     department_name: Optional[str] = None
+#     cost_center: Optional[str] = None
+#     unit_of_measure: Optional[str] = None
+#     resource_group: Optional[str] = None
+#     month_date: date  # Required field
 
 # Final models - processed data with transformations
 class Blob(BaseModel):
@@ -128,53 +129,54 @@ class UnstructuredData(BaseModel):
     processing_instructions: Optional[str] = None
     transform_timestamp: str
 
-class AzureBillingDetail(BaseModel):
-    """Final processed model for Azure billing detail records"""
-    id: Key[str]
-    account_owner_id: Optional[str] = None
-    account_name: Optional[str] = None
-    service_administrator_id: Optional[str] = None
-    subscription_id: Optional[int] = None
-    subscription_guid: Optional[str] = None
-    subscription_name: Optional[str] = None
-    date: Union[date, None] = None
-    month: Optional[int] = None
-    day: Optional[int] = None
-    year: Optional[int] = None
-    product: Optional[str] = None
-    meter_id: Optional[str] = None
-    meter_category: Optional[str] = None
-    meter_sub_category: Optional[str] = None
-    meter_region: Optional[str] = None
-    meter_name: Optional[str] = None
-    consumed_quantity: Optional[float] = None
-    resource_rate: Optional[float] = None
-    extended_cost: Optional[float] = None
-    resource_location: Optional[str] = None
-    consumed_service: Optional[str] = None
-    instance_id: str  # Required field
-    service_info1: Optional[str] = None
-    service_info2: Optional[str] = None
-    additional_info: Optional[Dict[str, Any]] = None  # Parsed JSON
-    tags: Optional[Dict[str, Any]] = None  # Parsed JSON
-    store_service_identifier: Optional[str] = None
-    department_name: Optional[str] = None
-    cost_center: Optional[str] = None
-    unit_of_measure: Optional[str] = None
-    resource_group: Optional[str] = None
-    extended_cost_tax: Optional[float] = None
-    resource_tracking: Optional[str] = None
-    resource_name: Optional[str] = None
-    vm_name: Optional[str] = None
-    latest_resource_type: Optional[str] = None
-    newmonth: Optional[str] = None
-    month_date: date  # Required field
-    sku: Optional[str] = None
-    cmdb_mapped_application_service: Optional[str] = None
-    ppm_billing_item: Optional[str] = None
-    ppm_id_owner: Optional[str] = None
-    ppm_io_cc: Optional[str] = None
-    transform_timestamp: str
+# Temporarily commented out to debug NoneType issue
+# class AzureBillingDetail(BaseModel):
+#     """Final processed model for Azure billing detail records"""
+#     id: Key[str]
+#     account_owner_id: Optional[str] = None
+#     account_name: Optional[str] = None
+#     service_administrator_id: Optional[str] = None
+#     subscription_id: Optional[int] = None
+#     subscription_guid: Optional[str] = None
+#     subscription_name: Optional[str] = None
+#     date: Optional[date] = None
+#     month: Optional[int] = None
+#     day: Optional[int] = None
+#     year: Optional[int] = None
+#     product: Optional[str] = None
+#     meter_id: Optional[str] = None
+#     meter_category: Optional[str] = None
+#     meter_sub_category: Optional[str] = None
+#     meter_region: Optional[str] = None
+#     meter_name: Optional[str] = None
+#     consumed_quantity: Optional[float] = None
+#     resource_rate: Optional[float] = None
+#     extended_cost: Optional[float] = None
+#     resource_location: Optional[str] = None
+#     consumed_service: Optional[str] = None
+#     instance_id: str  # Required field
+#     service_info1: Optional[str] = None
+#     service_info2: Optional[str] = None
+#     additional_info: Optional[str] = None  # Parsed JSON as string
+#     tags: Optional[str] = None  # Parsed JSON as string
+#     store_service_identifier: Optional[str] = None
+#     department_name: Optional[str] = None
+#     cost_center: Optional[str] = None
+#     unit_of_measure: Optional[str] = None
+#     resource_group: Optional[str] = None
+#     extended_cost_tax: Optional[float] = None
+#     resource_tracking: Optional[str] = None
+#     resource_name: Optional[str] = None
+#     vm_name: Optional[str] = None
+#     latest_resource_type: Optional[str] = None
+#     newmonth: Optional[str] = None
+#     month_date: date  # Required field
+#     sku: Optional[str] = None
+#     cmdb_mapped_application_service: Optional[str] = None
+#     ppm_billing_item: Optional[str] = None
+#     ppm_id_owner: Optional[str] = None
+#     ppm_io_cc: Optional[str] = None
+#     transform_timestamp: str
 
 
 # Source ingest pipelines
@@ -206,12 +208,13 @@ unstructuredDataSourceModel = IngestPipeline[UnstructuredDataSource]("Unstructur
     dead_letter_queue=True
 ))
 
-azureBillingDetailSourceModel = IngestPipeline[AzureBillingDetailSource]("AzureBillingDetailSource", IngestPipelineConfig(
-    ingest=True,
-    stream=True,
-    table=False,  # No table needed - only for DLQ processing
-    dead_letter_queue=True
-))
+# Temporarily commented out to debug NoneType issue
+# azureBillingDetailSourceModel = IngestPipeline[AzureBillingDetailSource]("AzureBillingDetailSource", IngestPipelineConfig(
+#     ingest=True,
+#     stream=True,
+#     table=False,  # No table needed - only for DLQ processing
+#     dead_letter_queue=True
+# ))
 
 # Final processed pipelines
 blobModel = IngestPipeline[Blob]("Blob", IngestPipelineConfig(
@@ -260,9 +263,10 @@ medicalModel = IngestPipeline[Medical]("Medical", IngestPipelineConfig(
     dead_letter_queue=True
 ))
 
-azureBillingDetailModel = IngestPipeline[AzureBillingDetail]("AzureBillingDetail", IngestPipelineConfig(
-    ingest=True,
-    stream=True,
-    table=True,
-    dead_letter_queue=True
-))
+# Temporarily commented out to debug NoneType issue
+# azureBillingDetailModel = IngestPipeline[AzureBillingDetail]("AzureBillingDetail", IngestPipelineConfig(
+#     ingest=True,
+#     stream=True,
+#     table=True,
+#     dead_letter_queue=True
+# ))

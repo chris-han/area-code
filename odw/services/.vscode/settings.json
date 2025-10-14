@@ -1,0 +1,40 @@
+{
+  "python.defaultInterpreterPath": "./.venv/bin/python",
+  "python.terminal.activateEnvironment": true,
+  "python.terminal.activateEnvInCurrentTerminal": true,
+  "python.analysis.extraPaths": [
+    "./.venv/lib/python3.12/site-packages",
+    "./connectors/src",
+    "./data-warehouse"
+  ],
+  "python.linting.enabled": true,
+  "python.linting.pylintEnabled": false,
+  "python.linting.flake8Enabled": true,
+  "python.formatting.provider": "black",
+  "python.testing.pytestEnabled": true,
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestArgs": [
+    "."
+  ],
+  "files.associations": {
+    "*.toml": "toml"
+  },
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/*.pyc": true,
+    "**/.moose": false,
+    "**/build": true,
+    "**/*.egg-info": true
+  },
+  "terminal.integrated.defaultProfile.linux": "bash",
+  "terminal.integrated.profiles.linux": {
+    "bash": {
+      "path": "bash",
+      "args": [
+        "-c",
+        "source .venv/bin/activate 2>/dev/null && echo '🐍 Backend Services .venv activated' || echo '⚠️  Backend .venv not found'; exec bash"
+      ]
+    }
+  },
+  "terminal.integrated.cwd": "${workspaceFolder}"
+}

@@ -1,0 +1,44 @@
+{
+  "folders": [
+    {
+      "name": "ODW Root",
+      "path": "."
+    },
+    {
+      "name": "Backend Services",
+      "path": "./services"
+    },
+    {
+      "name": "Data Warehouse Service",
+      "path": "./services/data-warehouse"
+    },
+    {
+      "name": "Connectors Service", 
+      "path": "./services/connectors"
+    },
+    {
+      "name": "DW Frontend App",
+      "path": "./apps/dw-frontend"
+    }
+  ],
+  "settings": {
+    "python.terminal.activateEnvironment": true,
+    "python.terminal.activateEnvInCurrentTerminal": true,
+    "files.exclude": {
+      "**/__pycache__": true,
+      "**/*.pyc": true,
+      "**/.venv": false
+    }
+  },
+  "extensions": {
+    "recommendations": [
+      "ms-python.python",
+      "ms-python.flake8",
+      "ms-python.black-formatter",
+      "ms-python.pylint",
+      "ms-toolsai.jupyter",
+      "bradlc.vscode-tailwindcss",
+      "esbenp.prettier-vscode"
+    ]
+  }
+}

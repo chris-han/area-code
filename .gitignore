@@ -9,7 +9,10 @@ dist-ssr
 .env*
 .cache
 ./logs/
+# Python virtual environments
+.venv/
 venv/
+.odw-venv/
 
 # Ignore scratch files - used for testing and development in Data Warehouse
 scratch*

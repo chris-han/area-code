@@ -38,3 +38,23 @@ Backend & Data:
 - Ingestion: Moose connectors for Blobs, Events, and Logs
 
 Frontend: Streamlit
+
+### Next Steps
+
+- Setup the environments:
+
+```
+cd odw
+./scripts/clean-venvs.sh
+./scripts/setup-venvs.sh
+```
+
+
+
+- Start development:
+
+```
+# Development
+bun run odw:dev              # Start all services
+bun run odw:dev:clean        # Clean all services
+```

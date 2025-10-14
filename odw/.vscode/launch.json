@@ -1,0 +1,41 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Data Warehouse: Moose CLI Dev",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/services/.venv/bin/moose-cli",
+      "args": ["dev"],
+      "cwd": "${workspaceFolder}/services/data-warehouse",
+      "console": "integratedTerminal",
+      "python": "${workspaceFolder}/services/.venv/bin/python",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/services/data-warehouse"
+      }
+    },
+    {
+      "name": "Frontend: Streamlit App",
+      "type": "python", 
+      "request": "launch",
+      "program": "${workspaceFolder}/apps/dw-frontend/.venv/bin/streamlit",
+      "args": ["run", "main.py"],
+      "cwd": "${workspaceFolder}/apps/dw-frontend",
+      "console": "integratedTerminal",
+      "python": "${workspaceFolder}/apps/dw-frontend/.venv/bin/python"
+    },
+    {
+      "name": "Connectors: Run Tests",
+      "type": "python",
+      "request": "launch", 
+      "module": "pytest",
+      "args": ["tests/", "-v"],
+      "cwd": "${workspaceFolder}/services/connectors",
+      "console": "integratedTerminal",
+      "python": "${workspaceFolder}/services/.venv/bin/python",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/services/connectors/src"
+      }
+    }
+  ]
+}

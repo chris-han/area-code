@@ -1,0 +1,40 @@
+# Development Requirements for Azure Billing Connector Test Suite
+# These are additional dependencies needed for development and testing
+
+# Include base requirements
+-r requirements.txt
+
+# Additional testing frameworks
+pytest-asyncio>=0.21.0
+pytest-xdist>=3.2.0
+
+# Test data generation and mocking
+factory-boy>=3.2.0
+hypothesis>=6.70.0
+responses>=0.23.0
+
+# Code quality and linting
+isort>=5.12.0
+pylint>=2.17.0
+
+# Documentation
+sphinx>=6.0.0
+sphinx-rtd-theme>=1.2.0
+
+# Performance profiling and monitoring
+memory-profiler>=0.60.0
+
+# Development tools
+jupyter>=1.0.0
+
+# Type checking
+types-requests>=2.31.0
+
+# Coverage reporting
+coverage>=7.0.0
+
+# Time and date testing
+freezegun>=1.2.0
+
+# Property-based testing
+hypothesis-jsonschema>=0.22.0

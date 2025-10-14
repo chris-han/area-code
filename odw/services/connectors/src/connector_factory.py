@@ -1,9 +1,9 @@
 from enum import Enum
 from typing import TypeVar, Union, Optional, Generic, Any
-from blob_connector import BlobConnector, BlobConnectorConfig
-from logs_connector import LogsConnector, LogsConnectorConfig
-from events_connector import EventsConnector, EventsConnectorConfig
-from s3_connector import S3Connector, S3ConnectorConfig
+from .blob_connector import BlobConnector, BlobConnectorConfig
+from .logs_connector import LogsConnector, LogsConnectorConfig
+from .events_connector import EventsConnector, EventsConnectorConfig
+from .s3_connector import S3Connector, S3ConnectorConfig
 # Azure billing imports will be done lazily to avoid circular imports
 
 T = TypeVar('T')

@@ -1,0 +1,141 @@
+AZURE BILLING CONNECTOR - COMPREHENSIVE TEST REPORT
+================================================================================
+Generated: 2025-10-14 09:40:33
+Test Duration: 0.78s
+
+SUMMARY: 0/6 tests passed
+
+TEST: Import Test
+Status: FAIL
+Execution Time: 0.16s
+Timestamp: 2025-10-14 09:40:33
+Output:
+Import failed: No module named 'urllib3'
+--------------------------------------------------------------------------------
+TEST: Configuration Test
+Status: FAIL
+Execution Time: 0.00s
+Timestamp: 2025-10-14 09:40:33
+Output:
+Configuration test failed: No module named 'urllib3'
+--------------------------------------------------------------------------------
+TEST: Simple Azure Test
+Status: FAIL
+Execution Time: 0.18s
+Timestamp: 2025-10-14 09:40:33
+Output:
+Traceback (most recent call last):
+  File "/home/chris/repo/area-code/odw/services/connectors/test_azure_only_simple.py", line 20, in test_azure_billing_direct
+    import azure_billing.azure_ea_api_client as api_module
+  File "/home/chris/repo/area-code/odw/services/connectors/src/azure_billing/azure_ea_api_client.py", line 8, in <module>
+    import requests
+  File "/home/chris/.local/lib/python3.12/site-packages/requests/__init__.py", line 43, in <module>
+    import urllib3
+ModuleNotFoundError: No module named 'urllib3'
+
+--------------------------------------------------------------------------------
+TEST: Integration Test
+Status: FAIL
+Execution Time: 0.17s
+Timestamp: 2025-10-14 09:40:33
+Output:
+✗ Integration test failed: No module named 'moose_lib'
+
+--------------------------------------------------------------------------------
+TEST: Azure Components Test
+Status: FAIL
+Execution Time: 0.18s
+Timestamp: 2025-10-14 09:40:33
+Output:
+2025-10-14 09:40:33,556 - __main__ - INFO - Starting Azure Billing Connector Test Suite (Azure Components Only)
+2025-10-14 09:40:33,556 - __main__ - INFO - ======================================================================
+2025-10-14 09:40:33,556 - __main__ - INFO - === Testing Configuration Models ===
+2025-10-14 09:40:33,623 - __main__ - INFO - ✓ AzureApiConfig created: 123456789
+2025-10-14 09:40:33,623 - __main__ - INFO - ✓ ProcessingConfig created: batch_size=500
+2025-10-14 09:40:33,623 - __main__ - INFO - ✓ AzureBillingConnectorConfig created
+2025-10-14 09:40:33,623 - __main__ - INFO - ✓ Effective batch size: 1000
+2025-10-14 09:40:33,623 - __main__ - INFO - ✓ Effective API config: 123456789
+2025-10-14 09:40:33,623 - __main__ - INFO - ✓ AzureBillingDetail model created: test-instance-123
+2025-10-14 09:40:33,623 - __main__ - INFO - 
+2025-10-14 09:40:33,623 - __main__ - INFO - === Testing Azure EA API Client ===
+2025-10-14 09:40:33,624 - __main__ - ERROR - ✗ Azure API client test failed: No module named 'urllib3'
+2025-10-14 09:40:33,624 - __main__ - INFO - 
+2025-10-14 09:40:33,624 - __main__ - INFO - === Testing Resource Tracking Engine ===
+2025-10-14 09:40:33,627 - __main__ - ERROR - ✗ Resource tracking engine test failed: No module named 'polars'
+2025-10-14 09:40:33,627 - __main__ - INFO - 
+2025-10-14 09:40:33,627 - __main__ - INFO - === Testing Data Transformer ===
+2025-10-14 09:40:33,628 - __main__ - ERROR - ✗ Data transformer test failed: No module named 'polars'
+2025-10-14 09:40:33,628 - __main__ - INFO - 
+2025-10-14 09:40:33,628 - __main__ - INFO - === Testing Error Handler ===
+2025-10-14 09:40:33,628 - __main__ - ERROR - ✗ Error handler test failed: No module named 'urllib3'
+2025-10-14 09:40:33,628 - __main__ - INFO - 
+2025-10-14 09:40:33,628 - __main__ - INFO - === Testing Integration ===
+2025-10-14 09:40:33,628 - __main__ - INFO - ✓ Connector created
+2025-10-14 09:40:33,629 - __main__ - ERROR - ✗ Integration test failed: No module named 'urllib3'
+2025-10-14 09:40:33,629 - __main__ - INFO - 
+2025-10-14 09:40:33,629 - __main__ - INFO - === Testing End-to-End Simulation ===
+2025-10-14 09:40:33,629 - __main__ - ERROR - ✗ End-to-end simulation failed: No module named 'polars'
+2025-10-14 09:40:33,629 - __main__ - INFO - 
+2025-10-14 09:40:33,629 - __main__ - INFO - ======================================================================
+2025-10-14 09:40:33,629 - __main__ - INFO - TEST SUMMARY
+2025-10-14 09:40:33,629 - __main__ - INFO - ======================================================================
+2025-10-14 09:40:33,629 - __main__ - INFO - Configuration Models           PASS
+2025-10-14 09:40:33,629 - __main__ - INFO - Azure API Client               FAIL
+2025-10-14 09:40:33,629 - __main__ - INFO - Resource Tracking Engine       FAIL
+2025-10-14 09:40:33,629 - __main__ - INFO - Data Transformer               FAIL
+2025-10-14 09:40:33,629 - __main__ - INFO - Error Handler                  FAIL
+2025-10-14 09:40:33,629 - __main__ - INFO - Integration Test               FAIL
+2025-10-14 09:40:33,629 - __main__ - INFO - End-to-End Simulation          FAIL
+2025-10-14 09:40:33,629 - __main__ - INFO - ======================================================================
+2025-10-14 09:40:33,629 - __main__ - INFO - TOTAL: 1/7 tests passed
+2025-10-14 09:40:33,629 - __main__ - WARNING - ⚠️  6 tests failed. Review the logs above.
+
+--------------------------------------------------------------------------------
+TEST: Full Component Test
+Status: FAIL
+Execution Time: 0.10s
+Timestamp: 2025-10-14 09:40:33
+Output:
+2025-10-14 09:40:33,735 - __main__ - INFO - Starting Azure Billing Connector Test Suite
+2025-10-14 09:40:33,735 - __main__ - INFO - ============================================================
+2025-10-14 09:40:33,735 - __main__ - INFO - === Testing Configuration Models ===
+2025-10-14 09:40:33,735 - __main__ - ERROR - ✗ Configuration models test failed: No module named 'azure_billing_connector'
+2025-10-14 09:40:33,735 - __main__ - INFO - 
+2025-10-14 09:40:33,735 - __main__ - INFO - === Testing Azure EA API Client ===
+2025-10-14 09:40:33,735 - __main__ - ERROR - ✗ Azure API client test failed: No module named 'azure_billing_connector'
+2025-10-14 09:40:33,735 - __main__ - INFO - 
+2025-10-14 09:40:33,735 - __main__ - INFO - === Testing Resource Tracking Engine ===
+2025-10-14 09:40:33,735 - __main__ - ERROR - ✗ Resource tracking engine test failed: No module named 'resource_tracking_engine'
+2025-10-14 09:40:33,735 - __main__ - INFO - 
+2025-10-14 09:40:33,735 - __main__ - INFO - === Testing Data Transformer ===
+2025-10-14 09:40:33,735 - __main__ - ERROR - ✗ Data transformer test failed: No module named 'azure_billing_transformer'
+2025-10-14 09:40:33,735 - __main__ - INFO - 
+2025-10-14 09:40:33,735 - __main__ - INFO - === Testing Error Handler ===
+2025-10-14 09:40:33,735 - __main__ - ERROR - ✗ Error handler test failed: No module named 'error_handler'
+2025-10-14 09:40:33,735 - __main__ - INFO - 
+2025-10-14 09:40:33,736 - __main__ - INFO - === Testing Main Connector Integration ===
+2025-10-14 09:40:33,736 - __main__ - ERROR - ✗ Main connector test failed: No module named 'azure_billing_connector'
+2025-10-14 09:40:33,736 - __main__ - INFO - 
+2025-10-14 09:40:33,736 - __main__ - INFO - === Testing Temporal Workflow ===
+2025-10-14 09:40:33,736 - __main__ - ERROR - ✗ Temporal workflow test failed: No module named 'extract_azure_billing'
+2025-10-14 09:40:33,736 - __main__ - INFO - 
+2025-10-14 09:40:33,736 - __main__ - INFO - 
+2025-10-14 09:40:33,736 - __main__ - INFO - === Running End-to-End Test (1 Month) ===
+2025-10-14 09:40:33,736 - __main__ - ERROR - ✗ End-to-end test failed: No module named 'extract_azure_billing'
+2025-10-14 09:40:33,736 - __main__ - INFO - 
+2025-10-14 09:40:33,736 - __main__ - INFO - ============================================================
+2025-10-14 09:40:33,736 - __main__ - INFO - TEST SUMMARY
+2025-10-14 09:40:33,736 - __main__ - INFO - ============================================================
+2025-10-14 09:40:33,736 - __main__ - INFO - Configuration Models           FAIL
+2025-10-14 09:40:33,736 - __main__ - INFO - Azure API Client               FAIL
+2025-10-14 09:40:33,736 - __main__ - INFO - Resource Tracking Engine       FAIL
+2025-10-14 09:40:33,736 - __main__ - INFO - Data Transformer               FAIL
+2025-10-14 09:40:33,736 - __main__ - INFO - Error Handler                  FAIL
+2025-10-14 09:40:33,736 - __main__ - INFO - Main Connector                 FAIL
+2025-10-14 09:40:33,736 - __main__ - INFO - Temporal Workflow              FAIL
+2025-10-14 09:40:33,736 - __main__ - INFO - End-to-End Test                FAIL
+2025-10-14 09:40:33,736 - __main__ - INFO - ============================================================
+2025-10-14 09:40:33,736 - __main__ - INFO - TOTAL: 0/8 tests passed
+2025-10-14 09:40:33,736 - __main__ - WARNING - ⚠️  8 tests failed. Review the logs above.
+
+--------------------------------------------------------------------------------

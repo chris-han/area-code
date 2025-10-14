@@ -1,0 +1,92 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Setup All Venvs",
+      "type": "shell",
+      "command": "./scripts/setup-venvs.sh",
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Clean All Venvs", 
+      "type": "shell",
+      "command": "./scripts/clean-venvs.sh",
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Data Warehouse: Start Dev",
+      "type": "shell",
+      "command": "source ../.venv/bin/activate && moose-cli dev",
+      "options": {
+        "cwd": "${workspaceFolder}/services/data-warehouse"
+      },
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "dedicated"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Frontend: Start Streamlit",
+      "type": "shell", 
+      "command": "source .venv/bin/activate && streamlit run main.py",
+      "options": {
+        "cwd": "${workspaceFolder}/apps/dw-frontend"
+      },
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always", 
+        "focus": false,
+        "panel": "dedicated"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Connectors: Run Tests",
+      "type": "shell",
+      "command": "source ../.venv/bin/activate && python -m pytest tests/ -v",
+      "options": {
+        "cwd": "${workspaceFolder}/services/connectors"
+      },
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Start All Services",
+      "type": "shell",
+      "command": "bun run odw:dev",
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "dedicated"
+      },
+      "problemMatcher": []
+    }
+  ]
+}
