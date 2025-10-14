@@ -19,4 +19,5 @@ import app.apis.get_daily_pageviews
 import app.apis.extract_unstructured_data
 import app.apis.get_unstructured_data
 import app.apis.get_medical
+import app.apis.get_workflows
 

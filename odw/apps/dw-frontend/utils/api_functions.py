@@ -554,7 +554,7 @@ def render_dlq_controls(endpoint_path, refresh_key, show_info_icon=False, info_t
 
 def fetch_workflows(name_prefix=None):
     """
-    Fetch workflows from localhost:4200/workflows/list endpoint.
+    Fetch workflows from localhost:4200/consumption/getWorkflows endpoint.
 
     Args:
         name_prefix (str, optional): Filter workflows by name prefix
@@ -562,22 +562,25 @@ def fetch_workflows(name_prefix=None):
     Returns:
         list: List of workflow dictionaries sorted by started_at (most recent first)
     """
-    api_url = f"{WORKFLOW_API_BASE}/list"
+    api_url = f"{WORKFLOW_API_BASE}/getWorkflows"
+    if name_prefix:
+        api_url += f"?name_prefix={name_prefix}"
+    
     try:
         response = requests.get(api_url)
         response.raise_for_status()
-        workflows = response.json()
+        data = response.json()
+        
+        # Extract items from the response (Moose consumption API returns {items: [], total: N})
+        workflows = data.get("items", [])
 
-        # Filter by name prefix if provided
-        if name_prefix:
-            workflows = [w for w in workflows if w.get("name", "").startswith(name_prefix)]
-
-        # Sort by started_at descending (most recent first)
-        workflows.sort(key=lambda x: x.get("started_at", ""), reverse=True)
+        # Sort by started_at descending (most recent first), then by name
+        workflows.sort(key=lambda x: (x.get("started_at", "") or "", x.get("name", "")), reverse=True)
 
         return workflows
     except Exception as e:
         st.error(f"Failed to fetch workflows from API: {e}")
+        return []
         return []
 
 def format_workflow_status(status):
