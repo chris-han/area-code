@@ -581,7 +581,6 @@ def fetch_workflows(name_prefix=None):
     except Exception as e:
         st.error(f"Failed to fetch workflows from API: {e}")
         return []
-        return []
 
 def format_workflow_status(status):
     """
