@@ -86,8 +86,8 @@ wait_for_redpanda() {
     local attempts=0
 
     while [ $attempts -lt $max_attempts ]; do
-        # Check Redpanda status endpoint
-        if curl -s --connect-timeout 2 localhost:$REDPANDA_ADMIN_PORT/v1/status/ready >/dev/null 2>&1; then
+        # Check if Redpanda container is running and healthy
+        if docker ps --filter "name=data-warehouse-redpanda" --filter "health=healthy" --format "{{.Names}}" | grep -q "data-warehouse-redpanda"; then
             print_success "Redpanda is ready!"
             return 0
         fi

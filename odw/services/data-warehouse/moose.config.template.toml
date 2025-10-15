@@ -66,3 +66,8 @@ signature_version = "${MOOSE_S3_SIGNATURE_VERSION}"
 streaming_engine = true
 workflows = true
 data_model_v2 = true
+
+[table_engine]
+# Force MergeTree instead of ReplicatedMergeTree for single-node setup
+default_engine = "MergeTree"
+use_replicated = false
