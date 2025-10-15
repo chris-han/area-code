@@ -190,40 +190,36 @@ DATA_WAREHOUSE_PORT=4200
 
 # Virtual environment utility functions
 check_venv_exists() {
-    if [ -d "venv" ]; then
-        return 0  # venv exists
+    if [ -d ".venv" ]; then
+        return 0  # local .venv exists
     else
-        return 1  # venv does not exist
+        return 1  # no venv exists
     fi
 }
 
 create_venv_if_missing() {
     if ! check_venv_exists; then
-        print_status "Creating Python virtual environment..."
-
-        if python3 -m venv venv; then
-            print_success "Virtual environment created successfully at ./venv"
+        print_status "Creating local virtual environment with uv..."
+        
+        if uv venv .venv; then
+            print_success "Virtual environment created successfully at ./.venv"
         else
             print_error "Failed to create virtual environment"
             exit 1
         fi
     else
-        print_success "Virtual environment already exists at ./venv"
+        print_success "Virtual environment already exists at ./.venv"
     fi
 }
 
 ensure_venv_activated() {
-    # First check if venv exists
-    if ! check_venv_exists; then
-        print_error "Virtual environment not found. Creating it now..."
-        create_venv_if_missing
-    fi
-
-    # Check if we're already in the virtual environment
-    if [ -z "$VIRTUAL_ENV" ]; then
-        print_status "Activating virtual environment..."
-        source venv/bin/activate
-
+    # First ensure a venv exists
+    create_venv_if_missing
+    
+    # Check if we're already in the correct virtual environment
+    if [ -z "$VIRTUAL_ENV" ] || [[ "$VIRTUAL_ENV" != *"$(pwd)/.venv" ]]; then
+        print_status "Activating local virtual environment..."
+        source .venv/bin/activate
         if [ -n "$VIRTUAL_ENV" ]; then
             print_success "Virtual environment activated: $VIRTUAL_ENV"
         else
@@ -273,7 +269,14 @@ install_dependencies() {
     ensure_venv_activated
 
     print_status "Installing data-warehouse dependencies in virtual environment..."
-    pip install .
+    
+    print_status "Installing data-warehouse dependencies in virtual environment..."
+    uv pip install .
+    
+    # Also install connectors package in editable mode
+    print_status "Installing connectors package in virtual environment..."
+    uv pip install -e ../connectors
+    
     print_success "Data warehouse dependencies installed successfully in virtual environment"
 
     render_moose_config

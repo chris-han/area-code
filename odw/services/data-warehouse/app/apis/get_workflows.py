@@ -133,6 +133,13 @@ def get_workflows(client, params: GetWorkflowsQuery) -> GetWorkflowsResponse:
                     "started_at": "2025-10-14 06:05:18.566240 UTC",
                     "duration": "851ms",
                 },
+                {
+                    "name": "azure-billing-workflow",
+                    "run_id": "azure-billing-sample-run-id",
+                    "status": "WORKFLOW_EXECUTION_STATUS_COMPLETED",
+                    "started_at": "2025-10-14 08:15:00.000000 UTC",
+                    "duration": "2m 15s",
+                },
             ]
 
             for workflow_data in real_workflows:

@@ -21,6 +21,28 @@
       "path": "./apps/dw-frontend"
     }
   ],
+  "folders": [
+    {
+      "name": "ODW Root",
+      "path": "."
+    },
+    {
+      "name": "Backend Services",
+      "path": "./services"
+    },
+    {
+      "name": "Data Warehouse Service",
+      "path": "./services/data-warehouse"
+    },
+    {
+      "name": "Connectors Service", 
+      "path": "./services/connectors"
+    },
+    {
+      "name": "DW Frontend App",
+      "path": "./apps/dw-frontend"
+    }
+  ],
   "settings": {
     "python.terminal.activateEnvironment": true,
     "python.terminal.activateEnvInCurrentTerminal": true,
@@ -28,6 +50,13 @@
       "**/__pycache__": true,
       "**/*.pyc": true,
       "**/.venv": false
+    },
+    "[python]": {
+      "editor.defaultFormatter": "ms-python.black-formatter",
+      "editor.formatOnSave": true,
+      "editor.codeActionsOnSave": {
+        "source.organizeImports": "explicit"
+      }
     }
   },
   "extensions": {

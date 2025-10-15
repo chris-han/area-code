@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Data Warehouse Frontend Development Script
+# Connectors Service Development Script
 
 set -e
 
@@ -17,23 +17,20 @@ NC='\033[0m' # No Color
 
 # Function to print colored output
 print_status() {
-    echo -e "${BLUE}[DW-FRONTEND]${NC} $1"
+    echo -e "${BLUE}[CONNECTORS]${NC} $1"
 }
 
 print_success() {
-    echo -e "${GREEN}[DW-FRONTEND]${NC} $1"
+    echo -e "${GREEN}[CONNECTORS]${NC} $1"
 }
 
 print_warning() {
-    echo -e "${YELLOW}[DW-FRONTEND]${NC} $1"
+    echo -e "${YELLOW}[CONNECTORS]${NC} $1"
 }
 
 print_error() {
-    echo -e "${RED}[DW-FRONTEND]${NC} $1"
+    echo -e "${RED}[CONNECTORS]${NC} $1"
 }
-
-# Port configuration
-FRONTEND_PORT=8501
 
 # Virtual environment utility functions
 DEFAULT_VENV_PATH="/home/chris/repo/area-code/odw/services/data-warehouse/.venv"
@@ -103,15 +100,6 @@ ensure_venv_activated() {
     fi
 }
 
-is_port_in_use() {
-    local port=$1
-    if lsof -i ":$port" >/dev/null 2>&1; then
-        return 0  # Port is in use
-    else
-        return 1  # Port is available
-    fi
-}
-
 check_environment() {
     print_status "Checking Python version..."
 
@@ -140,43 +128,21 @@ install_dependencies() {
     create_venv_if_missing
     ensure_venv_activated
 
-    print_status "Installing dw-frontend dependencies in virtual environment..."
-    uv pip install -r requirements.txt
+    print_status "Installing connectors dependencies in virtual environment..."
+    uv pip install -e .
     
-    print_success "DW-Frontend dependencies installed successfully in virtual environment"
-
-    # Check Streamlit
-    if ! command -v streamlit &> /dev/null; then
-        print_error "Streamlit is not installed."
-        exit 1
-    fi
-
-    print_status "Streamlit path: $(which streamlit 2>/dev/null || echo 'not found')"
-    print_status "Streamlit version: $(streamlit version 2>/dev/null || echo 'unknown')"
-}
-
-start_frontend_service() {
-    ensure_venv_activated
-
-    # Check if port is in use
-    if is_port_in_use $FRONTEND_PORT; then
-        print_error "Port $FRONTEND_PORT is already in use!"
-        print_status "To find what's using port $FRONTEND_PORT: lsof -i :$FRONTEND_PORT"
-        exit 1
-    fi
-
-    print_status "Starting Streamlit frontend on port $FRONTEND_PORT..."
-    echo ""
-
-    exec streamlit run main.py --server.port $FRONTEND_PORT
+    print_success "Connectors dependencies installed successfully in virtual environment"
 }
 
 main() {
-    print_status "Starting Data Warehouse Frontend..."
+    print_status "Setting up Connectors service..."
 
     check_environment
     install_dependencies
-    start_frontend_service
+    
+    print_success "Connectors service setup complete!"
+    print_status "Virtual environment: $VIRTUAL_ENV"
+    print_status "To activate manually: source .venv/bin/activate"
 }
 
 main "$@"
