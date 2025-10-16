@@ -291,15 +291,47 @@ install_dependencies() {
     print_status "Moose CLI version: $(moose-cli --version 2>/dev/null || echo 'unknown')"
 }
 
+kill_processes_on_port() {
+    local port=$1
+    local pids
+    
+    # Get PIDs of processes using the port
+    pids=$(lsof -ti ":$port" 2>/dev/null || true)
+    
+    if [ -n "$pids" ]; then
+        print_warning "Found processes using port $port: $pids"
+        print_status "Killing existing processes on port $port..."
+        
+        # Kill processes gracefully first (TERM signal)
+        echo "$pids" | xargs -r kill -TERM 2>/dev/null || true
+        
+        # Wait a moment for graceful shutdown
+        sleep 2
+        
+        # Check if any processes are still running and force kill them
+        pids=$(lsof -ti ":$port" 2>/dev/null || true)
+        if [ -n "$pids" ]; then
+            print_warning "Force killing remaining processes on port $port: $pids"
+            echo "$pids" | xargs -r kill -KILL 2>/dev/null || true
+            sleep 1
+        fi
+        
+        print_success "Cleared port $port"
+    fi
+}
+
 start_data_warehouse_service() {
     ensure_venv_activated
 
     render_moose_config
 
-    # Check if port is in use
+    # Kill any existing processes on the port before starting
+    kill_processes_on_port $DATA_WAREHOUSE_PORT
+
+    # Double-check port is now available
     if is_port_in_use $DATA_WAREHOUSE_PORT; then
-        print_error "Port $DATA_WAREHOUSE_PORT is already in use!"
-        print_status "To find what's using port $DATA_WAREHOUSE_PORT: lsof -i :$DATA_WAREHOUSE_PORT"
+        print_error "Port $DATA_WAREHOUSE_PORT is still in use after cleanup!"
+        print_status "Manual intervention required. Check: lsof -i :$DATA_WAREHOUSE_PORT"
         exit 1
     fi
 

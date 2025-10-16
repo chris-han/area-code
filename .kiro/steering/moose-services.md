@@ -30,8 +30,32 @@ moose workflow run eventsPipeline
 # will execute against the current running instance
 ```
 
+## Port Configuration Rules
+
+**CRITICAL: Always use the configured ports, never fallback to alternative ports**
+
+- **Port 4200**: Main Moose HTTP server (consumption APIs)
+- **Port 4201**: Proxy port (internal use only)
+- **If port 4200 is not available**: Issue a warning and investigate the problem
+- **NEVER automatically switch to port 4201** - this breaks the expected API contract
+- **Frontend constants should always point to port 4200** with `/consumption` path
+
+### API Endpoint Format
+```
+CONSUMPTION_API_BASE = "http://localhost:4200/consumption"
+WORKFLOW_API_BASE = "http://localhost:4200/consumption"  
+INGEST_API_BASE = "http://localhost:4200/ingest"
+```
+
+### Troubleshooting Port Issues
+1. Check if moose service is running: `lsof -i :4200`
+2. If not running, restart the moose service
+3. If running but not responding, check moose logs
+4. **Do NOT change port configuration as a workaround**
+
 ## Important Notes
 
 - Do not restart the Moose server unnecessarily - it supports hot reload
 - Focus on the workflow logic rather than server management
-- Use the workflow run command for quick iteration and testing 
+- Use the workflow run command for quick iteration and testing
+- **Always verify port 4200 is working before suggesting alternatives** 

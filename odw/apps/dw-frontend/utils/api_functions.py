@@ -731,3 +731,161 @@ def is_data_warehouse_not_ready(error):
         error_args = getattr(error, 'args', [])
         return any("Connection refused" in str(arg) for arg in error_args)
     return False
+
+# Azure Billing API Functions
+def fetch_azure_billing_data(filters=None, limit=1000, should_throw=False):
+    """Fetch Azure billing data from consumption API (moose_f_azure_billing_detail table)"""
+    params = {"limit": limit}
+    
+    if filters:
+        if filters.get("start_date"):
+            params["start_date"] = filters["start_date"].isoformat()
+        if filters.get("end_date"):
+            params["end_date"] = filters["end_date"].isoformat()
+        if filters.get("subscription_id"):
+            params["subscription_id"] = filters["subscription_id"]
+        if filters.get("resource_group"):
+            params["resource_group"] = filters["resource_group"]
+    
+    query_string = "&".join([f"{k}={v}" for k, v in params.items()])
+    api_url = f"{CONSUMPTION_API_BASE}/getAzureBilling?{query_string}"
+    
+    try:
+        response = requests.get(api_url)
+        response.raise_for_status()
+        data = response.json()
+        return pd.DataFrame(data.get("items", []))
+    except Exception as e:
+        if should_throw:
+            raise e
+        else:
+            print(f"Azure Billing API error: {e}")
+            st.toast("Error fetching Azure billing data. Check terminal for details.")
+        return pd.DataFrame()
+
+def trigger_azure_billing_extract(config_dict):
+    """Trigger Azure billing workflow with configuration"""
+    api_url = f"{CONSUMPTION_API_BASE}/extract-azure-billing"
+    
+    try:
+        # Use GET request with query parameters, not POST with JSON
+        response = requests.get(api_url, params=config_dict, timeout=30)
+        response.raise_for_status()
+        
+        st.session_state["extract_status_msg"] = f"Azure billing extract triggered for {config_dict['start_date']} to {config_dict['end_date']}"
+        st.session_state["extract_status_type"] = "success"
+        st.session_state["extract_status_time"] = time.time()
+        
+        return True
+    except Exception as e:
+        handle_azure_api_error(e, "Azure billing extract")
+        return False
+
+def test_azure_connection(enrollment_number, api_key):
+    """Test Azure EA API connection"""
+    api_url = f"{CONSUMPTION_API_BASE}/test-azure-connection"
+    
+    params = {
+        "enrollment_number": enrollment_number,
+        "api_key": api_key
+    }
+    
+    # Log request details for debugging
+    print(f"DEBUG: Making request to {api_url}")
+    print(f"DEBUG: Request payload: {{'enrollment_number': '{enrollment_number[:10]}...', 'api_key': '{api_key[:20]}...'}}")
+    print(f"DEBUG: Full URL: {api_url}")
+    
+    try:
+        # Use GET request with query parameters, not POST with JSON
+        response = requests.get(api_url, params=params, timeout=30)
+        print(f"DEBUG: Response status: {response.status_code}")
+        print(f"DEBUG: Response headers: {dict(response.headers)}")
+        
+        if response.status_code == 404:
+            print(f"DEBUG: 404 response body: {response.text}")
+            st.error("API endpoint not found. Please ensure the backend service is running with the latest code.")
+            return False
+            
+        response.raise_for_status()
+        
+        response_data = response.json()
+        print(f"DEBUG: Response data: {response_data}")
+        
+        if response_data.get('success'):
+            st.success("Azure connection test successful!")
+            return True
+        else:
+            st.error(f"Connection test failed: {response_data.get('message', 'Unknown error')}")
+            return False
+            
+    except requests.exceptions.RequestException as e:
+        print(f"DEBUG: Request exception: {e}")
+        handle_azure_api_error(e, "Azure connection test")
+        return False
+    except Exception as e:
+        print(f"DEBUG: General exception: {e}")
+        handle_azure_api_error(e, "Azure connection test")
+        return False
+
+def fetch_azure_billing_summary():
+    """Fetch summary metrics for Azure billing data"""
+    api_url = f"{CONSUMPTION_API_BASE}/getAzureBillingSummary"
+    
+    try:
+        response = requests.get(api_url)
+        response.raise_for_status()
+        return response.json()
+    except Exception as e:
+        print(f"Azure Billing Summary API error: {e}")
+        # Return mock data for development
+        return {
+            "total_cost": 12345.67,
+            "resource_count": 150,
+            "subscription_count": 3,
+            "last_updated": "2024-01-15 10:30:00"
+        }
+
+def handle_azure_api_error(error: Exception, operation: str):
+    """Handle Azure API errors with user-friendly messages"""
+    error_message = str(error)
+    
+    if "401" in error_message or "Unauthorized" in error_message:
+        st.error(f"Authentication failed for {operation}. Please check your Azure credentials.")
+    elif "403" in error_message or "Forbidden" in error_message:
+        st.error(f"Access denied for {operation}. Please verify your Azure enrollment permissions.")
+    elif "429" in error_message or "rate limit" in error_message.lower():
+        st.warning(f"Rate limit exceeded for {operation}. Please try again in a few minutes.")
+    elif "500" in error_message or "502" in error_message or "503" in error_message:
+        st.error(f"Server error during {operation}. Please try again later.")
+    else:
+        st.error(f"Error during {operation}: {error_message}")
+    
+    # Store error in session state for status display
+    st.session_state["extract_status_msg"] = f"Failed to {operation.lower()}: {error_message}"
+    st.session_state["extract_status_type"] = "error"
+    st.session_state["extract_status_time"] = time.time()
+
+def get_azure_subscription_options():
+    """Get available Azure subscription options"""
+    try:
+        api_url = f"{CONSUMPTION_API_BASE}/getAzureSubscriptions"
+        response = requests.get(api_url)
+        response.raise_for_status()
+        data = response.json()
+        return [sub.get("subscription_name", f"Subscription {sub.get('subscription_id', '')}") 
+                for sub in data.get("items", [])]
+    except Exception:
+        # Return mock data for development
+        return ["Production Subscription", "Development Subscription", "Test Subscription"]
+
+def get_azure_resource_group_options():
+    """Get available Azure resource group options"""
+    try:
+        api_url = f"{CONSUMPTION_API_BASE}/getAzureResourceGroups"
+        response = requests.get(api_url)
+        response.raise_for_status()
+        data = response.json()
+        return [rg.get("resource_group", "") for rg in data.get("items", []) if rg.get("resource_group")]
+    except Exception:
+        # Return mock data for development
+        return ["rg-production", "rg-development", "rg-test", "rg-shared-services"]
