@@ -133,16 +133,16 @@ class AzureBillingConnector(Generic[T]):
     def _initialize_components(self):
         """Initialize API client and processing components"""
         if self._api_client is None:
-            import azure_billing.azure_ea_api_client as api_client_module
-            self._api_client = api_client_module.AzureEAApiClient(self._azure_api_config)
+            from .azure_ea_api_client import AzureEAApiClient
+            self._api_client = AzureEAApiClient(self._azure_api_config)
             
         if self._resource_tracking_engine is None:
-            import azure_billing.resource_tracking_engine as tracking_module
-            self._resource_tracking_engine = tracking_module.ResourceTrackingEngine()
+            from .resource_tracking_engine import ResourceTrackingEngine
+            self._resource_tracking_engine = ResourceTrackingEngine()
             
         if self._transformer is None:
-            import azure_billing.azure_billing_transformer as transformer_module
-            self._transformer = transformer_module.AzureBillingTransformer()
+            from .azure_billing_transformer import AzureBillingTransformer
+            self._transformer = AzureBillingTransformer()
         
     def extract(self) -> List[AzureBillingDetail]:
         """

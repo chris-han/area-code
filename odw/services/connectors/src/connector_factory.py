@@ -33,9 +33,7 @@ class ConnectorFactory(Generic[T]):
             return S3Connector[T](config or S3ConnectorConfig("s3://bucket/*"))
         elif connector_type == ConnectorType.AzureBilling:
             # Lazy import to avoid circular imports
-            import azure_billing.azure_billing_connector as azure_module
-            AzureBillingConnector = azure_module.AzureBillingConnector
-            AzureBillingConnectorConfig = azure_module.AzureBillingConnectorConfig
+            from .azure_billing.azure_billing_connector import AzureBillingConnector, AzureBillingConnectorConfig
             return AzureBillingConnector[T](config or AzureBillingConnectorConfig())
         else:
             raise ValueError(f"Unknown connector type: {connector_type}")

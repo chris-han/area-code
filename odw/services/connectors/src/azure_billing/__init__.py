@@ -8,38 +8,49 @@ tracking, and error handling.
 
 # Lazy imports to avoid circular import issues
 def _get_connector_classes():
-    import azure_billing.azure_billing_connector as connector_module
+    from .azure_billing_connector import (
+        AzureBillingConnector,
+        AzureBillingConnectorConfig,
+        AzureBillingDetail,
+        AzureApiConfig,
+        ProcessingConfig,
+        MemoryMonitor
+    )
     return (
-        connector_module.AzureBillingConnector,
-        connector_module.AzureBillingConnectorConfig,
-        connector_module.AzureBillingDetail,
-        connector_module.AzureApiConfig,
-        connector_module.ProcessingConfig,
-        connector_module.MemoryMonitor
+        AzureBillingConnector,
+        AzureBillingConnectorConfig,
+        AzureBillingDetail,
+        AzureApiConfig,
+        ProcessingConfig,
+        MemoryMonitor
     )
 
 def _get_api_client():
-    import azure_billing.azure_ea_api_client as api_module
-    return api_module.AzureEAApiClient
+    from .azure_ea_api_client import AzureEAApiClient
+    return AzureEAApiClient
 
 def _get_transformer():
-    import azure_billing.azure_billing_transformer as transformer_module
-    return transformer_module.AzureBillingTransformer
+    from .azure_billing_transformer import AzureBillingTransformer
+    return AzureBillingTransformer
 
 def _get_tracking_engine():
-    import azure_billing.resource_tracking_engine as tracking_module
-    return tracking_module.ResourceTrackingEngine
+    from .resource_tracking_engine import ResourceTrackingEngine
+    return ResourceTrackingEngine
 
 def _get_error_handler():
-    import azure_billing.error_handler as error_module
-    return error_module.ErrorHandler, error_module.ErrorType, error_module.ErrorSeverity
+    from .error_handler import ErrorHandler, ErrorType, ErrorSeverity
+    return ErrorHandler, ErrorType, ErrorSeverity
 
 def _get_workflow_classes():
-    import azure_billing.extract_azure_billing as workflow_module
+    from .extract_azure_billing import (
+        AzureBillingWorkflowConfig,
+        extract_azure_billing_task,
+        extract_azure_billing_monthly
+    )
     return (
-        workflow_module.AzureBillingWorkflowConfig,
-        workflow_module.extract_azure_billing_task,
-        workflow_module.extract_azure_billing_monthly
+        AzureBillingWorkflowConfig,
+        extract_azure_billing_task,
+        extract_azure_billing_monthly
     )
 
 # Make classes available at package level through lazy loading

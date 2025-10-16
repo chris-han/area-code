@@ -169,8 +169,9 @@ def render_configuration_form():
             )
             
             # Store current form values in session state for extract handler
-            st.session_state["current_enrollment_number"] = enrollment_number
-            st.session_state["current_api_key"] = api_key
+            # Use the actual widget values from session state (Streamlit automatically stores these)
+            st.session_state["current_enrollment_number"] = st.session_state.get("enrollment_number_input", enrollment_number)
+            st.session_state["current_api_key"] = st.session_state.get("api_key_input", api_key)
             
             # Persistence options
             persistence_level = st.selectbox(
@@ -209,9 +210,10 @@ def render_configuration_form():
             )
             
             # Store current form values in session state for extract handler
-            st.session_state["current_start_date"] = start_date
-            st.session_state["current_end_date"] = end_date
-            st.session_state["current_batch_size"] = batch_size
+            # Use the actual widget values from session state (Streamlit automatically stores these)
+            st.session_state["current_start_date"] = st.session_state.get("start_date_input", start_date)
+            st.session_state["current_end_date"] = st.session_state.get("end_date_input", end_date)
+            st.session_state["current_batch_size"] = st.session_state.get("batch_size_input", batch_size)
         
         # Action buttons
         col_btn1, col_btn2, col_btn3, col_btn4 = st.columns(4)

@@ -11,8 +11,7 @@ import logging
 import random
 from typing import Dict, List, Optional, Tuple, Any
 from urllib.parse import urljoin
-import azure_billing.azure_billing_connector as connector_module
-AzureApiConfig = connector_module.AzureApiConfig
+from .azure_billing_connector import AzureApiConfig
 
 logger = logging.getLogger(__name__)
 
