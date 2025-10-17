@@ -2,7 +2,7 @@ from moose_lib import ConsumptionApi, EgressConfig
 from pydantic import BaseModel
 from typing import List, Optional
 
-# An API to retrieve unique Azure subscriptions from the moose-azure-billing ClickHouse table.
+# An API to retrieve unique Azure subscriptions from the moose_azure_billing ClickHouse table.
 
 class AzureSubscriptionsQuery(BaseModel):
     limit: Optional[int] = 100
@@ -18,7 +18,7 @@ class AzureSubscriptionsResponse(BaseModel):
 
 def get_azure_subscriptions_data(client, params: AzureSubscriptionsQuery) -> AzureSubscriptionsResponse:
     """
-    Retrieve unique Azure subscriptions from the moose-azure-billing table.
+    Retrieve unique Azure subscriptions from the moose_azure_billing table.
     
     Args:
         client: Database client for executing queries
@@ -35,7 +35,7 @@ def get_azure_subscriptions_data(client, params: AzureSubscriptionsQuery) -> Azu
             subscription_id,
             subscription_guid,
             subscription_name
-        FROM `moose-azure-billing`
+        FROM `moose_azure_billing`
         WHERE subscription_name IS NOT NULL 
         AND subscription_name != ''
         ORDER BY subscription_name
@@ -75,6 +75,6 @@ def get_azure_subscriptions_data(client, params: AzureSubscriptionsQuery) -> Azu
 get_azure_subscriptions_api = ConsumptionApi[AzureSubscriptionsQuery, AzureSubscriptionsResponse](
     "getAzureSubscriptions",
     query_function=get_azure_subscriptions_data,
-    source="moose-azure-billing",
+    source="moose_azure_billing",
     config=EgressConfig()
 )

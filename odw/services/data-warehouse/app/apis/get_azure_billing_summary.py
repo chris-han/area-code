@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime, timedelta
 
-# An API to retrieve Azure billing summary metrics from the moose-azure-billing ClickHouse table.
+# An API to retrieve Azure billing summary metrics from the moose_azure_billing ClickHouse table.
 
 class AzureBillingSummaryQuery(BaseModel):
     start_date: Optional[str] = None  # YYYY-MM-DD format
@@ -19,7 +19,7 @@ class AzureBillingSummaryResponse(BaseModel):
 
 def get_azure_billing_summary_data(client, params: AzureBillingSummaryQuery) -> AzureBillingSummaryResponse:
     """
-    Retrieve Azure billing summary metrics from the moose-azure-billing table.
+    Retrieve Azure billing summary metrics from the moose_azure_billing table.
     
     Args:
         client: Database client for executing queries
@@ -47,7 +47,7 @@ def get_azure_billing_summary_data(client, params: AzureBillingSummaryQuery) -> 
             COUNT(DISTINCT instance_id) as resource_count,
             COUNT(DISTINCT subscription_guid) as subscription_count,
             MAX(transform_timestamp) as last_updated
-        FROM `moose-azure-billing`
+        FROM `moose_azure_billing`
         WHERE date >= {start_date} AND date <= {end_date}
         """
         
@@ -87,6 +87,6 @@ def get_azure_billing_summary_data(client, params: AzureBillingSummaryQuery) -> 
 get_azure_billing_summary_api = ConsumptionApi[AzureBillingSummaryQuery, AzureBillingSummaryResponse](
     "getAzureBillingSummary",
     query_function=get_azure_billing_summary_data,
-    source="moose-azure-billing",
+    source="moose_azure_billing",
     config=EgressConfig()
 )

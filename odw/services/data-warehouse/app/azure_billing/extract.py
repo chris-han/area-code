@@ -17,7 +17,7 @@ import os
 # The data flows through the following pipeline:
 # 1. Azure EA API -> AzureBillingDetailSource (raw data)
 # 2. Stream transformation -> AzureBillingDetail (processed data)
-# 3. Final storage -> moose-azure-billing ClickHouse table
+# 3. Final storage -> moose_azure_billing ClickHouse table
 
 class AzureBillingExtractParams(BaseModel):
     batch_size: Optional[int] = 1000

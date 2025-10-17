@@ -2,7 +2,7 @@ from moose_lib import ConsumptionApi, EgressConfig
 from pydantic import BaseModel
 from typing import List, Optional
 
-# An API to retrieve unique Azure resource groups from the moose-azure-billing ClickHouse table.
+# An API to retrieve unique Azure resource groups from the moose_azure_billing ClickHouse table.
 
 class AzureResourceGroupsQuery(BaseModel):
     subscription_guid: Optional[str] = None
@@ -19,7 +19,7 @@ class AzureResourceGroupsResponse(BaseModel):
 
 def get_azure_resource_groups_data(client, params: AzureResourceGroupsQuery) -> AzureResourceGroupsResponse:
     """
-    Retrieve unique Azure resource groups from the moose-azure-billing table.
+    Retrieve unique Azure resource groups from the moose_azure_billing table.
     
     Args:
         client: Database client for executing queries
@@ -36,7 +36,7 @@ def get_azure_resource_groups_data(client, params: AzureResourceGroupsQuery) -> 
             resource_group,
             subscription_guid,
             subscription_name
-        FROM `moose-azure-billing`
+        FROM `moose_azure_billing`
         WHERE resource_group IS NOT NULL 
         AND resource_group != ''
         """
@@ -82,6 +82,6 @@ def get_azure_resource_groups_data(client, params: AzureResourceGroupsQuery) -> 
 get_azure_resource_groups_api = ConsumptionApi[AzureResourceGroupsQuery, AzureResourceGroupsResponse](
     "getAzureResourceGroups",
     query_function=get_azure_resource_groups_data,
-    source="moose-azure-billing",
+    source="moose_azure_billing",
     config=EgressConfig()
 )

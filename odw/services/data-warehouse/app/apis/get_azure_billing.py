@@ -1,7 +1,7 @@
 from moose_lib import ConsumptionApi, EgressConfig
 from pydantic import BaseModel
 from typing import Optional, List
-# An API to retrieve Azure billing data from the moose-azure-billing ClickHouse table.
+# An API to retrieve Azure billing data from the moose_azure_billing ClickHouse table.
 # For more information on consumption apis, see: https://docs.fiveonefour.com/moose/building/consumption-apis.
 
 class AzureBillingQuery(BaseModel):
@@ -41,7 +41,7 @@ class AzureBillingResponse(BaseModel):
 
 def get_azure_billing_data(client, params: AzureBillingQuery) -> AzureBillingResponse:
     """
-    Retrieve Azure billing data from the moose-azure-billing table.
+    Retrieve Azure billing data from the moose_azure_billing table.
     
     Args:
         client: Database client for executing queries
@@ -75,7 +75,7 @@ def get_azure_billing_data(client, params: AzureBillingQuery) -> AzureBillingRes
             extended_cost_tax,
             resource_name,
             transform_timestamp
-        FROM `moose-azure-billing`
+        FROM `moose_azure_billing`
         WHERE 1=1
         """
         
@@ -137,6 +137,6 @@ def get_azure_billing_data(client, params: AzureBillingQuery) -> AzureBillingRes
 get_azure_billing_api = ConsumptionApi[AzureBillingQuery, AzureBillingResponse](
     "getAzureBilling",
     query_function=get_azure_billing_data,
-    source="moose-azure-billing",
+    source="moose_azure_billing",
     config=EgressConfig()
 )

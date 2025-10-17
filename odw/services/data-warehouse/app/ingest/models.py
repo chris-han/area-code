@@ -272,6 +272,6 @@ medicalModel = IngestPipeline[Medical](
 
 # Create the final Azure billing model with custom table name
 azureBillingDetailModel = IngestPipeline[AzureBillingDetail](
-    "moose-azure-billing",
+    "moose_azure_billing",
     IngestPipelineConfig(ingest=True, stream=True, table=True, dead_letter_queue=True),
 )

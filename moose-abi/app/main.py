@@ -93,7 +93,7 @@ class UnstructuredData(BaseModel):
     processing_instructions: Optional[str] = None
     transform_timestamp: str
 
-class moose-azure-billing(BaseModel):
+class moose_azure_billing(BaseModel):
     id: Key[str]
     account_owner_id: Optional[str] = None
     account_name: Optional[str] = None
@@ -170,7 +170,7 @@ unstructured_data_table = OlapTable[UnstructuredData]("UnstructuredData", OlapCo
     settings={"enable_mixed_granularity_parts": "1", "index_granularity": "8192", "index_granularity_bytes": "10485760"},
 ))
 
-moose_azure_billing_table = OlapTable[moose-azure-billing]("moose-azure-billing", OlapConfig(
+moose_azure_billing_table = OlapTable[moose_azure_billing]("moose_azure_billing", OlapConfig(
     order_by_fields=["id"],
     engine=MergeTreeEngine(),
     settings={"index_granularity": "8192", "enable_mixed_granularity_parts": "1", "index_granularity_bytes": "10485760"},
