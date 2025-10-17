@@ -143,25 +143,25 @@ class moose-azure-billing(BaseModel):
 blob_table = OlapTable[Blob]("Blob", OlapConfig(
     order_by_fields=["id"],
     engine=MergeTreeEngine(),
-    settings={"index_granularity": "8192", "enable_mixed_granularity_parts": "1", "index_granularity_bytes": "10485760"},
+    settings={"index_granularity_bytes": "10485760", "enable_mixed_granularity_parts": "1", "index_granularity": "8192"},
 ))
 
 event_table = OlapTable[Event]("Event", OlapConfig(
     order_by_fields=["id"],
     engine=MergeTreeEngine(),
-    settings={"index_granularity": "8192", "enable_mixed_granularity_parts": "1", "index_granularity_bytes": "10485760"},
+    settings={"index_granularity": "8192", "index_granularity_bytes": "10485760", "enable_mixed_granularity_parts": "1"},
 ))
 
 log_table = OlapTable[Log]("Log", OlapConfig(
     order_by_fields=["id"],
     engine=MergeTreeEngine(),
-    settings={"enable_mixed_granularity_parts": "1", "index_granularity_bytes": "10485760", "index_granularity": "8192"},
+    settings={"index_granularity_bytes": "10485760", "index_granularity": "8192", "enable_mixed_granularity_parts": "1"},
 ))
 
 medical_table = OlapTable[Medical]("Medical", OlapConfig(
     order_by_fields=["id"],
     engine=MergeTreeEngine(),
-    settings={"index_granularity": "8192", "index_granularity_bytes": "10485760", "enable_mixed_granularity_parts": "1"},
+    settings={"enable_mixed_granularity_parts": "1", "index_granularity": "8192", "index_granularity_bytes": "10485760"},
 ))
 
 unstructured_data_table = OlapTable[UnstructuredData]("UnstructuredData", OlapConfig(
@@ -173,7 +173,7 @@ unstructured_data_table = OlapTable[UnstructuredData]("UnstructuredData", OlapCo
 moose_azure_billing_table = OlapTable[moose-azure-billing]("moose-azure-billing", OlapConfig(
     order_by_fields=["id"],
     engine=MergeTreeEngine(),
-    settings={"enable_mixed_granularity_parts": "1", "index_granularity_bytes": "10485760", "index_granularity": "8192"},
+    settings={"index_granularity": "8192", "enable_mixed_granularity_parts": "1", "index_granularity_bytes": "10485760"},
 ))
 
 
