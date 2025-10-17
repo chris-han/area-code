@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 import requests
 import json
 import uuid
+import os
 
 # This workflow extracts Azure billing data and sends it to the ingest API.
 # For more information on workflows, see: https://docs.fiveonefour.com/moose/building/workflows.
@@ -48,13 +49,35 @@ def run_task(context: TaskContext[AzureBillingExtractParams]) -> None:
             message_type="Info"
         ))
 
+        # Get Azure credentials from environment variables or input parameters
+        azure_enrollment_number = (
+            context.input.azure_enrollment_number or 
+            os.getenv('AZURE_ENROLLMENT_NUMBER')
+        )
+        azure_api_key = (
+            context.input.azure_api_key or 
+            os.getenv('AZURE_API_KEY')
+        )
+        
+        if not azure_enrollment_number or not azure_api_key:
+            raise ValueError(
+                "Azure credentials not provided. Set AZURE_ENROLLMENT_NUMBER and AZURE_API_KEY "
+                "environment variables or pass them as workflow parameters."
+            )
+
+        cli_log(CliLogData(
+            action="AzureBillingWorkflow", 
+            message=f"Using Azure enrollment: {azure_enrollment_number}", 
+            message_type="Info"
+        ))
+
         # Create Azure billing connector configuration
         connector_config = AzureBillingConnectorConfig(
             batch_size=context.input.batch_size,
             start_date=start_date,
             end_date=end_date,
-            azure_enrollment_number=context.input.azure_enrollment_number,
-            azure_api_key=context.input.azure_api_key
+            azure_enrollment_number=azure_enrollment_number,
+            azure_api_key=azure_api_key
         )
 
         # Create connector to extract data from Azure billing API
