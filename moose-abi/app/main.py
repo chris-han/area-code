@@ -149,31 +149,31 @@ blob_table = OlapTable[Blob]("Blob", OlapConfig(
 event_table = OlapTable[Event]("Event", OlapConfig(
     order_by_fields=["id"],
     engine=MergeTreeEngine(),
-    settings={"index_granularity_bytes": "10485760", "enable_mixed_granularity_parts": "1", "index_granularity": "8192"},
+    settings={"index_granularity": "8192", "enable_mixed_granularity_parts": "1", "index_granularity_bytes": "10485760"},
 ))
 
 log_table = OlapTable[Log]("Log", OlapConfig(
     order_by_fields=["id"],
     engine=MergeTreeEngine(),
-    settings={"index_granularity": "8192", "index_granularity_bytes": "10485760", "enable_mixed_granularity_parts": "1"},
+    settings={"enable_mixed_granularity_parts": "1", "index_granularity_bytes": "10485760", "index_granularity": "8192"},
 ))
 
 medical_table = OlapTable[Medical]("Medical", OlapConfig(
     order_by_fields=["id"],
     engine=MergeTreeEngine(),
-    settings={"enable_mixed_granularity_parts": "1", "index_granularity": "8192", "index_granularity_bytes": "10485760"},
+    settings={"index_granularity": "8192", "index_granularity_bytes": "10485760", "enable_mixed_granularity_parts": "1"},
 ))
 
 unstructured_data_table = OlapTable[UnstructuredData]("UnstructuredData", OlapConfig(
     order_by_fields=["id"],
     engine=MergeTreeEngine(),
-    settings={"index_granularity": "8192", "enable_mixed_granularity_parts": "1", "index_granularity_bytes": "10485760"},
+    settings={"enable_mixed_granularity_parts": "1", "index_granularity": "8192", "index_granularity_bytes": "10485760"},
 ))
 
 moose_azure_billing_table = OlapTable[moose-azure-billing]("moose-azure-billing", OlapConfig(
     order_by_fields=["id"],
     engine=MergeTreeEngine(),
-    settings={"index_granularity": "8192", "index_granularity_bytes": "10485760", "enable_mixed_granularity_parts": "1"},
+    settings={"enable_mixed_granularity_parts": "1", "index_granularity_bytes": "10485760", "index_granularity": "8192"},
 ))
 
 
