@@ -21,3 +21,14 @@ Some hygiene rules you should follow:
 - Prefix package names for packages and services with @workspace
 
 Until Moose Node Versions Issues are fixed in Moose you must use Node 20
+## Docker Port Configuration
+
+NEVER allow Docker to auto-assign ports when there are conflicts. Always use fixed port numbers in Docker Compose configurations. If there's a port conflict, it should raise an error for investigation rather than silently using a different port.
+
+This prevents:
+- Silent port conflicts that are hard to debug
+- Services running on unexpected ports
+- Configuration drift between environments
+- Hard-to-trace connectivity issues
+
+Always explicitly set ports in docker-compose.yml without fallback auto-assignment.

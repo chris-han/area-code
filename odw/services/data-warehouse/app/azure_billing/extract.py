@@ -29,6 +29,11 @@ class AzureBillingExtractParams(BaseModel):
 
 def run_task(context: TaskContext[AzureBillingExtractParams]) -> None:
     cli_log(CliLogData(action="AzureBillingWorkflow", message="Starting Azure billing data extraction...", message_type="Info"))
+    
+    # Log workflow execution start time for timeout debugging
+    import time
+    start_time = time.time()
+    cli_log(CliLogData(action="AzureBillingWorkflow", message=f"Workflow started at: {time.ctime(start_time)}", message_type="Info"))
 
     try:
         # Parse date parameters or use defaults (last month)
@@ -203,9 +208,12 @@ def run_task(context: TaskContext[AzureBillingExtractParams]) -> None:
                 # Continue with next batch rather than failing completely
                 continue
 
+        # Log completion time for timeout debugging
+        end_time = time.time()
+        execution_time = end_time - start_time
         cli_log(CliLogData(
             action="AzureBillingWorkflow",
-            message=f"Azure billing extraction completed. Total records sent: {total_sent}/{len(source_records)}",
+            message=f"Azure billing extraction completed. Total records sent: {total_sent}/{len(source_records)}. Execution time: {execution_time:.2f} seconds",
             message_type="Info"
         ))
 

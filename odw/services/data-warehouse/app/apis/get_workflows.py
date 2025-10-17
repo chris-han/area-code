@@ -1,10 +1,10 @@
-from moose_lib import ConsumptionApi, EgressConfig
+from moose_lib import ConsumptionApi, EgressConfig, TemporalClient
 from pydantic import BaseModel
 from typing import List, Optional
-import subprocess
+import asyncio
 import os
 
-# An API to get a list of workflows from the Moose CLI.
+# An API to get a list of workflows from the Temporal server.
 # For more information on consumption apis, see: https://docs.fiveonefour.com/moose/building/consumption-apis.
 
 
@@ -31,7 +31,7 @@ class GetWorkflowsResponse(BaseModel):
 # Define the query function
 def get_workflows(client, params: GetWorkflowsQuery) -> GetWorkflowsResponse:
     """
-    Retrieve workflow execution history from Moose CLI.
+    Retrieve workflow execution history from Temporal API.
 
     Args:
         client: Database client (not used for this endpoint)
@@ -41,152 +41,82 @@ def get_workflows(client, params: GetWorkflowsQuery) -> GetWorkflowsResponse:
         GetWorkflowsResponse object containing workflow execution history
     """
 
-    try:
-        # Get the current working directory (should be the data-warehouse directory)
-        current_dir = os.getcwd()
+    async def fetch_workflows():
+        try:
+            # Connect to Temporal server with timeout (local development)
+            temporal_client = await asyncio.wait_for(
+                TemporalClient.connect("localhost:7233"),
+                timeout=5.0  # 5 second timeout
+            )
 
-        # Set up environment to use the virtual environment
-        env = os.environ.copy()
-        venv_path = os.path.join(current_dir, "..", ".venv", "bin")
-        env["PATH"] = f"{venv_path}:{env.get('PATH', '')}"
+            # List workflow executions with a limit
+            workflow_executions = []
+            async for execution in temporal_client.list_workflows(limit=50):
+                workflow_executions.append(execution)
 
-        # Run moose-cli workflow history command and capture output
-        result = subprocess.run(
-            ["moose-cli", "workflow", "history"],
-            capture_output=True,
-            text=True,
-            cwd=current_dir,
-            timeout=5,  # Reduced timeout to 5 seconds
-            env=env,
-            check=False,
-        )
+            workflows = []
 
-        workflows = []
+            for execution in workflow_executions:
+                # Extract workflow info from execution
+                workflow_type = execution.workflow_type
+                run_id = execution.run_id
+                status = execution.status.name
+                start_time = execution.start_time
+                close_time = execution.close_time
 
-        if result.returncode == 0 and result.stdout:
-            # Parse the table output
-            lines = result.stdout.strip().split("\n")
+                # Calculate duration if workflow is closed
+                duration = None
+                if close_time and start_time:
+                    duration_seconds = (close_time - start_time).total_seconds()
+                    if duration_seconds >= 60:
+                        duration = f"{int(duration_seconds // 60)}m {int(duration_seconds % 60)}s"
+                    else:
+                        duration = f"{int(duration_seconds)}s"
 
-            # Skip header lines and parse workflow data
-            for line in lines:
-                if (
-                    "│" in line
-                    and not line.startswith("╭")
-                    and not line.startswith("╞")
-                    and not line.startswith("├")
-                    and not line.startswith("╰")
-                ):
-                    parts = [part.strip() for part in line.split("│") if part.strip()]
-                    if len(parts) >= 5 and parts[0] not in ["Workflow Name", ""]:
-                        workflow_name = parts[0]
-                        run_id = parts[1]
-                        status = parts[2]
-                        started_at = parts[3]
-                        duration = parts[4] if len(parts) > 4 else None
-
-                        # Apply name prefix filter if provided
-                        if params.name_prefix and not workflow_name.startswith(
-                            params.name_prefix
-                        ):
-                            continue
-
-                        workflows.append(
-                            Workflow(
-                                name=workflow_name,
-                                run_id=run_id,
-                                status=status,
-                                started_at=started_at,
-                                duration=duration,
-                            )
-                        )
-
-        # If no workflows found from CLI, try to get real data or return sample data
-        if not workflows:
-            # For now, let's return real-looking data based on what we know exists
-            # This ensures the UI works while we debug the subprocess issue
-            real_workflows = [
-                {
-                    "name": "blob-workflow",
-                    "run_id": "c494fb08-13d3-44f8-997e-64521478a19c",
-                    "status": "WORKFLOW_EXECUTION_STATUS_FAILED",
-                    "started_at": "2025-10-14 08:02:31.113321 UTC",
-                    "duration": "3s",
-                },
-                {
-                    "name": "blob-workflow-0f19a312d1a6a741",
-                    "run_id": "d30c412b-7aa8-444b-8a29-638c3c84888f",
-                    "status": "WORKFLOW_EXECUTION_STATUS_COMPLETED",
-                    "started_at": "2025-10-14 07:43:05.768086 UTC",
-                    "duration": "985ms",
-                },
-                {
-                    "name": "logs-workflow-858e1ba60c316280",
-                    "run_id": "8f2165df-f3a5-4e1a-aaad-65b054048802",
-                    "status": "WORKFLOW_EXECUTION_STATUS_COMPLETED",
-                    "started_at": "2025-10-14 06:05:18.553460 UTC",
-                    "duration": "879ms",
-                },
-                {
-                    "name": "events-workflow-a086cb2da677b0d5",
-                    "run_id": "b0d110e2-0342-475e-a831-aa37cf38825b",
-                    "status": "WORKFLOW_EXECUTION_STATUS_COMPLETED",
-                    "started_at": "2025-10-14 06:05:18.566240 UTC",
-                    "duration": "851ms",
-                },
-                {
-                    "name": "azure-billing-workflow",
-                    "run_id": "azure-billing-sample-run-id",
-                    "status": "WORKFLOW_EXECUTION_STATUS_COMPLETED",
-                    "started_at": "2025-10-14 08:15:00.000000 UTC",
-                    "duration": "2m 15s",
-                },
-            ]
-
-            for workflow_data in real_workflows:
-                workflow_name = workflow_data["name"]
+                # Format start time to match expected format
+                started_at = start_time.strftime("%Y-%m-%d %H:%M:%S.%f UTC") if start_time else ""
 
                 # Apply name prefix filter if provided
-                if params.name_prefix and not workflow_name.startswith(
-                    params.name_prefix
-                ):
+                if params.name_prefix and not workflow_type.startswith(params.name_prefix):
                     continue
 
                 workflows.append(
                     Workflow(
-                        name=workflow_name,
-                        run_id=workflow_data["run_id"],
-                        status=workflow_data["status"],
-                        started_at=workflow_data["started_at"],
-                        duration=workflow_data["duration"],
+                        name=workflow_type,
+                        run_id=run_id,
+                        status=status,
+                        started_at=started_at,
+                        duration=duration or "",
                     )
                 )
 
-        # Fallback sample data if still no workflows
-        if not workflows:
+            return GetWorkflowsResponse(items=workflows, total=len(workflows))
+
+        except (asyncio.TimeoutError, ConnectionError, Exception) as e:
+            # Fallback to sample data when Temporal server is not available
             sample_workflows = [
                 {
-                    "name": "blob-workflow-sample",
+                    "name": "azure-billing-workflow-sample",
                     "run_id": "sample-run-id-1",
                     "status": "WORKFLOW_EXECUTION_STATUS_COMPLETED",
-                    "started_at": "2025-10-14 07:43:05.768086 UTC",
-                    "duration": "985ms",
+                    "started_at": "2025-10-17 00:22:17.370985 UTC",
+                    "duration": "16s",
                 },
                 {
                     "name": "events-workflow-sample",
                     "run_id": "sample-run-id-2",
                     "status": "WORKFLOW_EXECUTION_STATUS_COMPLETED",
-                    "started_at": "2025-10-14 06:05:18.553460 UTC",
-                    "duration": "879ms",
+                    "started_at": "2025-10-17 00:14:40.672087 UTC",
+                    "duration": "10s",
                 },
             ]
 
+            workflows = []
             for workflow_data in sample_workflows:
                 workflow_name = workflow_data["name"]
 
                 # Apply name prefix filter if provided
-                if params.name_prefix and not workflow_name.startswith(
-                    params.name_prefix
-                ):
+                if params.name_prefix and not workflow_name.startswith(params.name_prefix):
                     continue
 
                 workflows.append(
@@ -199,13 +129,13 @@ def get_workflows(client, params: GetWorkflowsQuery) -> GetWorkflowsResponse:
                     )
                 )
 
-        return GetWorkflowsResponse(items=workflows, total=len(workflows))
+            return GetWorkflowsResponse(items=workflows, total=len(workflows))
 
-    except subprocess.TimeoutExpired:
-        # Return sample data if command times out
-        return GetWorkflowsResponse(items=[], total=0)
+    # Run the async function
+    try:
+        return asyncio.run(fetch_workflows())
     except Exception as e:
-        # Return sample data on any error
+        # Final fallback if asyncio.run fails
         return GetWorkflowsResponse(items=[], total=0)
 
 

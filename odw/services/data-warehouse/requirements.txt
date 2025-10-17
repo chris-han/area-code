@@ -9,4 +9,3 @@ toml>=0.10.0
 faker
 anthropic>=0.57.1
 python-dotenv>=1.0.0
-../connectors
