@@ -11,6 +11,16 @@ check_supabase_status() {
     fi
 }
 
+check_postgres_ready() {
+    # Try pg_isready first, fallback to psql connection test
+    if command -v pg_isready > /dev/null 2>&1; then
+        pg_isready -h localhost -p 54322 > /dev/null 2>&1
+    else
+        # Fallback: try to connect with psql
+        PGPASSWORD=postgres psql -h localhost -p 54322 -U postgres -d postgres -c "SELECT 1;" > /dev/null 2>&1
+    fi
+}
+
 start_supabase() {
     echo "Supabase is not started"
     echo "Starting Supabase services..."
@@ -20,16 +30,33 @@ start_supabase() {
         exit 1
     fi
     
-    # Wait for services to be ready using supabase status
-    echo "Waiting for services to be ready..."
-    for i in {1..30}; do
-        if bun run supabase status --workdir database > /dev/null 2>&1; then
-            echo "Supabase services are ready"
+    # Wait for PostgreSQL to be ready to accept connections
+    echo "Waiting for PostgreSQL to be ready..."
+    for i in {1..60}; do
+        # Test actual database connection instead of just status
+        if check_postgres_ready; then
+            echo "PostgreSQL is ready to accept connections"
             break
         fi
-        if [ $i -eq 30 ]; then
-            echo "Timeout waiting for Supabase services"
+        if [ $i -eq 60 ]; then
+            echo "Timeout waiting for PostgreSQL to be ready"
+            echo "PostgreSQL may still be starting up. Try running the command again in a few seconds."
             exit 1
+        fi
+        echo "Waiting for PostgreSQL... (attempt $i/60)"
+        sleep 3
+    done
+    
+    # Additional wait for all Supabase services to be fully ready
+    echo "Waiting for all Supabase services to be ready..."
+    for i in {1..20}; do
+        if bun run supabase status --workdir database > /dev/null 2>&1; then
+            echo "All Supabase services are ready"
+            break
+        fi
+        if [ $i -eq 20 ]; then
+            echo "Warning: Some Supabase services may not be fully ready, but PostgreSQL is available"
+            break
         fi
         sleep 2
     done
@@ -40,12 +67,21 @@ start_supabase() {
 run_migrations() {
     echo "Checking database migrations..."
     
-    if ! bun run dev:migrate; then
-        echo "Failed to run database migrations"
-        exit 1
-    fi
+    # Retry migrations a few times in case of transient connection issues
+    for i in {1..3}; do
+        if bun run dev:migrate; then
+            echo "Database migrations completed"
+            return 0
+        fi
+        
+        if [ $i -lt 3 ]; then
+            echo "Migration attempt $i failed, retrying in 5 seconds..."
+            sleep 5
+        fi
+    done
     
-    echo "Database migrations completed"
+    echo "Failed to run database migrations after 3 attempts"
+    exit 1
 }
 
 start_server() {

@@ -156,7 +156,10 @@ pre_pull_images() {
 
     local pull_args=(pull --no-parallel)
     if [ "$compose_cmd" = "docker compose" ]; then
-        pull_args+=(--progress plain)
+        # Only add --progress flag if it's supported
+        if $compose_cmd pull --help 2>/dev/null | grep -q -- "--progress"; then
+            pull_args+=(--progress plain)
+        fi
     fi
 
     print_status "Pre-pulling Docker images (serial download for slow connections)..."

@@ -20,7 +20,8 @@
     "db:migrate:check": "drizzle-kit check",
     "db:start": "bun run supabase start --workdir database",
     "db:stop": "bun run supabase stop --workdir database || echo 'Note: supabase stop failed (may not be running)'",
-    "db:status": "bun run supabase status --workdir database"
+    "db:status": "bun run supabase status --workdir database",
+    "health": "./scripts/health-check.sh"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "2.0.0-beta.10",

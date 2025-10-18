@@ -90,13 +90,15 @@ clean_streamlit_by_process() {
 }
 
 clean_dw_frontend_port() {
-    print_status "Checking for process using port $DW_FRONTEND_PORT..."
+    print_status "Checking for processes using port $DW_FRONTEND_PORT..."
 
-    # Find only the server process in LISTEN state (not browser connections in ESTABLISHED state)
-    local pid=$(lsof -ti :$DW_FRONTEND_PORT -sTCP:LISTEN 2>/dev/null | head -1)
+    # Get all PIDs using the port (both LISTEN and ESTABLISHED)
+    local pids=$(lsof -ti :$DW_FRONTEND_PORT 2>/dev/null)
 
-    if [ -n "$pid" ]; then
-        terminate_process_gracefully "$pid"
+    if [ -n "$pids" ]; then
+        for pid in $pids; do
+            terminate_process_gracefully "$pid"
+        done
     else
         print_success "No processes found using port $DW_FRONTEND_PORT"
     fi
