@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 import time
 import requests
@@ -6,9 +7,46 @@ import random
 import json
 import streamlit_shadcn_ui as ui
 from datetime import datetime, timedelta
+from typing import Optional, Tuple
 from requests.exceptions import ConnectionError
 
 from .constants import CONSUMPTION_API_BASE, WORKFLOW_API_BASE, INGEST_API_BASE
+
+
+def _resolve_temporal_ui_base() -> str:
+    """Determine the Temporal UI base URL using environment configuration."""
+    temporal_ui_base = os.getenv("TEMPORAL_UI_BASE", "").strip()
+
+    if not temporal_ui_base:
+        host = os.getenv("MOOSE_TEMPORAL_HOST", os.getenv("TEMPORAL_HOST", "localhost"))
+        port = (
+            os.getenv("MOOSE_TEMPORAL_UI_PORT")
+            or os.getenv("TEMPORAL_UI_PORT")
+            or "8080"
+        )
+        temporal_ui_base = f"http://{host}:{port}"
+
+    return temporal_ui_base.rstrip("/")
+
+
+TEMPORAL_UI_BASE = _resolve_temporal_ui_base()
+
+
+def _get_backend_base() -> str:
+    return os.getenv("CONSUMPTION_API_BASE", CONSUMPTION_API_BASE)
+
+
+def check_moose_health(timeout: float = 2.0) -> Tuple[bool, Optional[str]]:
+    """Query backend Moose health endpoint."""
+    try:
+        response = requests.get(f"{_get_backend_base()}/getMooseHealth", timeout=timeout)
+        response.raise_for_status()
+        data = response.json() if response.content else {}
+        if data.get("status") == "ok":
+            return True, None
+        return False, data.get("message", "Moose health check failed")
+    except Exception as exc:
+        return False, str(exc)
 
 def normalize_for_display(blob_df, log_df, events_df=None):
     """Convert blob, log, and events data to a unified display format for 'All' view"""
@@ -630,7 +668,7 @@ def render_workflows_table(workflow_prefix, display_name, show_title=True):
         # LinkColumn and can't customize the display text per cell. Ideally, we just have the run id clickable
         if 'run_id' in workflows_df.columns and 'name' in workflows_df.columns:
             workflows_df['temporal_url'] = workflows_df.apply(
-                lambda row: f"http://localhost:8080/namespaces/default/workflows/{row['name']}/{row['run_id']}/history", 
+                lambda row: f"{TEMPORAL_UI_BASE}/namespaces/default/workflows/{row['name']}/{row['run_id']}/history",
                 axis=1
             )
 

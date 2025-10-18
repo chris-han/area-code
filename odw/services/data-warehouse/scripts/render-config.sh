@@ -40,6 +40,17 @@ if [[ -f "$ENV_FILE" ]]; then
     set +a
 fi
 
+# Validate required port configurations are explicitly set
+if [[ -z "${MOOSE_TEMPORAL_PORT:-}" ]]; then
+    echo "[render-config] ERROR: MOOSE_TEMPORAL_PORT must be explicitly set in .env file" >&2
+    exit 1
+fi
+
+if [[ -z "${TEMPORAL_PORT:-}" ]]; then
+    echo "[render-config] ERROR: TEMPORAL_PORT must be explicitly set in .env file" >&2
+    exit 1
+fi
+
 # Default values - External services by default
 : "${MOOSE_CLICKHOUSE_DB_NAME:=finops-odw}"
 : "${MOOSE_CLICKHOUSE_USER:=finops}"
@@ -53,12 +64,12 @@ fi
 : "${MOOSE_TEMPORAL_DB_PASSWORD:=temporal}"
 : "${MOOSE_TEMPORAL_DB_PORT:=5432}"
 : "${MOOSE_TEMPORAL_HOST:=localhost}"
-: "${MOOSE_TEMPORAL_PORT:=7233}"
+# MOOSE_TEMPORAL_PORT must be explicitly set in .env
 
 : "${TEMPORAL_DB_HOST:=marspbi.postgres.database.chinacloudapi.cn}"
 : "${TEMPORAL_DB_PORT:=5432}"
 : "${TEMPORAL_HOST:=temporal}"
-: "${TEMPORAL_PORT:=7233}"
+# TEMPORAL_PORT must be explicitly set in .env
 
 : "${MOOSE_S3_ENDPOINT_URL:=}"
 : "${MOOSE_S3_ACCESS_KEY_ID:=}"
@@ -187,7 +198,6 @@ EOF
     image: temporalio/auto-setup:1.29.0
     profiles:
       - temporal
-    depends_on: []  # No local dependencies since using external PostgreSQL
     environment:
       - DB=postgres12
       - DB_PORT=${TEMPORAL_DB_PORT:-5432}
@@ -200,21 +210,15 @@ EOF
     image: temporalio/admin-tools:1.29
     profiles:
       - temporal
-    depends_on:
-      temporal:
-        condition: service_healthy
     environment:
-      - TEMPORAL_ADDRESS=${MOOSE_TEMPORAL_HOST:-temporal}:${MOOSE_TEMPORAL_PORT:-17233}
-      - TEMPORAL_CLI_ADDRESS=${MOOSE_TEMPORAL_HOST:-temporal}:${MOOSE_TEMPORAL_PORT:-17233}
+      - TEMPORAL_ADDRESS=${MOOSE_TEMPORAL_HOST:-temporal}:${MOOSE_TEMPORAL_PORT}
+      - TEMPORAL_CLI_ADDRESS=${MOOSE_TEMPORAL_HOST:-temporal}:${MOOSE_TEMPORAL_PORT}
   temporal-ui:
     image: temporalio/ui:2.41.0
     profiles:
       - temporal
-    depends_on:
-      temporal:
-        condition: service_healthy
     environment:
-      - TEMPORAL_ADDRESS=${MOOSE_TEMPORAL_HOST:-temporal}:${MOOSE_TEMPORAL_PORT:-17233}
+      - TEMPORAL_ADDRESS=${MOOSE_TEMPORAL_HOST:-temporal}:${MOOSE_TEMPORAL_PORT}
 EOF
     else
         cat >> "$OVERRIDE_FILE" << EOF

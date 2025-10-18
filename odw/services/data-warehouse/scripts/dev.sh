@@ -8,6 +8,13 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SERVICE_DIR="$(dirname "$SCRIPT_DIR")"
 cd "$SERVICE_DIR"
 
+if [[ -f "$SERVICE_DIR/.env" ]]; then
+    set -a
+    # shellcheck disable=SC1091
+    source "$SERVICE_DIR/.env"
+    set +a
+fi
+
 # Force uv to use a workspace-local cache so sandboxed environments without
 # home-directory write access can still install dependencies.
 UV_CACHE_ROOT="$SERVICE_DIR/.uv-cache"
@@ -198,6 +205,52 @@ pre_pull_images() {
         print_warning "Docker image pre-pull encountered errors. Containers will retry during startup."
     else
         print_success "Docker images pulled successfully"
+    fi
+}
+
+refresh_temporal_containers() {
+    local compose_cmd
+    if ! compose_cmd="$(docker_compose_command)"; then
+        print_warning "Docker Compose CLI not available; skipping Temporal container refresh"
+        return
+    fi
+
+    local compose_files="$COMPOSE_FILE"
+    if [ -z "$compose_files" ]; then
+        local base="$SERVICE_DIR/.moose/docker-compose.yml"
+        local override="$SERVICE_DIR/.moose/docker-compose.override.yml"
+        if [ -f "$override" ]; then
+            compose_files="$base:$override"
+        else
+            compose_files="$base"
+        fi
+        export COMPOSE_FILE="$compose_files"
+    fi
+
+    local services_output
+    if ! services_output="$($compose_cmd ps --all --services 2>/dev/null)"; then
+        print_warning "Unable to inspect existing Docker Compose services"
+        return
+    fi
+
+    local needs_remove=false
+    for svc in temporal temporal-admin-tools temporal-ui; do
+        if echo "$services_output" | grep -qx "$svc"; then
+            needs_remove=true
+            break
+        fi
+    done
+
+    if [ "$needs_remove" != true ]; then
+        print_status "No existing Temporal containers to refresh"
+        return
+    fi
+
+    print_status "Removing existing Temporal containers to pick up new image tags..."
+    if $compose_cmd rm --stop --force temporal temporal-admin-tools temporal-ui >/dev/null 2>&1; then
+        print_success "Temporal containers cleared; they will be recreated with updated images"
+    else
+        print_warning "Failed to remove Temporal containers (they may already be running)"
     fi
 }
 
@@ -395,6 +448,7 @@ main() {
     configure_docker_timeouts
     install_dependencies
     pre_pull_images
+    refresh_temporal_containers
     start_data_warehouse_service
 }
 

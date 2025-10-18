@@ -30,3 +30,4 @@ import app.apis.get_azure_billing_summary
 import app.apis.get_azure_subscriptions
 import app.apis.get_azure_resource_groups
 import app.apis.test_azure_connection
+import app.apis.get_moose_health
