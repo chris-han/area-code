@@ -51,8 +51,8 @@ api_key = ""
 [authentication]
 
 [s3_config]
-# S3/MinIO configuration for unstructured data storage. Credentials should be
-# supplied via environment variables or a secret manager.
+# S3/MinIO configuration for unstructured data storage. Credentials should be supplied via
+# environment variables or a secure secret manager — never commit real keys to source control.
 endpoint_url = ""  # MinIO endpoint, set to empty string for AWS S3
 access_key_id = ""
 secret_access_key = ""
