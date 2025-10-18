@@ -67,11 +67,91 @@ ensure_venv_activated() {
     fi
 }
 
+load_env_file() {
+    if [ -f ./.env ]; then
+        print_status "Loading environment from .env..."
+        set -a
+        # shellcheck disable=SC1091
+        source ./.env
+        set +a
+    else
+        print_warning ".env file not found; using existing environment variables"
+    fi
+}
+
+generate_override_file() {
+    local override_file="./.moose/docker-compose.override.yml"
+    mkdir -p "$(dirname "$override_file")"
+    cat <<'EOF' > "$override_file"
+# Auto-generated override: route Temporal to external Postgres
+services:
+  postgresql:
+    profiles:
+      - disabled
+  temporal:
+    depends_on: []
+    environment:
+      - DB=postgres12
+      - DB_PORT=${TEMPORAL_DB_PORT:-5432}
+      - POSTGRES_USER=${TEMPORAL_DB_USER:-temporal}
+      - POSTGRES_PWD=${TEMPORAL_DB_PASSWORD:-temporal}
+      - POSTGRES_SEEDS=${TEMPORAL_DB_HOST:-postgresql}
+    restart: always
+  temporal-admin-tools:
+    environment:
+      - TEMPORAL_ADDRESS=${TEMPORAL_ADDRESS:-temporal:${TEMPORAL_PORT:-7233}}
+      - TEMPORAL_CLI_ADDRESS=${TEMPORAL_CLI_ADDRESS:-temporal:${TEMPORAL_PORT:-7233}}
+  temporal-ui:
+    environment:
+      - TEMPORAL_ADDRESS=${TEMPORAL_ADDRESS:-temporal:${TEMPORAL_PORT:-7233}}
+EOF
+}
+
+patch_temporal_compose() {
+    local compose_file="./.moose/docker-compose.yml"
+    if [ ! -f "$compose_file" ]; then
+        print_warning "No .moose/docker-compose.yml found; skipping Temporal compose patch"
+        return
+    fi
+
+    python - "$compose_file" <<'PY'
+import os
+import re
+from pathlib import Path
+
+compose_path = Path(__import__("sys").argv[1])
+text = compose_path.read_text()
+
+host = os.getenv("TEMPORAL_DB_HOST")
+user = os.getenv("TEMPORAL_DB_USER")
+password = os.getenv("TEMPORAL_DB_PASSWORD")
+
+if host:
+    safe_host = host.replace('"', '\\"')
+    text = re.sub(r"POSTGRES_SEEDS=postgresql", f"POSTGRES_SEEDS=${{TEMPORAL_DB_HOST:-{safe_host}}}", text)
+
+if user:
+    safe_user = user.replace('"', '\\"')
+    text = re.sub(r"POSTGRES_USER=\$\{TEMPORAL_DB_USER:-[^}]+\}", f"POSTGRES_USER=${{TEMPORAL_DB_USER:-{safe_user}}}", text)
+    text = re.sub(r"POSTGRES_USER: \${TEMPORAL_DB_USER:-[^}]+}", f"POSTGRES_USER: ${{TEMPORAL_DB_USER:-{safe_user}}}", text)
+
+if password:
+    safe_password = password.replace('"', '\\"')
+    text = re.sub(r"POSTGRES_PWD=\$\{TEMPORAL_DB_PASSWORD:-[^}]+\}", f"POSTGRES_PWD=${{TEMPORAL_DB_PASSWORD:-\"{safe_password}\"}}", text)
+    text = re.sub(r"POSTGRES_PASSWORD: \${TEMPORAL_DB_PASSWORD:-[^}]+}", f"POSTGRES_PASSWORD: ${{TEMPORAL_DB_PASSWORD:-\"{safe_password}\"}}", text)
+
+compose_path.write_text(text)
+PY
+}
+
 clean_moose_infrastructure() {
     if ensure_venv_activated; then
         # Check if moose-cli is available
         if command -v moose-cli &> /dev/null; then
             print_status "Cleaning Moose infrastructure..."
+            generate_override_file
+            patch_temporal_compose
+            load_env_file
             moose-cli clean
             print_success "Moose infrastructure cleaned"
         else
