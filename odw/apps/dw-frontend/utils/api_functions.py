@@ -554,7 +554,7 @@ def render_dlq_controls(endpoint_path, refresh_key, show_info_icon=False, info_t
 
 def fetch_workflows(name_prefix=None):
     """
-    Fetch workflows from localhost:4200/workflows/list endpoint.
+    Fetch workflows from localhost:4200/workflows/history endpoint.
 
     Args:
         name_prefix (str, optional): Filter workflows by name prefix
@@ -562,7 +562,7 @@ def fetch_workflows(name_prefix=None):
     Returns:
         list: List of workflow dictionaries sorted by started_at (most recent first)
     """
-    api_url = f"{WORKFLOW_API_BASE}/list"
+    api_url = f"{WORKFLOW_API_BASE}/history"
     try:
         response = requests.get(api_url)
         response.raise_for_status()
