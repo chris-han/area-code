@@ -66,8 +66,16 @@ stop_kafdrop() {
 
     print_status "Stopping Kafdrop container..."
 
+    print_status "Running: docker stop $KAFDROP_CONTAINER_NAME"
+
     if docker stop "$KAFDROP_CONTAINER_NAME" > /dev/null 2>&1; then
         print_success "Kafdrop stopped successfully"
+
+        if docker ps -a --filter "name=$KAFDROP_CONTAINER_NAME" --format '{{.ID}}' | grep -q .; then
+            print_status "Removing stopped Kafdrop container..."
+            docker rm "$KAFDROP_CONTAINER_NAME" > /dev/null 2>&1 || true
+            print_success "Kafdrop container removed"
+        fi
     else
         print_warning "Failed to stop Kafdrop gracefully, trying force removal..."
         docker rm -f "$KAFDROP_CONTAINER_NAME" > /dev/null 2>&1 || true

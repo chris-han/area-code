@@ -35,6 +35,9 @@ print_error() {
 # Port configuration
 REDPANDA_PORT=9092
 REDPANDA_ADMIN_PORT=9644
+REDPANDA_CONTAINER_NAME=${REDPANDA_CONTAINER_NAME:-"data-warehouse-redpanda-1"}
+REDPANDA_WAIT_TIMEOUT=${REDPANDA_WAIT_TIMEOUT:-300}
+REDPANDA_WAIT_INTERVAL=${REDPANDA_WAIT_INTERVAL:-2}
 KAFDROP_CONTAINER_NAME="data-warehouse-kafdrop"
 KAFDROP_PORT=9999
 
@@ -68,7 +71,7 @@ get_docker_network() {
     if docker network ls --format "{{.Name}}" | grep -q "^${network_name}$"; then
         echo "$network_name"
     else
-        print_warning "Network $network_name not found, using default"
+        print_warning "Network $network_name not found, using default" >&2
         echo "bridge"  # fallback to bridge network
     fi
 }
@@ -82,19 +85,57 @@ is_kafdrop_running() {
 
 wait_for_redpanda() {
     print_status "Waiting for Redpanda to be ready..."
-    local max_attempts=30
+
+    local interval=${REDPANDA_WAIT_INTERVAL:-2}
+    local timeout=${REDPANDA_WAIT_TIMEOUT:-300}
+
+    if [ "$interval" -le 0 ]; then
+        interval=2
+    fi
+
+    if [ "$timeout" -le 0 ]; then
+        timeout=$((interval * 30))
+    fi
+
+    local max_attempts=$((timeout / interval))
+    if (( timeout % interval != 0 )); then
+        max_attempts=$((max_attempts + 1))
+    fi
+    if (( max_attempts < 1 )); then
+        max_attempts=1
+    fi
+
     local attempts=0
 
+    if ! check_docker; then
+        return 1
+    fi
+
     while [ $attempts -lt $max_attempts ]; do
-        # Check Redpanda status endpoint
-        if curl -s --connect-timeout 2 localhost:$REDPANDA_ADMIN_PORT/v1/status/ready >/dev/null 2>&1; then
-            print_success "Redpanda is ready!"
-            return 0
+        local attempt_count=$((attempts + 1))
+        local inspect_output
+        inspect_output=$(docker inspect --format='{{.State.Status}}|{{if .State.Health}}{{.State.Health.Status}}{{else}}unknown{{end}}' "$REDPANDA_CONTAINER_NAME" 2>/dev/null || true)
+
+        if [[ -z "$inspect_output" ]]; then
+            print_status "Redpanda container not found ($REDPANDA_CONTAINER_NAME) (attempt $attempt_count/$max_attempts)"
+        else
+            local container_state="${inspect_output%%|*}"
+            local health_status="${inspect_output##*|}"
+
+            if [[ "$container_state" == "running" && "$health_status" == "healthy" ]]; then
+                print_success "Redpanda is ready!"
+                return 0
+            fi
+
+            if [[ "$container_state" != "running" ]]; then
+                print_status "Redpanda container state: $container_state (attempt $attempt_count/$max_attempts)"
+            else
+                print_status "Redpanda health status: $health_status (attempt $attempt_count/$max_attempts)"
+            fi
         fi
 
         attempts=$((attempts + 1))
-        print_status "Waiting for Redpanda... (attempt $attempts/$max_attempts)"
-        sleep 2
+        sleep "$interval"
     done
 
     print_warning "Redpanda not ready after $max_attempts attempts"
@@ -112,6 +153,14 @@ start_kafdrop() {
         return 0
     fi
 
+    # Remove any leftover stopped container with the same name
+    local existing_container_id
+    existing_container_id=$(docker ps -aq --filter "name=$KAFDROP_CONTAINER_NAME" | head -n1)
+    if [[ -n "$existing_container_id" ]]; then
+        print_status "Removing stale Kafdrop container ($existing_container_id)"
+        docker rm "$existing_container_id" > /dev/null 2>&1 || true
+    fi
+
     # Check if port is in use
     if is_port_in_use $KAFDROP_PORT; then
         print_error "Port $KAFDROP_PORT is already in use!"
@@ -122,16 +171,23 @@ start_kafdrop() {
     print_status "Starting Kafdrop..."
 
     local network_name=$(get_docker_network)
+    print_status "Using Docker network: $network_name"
 
     # Start Kafdrop container
-    docker run -d \
+    local container_output
+    if ! container_output=$(docker run -d \
         --name "$KAFDROP_CONTAINER_NAME" \
         --network "$network_name" \
         --rm \
         -p $KAFDROP_PORT:9000 \
         -e KAFKA_BROKERCONNECT=redpanda:$REDPANDA_PORT \
         -e SERVER_SERVLET_CONTEXTPATH="/" \
-        obsidiandynamics/kafdrop > /dev/null 2>&1
+        obsidiandynamics/kafdrop 2>&1); then
+        print_error "Failed to start Kafdrop: $container_output"
+        exit 1
+    fi
+
+    print_status "Kafdrop container ID: ${container_output%%\n*}"
 
     # Wait and verify
     sleep 3
