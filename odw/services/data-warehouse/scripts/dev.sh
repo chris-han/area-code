@@ -8,6 +8,18 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SERVICE_DIR="$(dirname "$SCRIPT_DIR")"
 cd "$SERVICE_DIR"
 
+# Force uv to use a workspace-local cache so sandboxed environments without
+# home-directory write access can still install dependencies.
+UV_CACHE_ROOT="$SERVICE_DIR/.uv-cache"
+mkdir -p "$UV_CACHE_ROOT" "$UV_CACHE_ROOT/http" "$UV_CACHE_ROOT/persistent"
+export UV_CACHE_DIR="${UV_CACHE_DIR:-$UV_CACHE_ROOT}"
+export UV_HTTP_CACHE_DIR="${UV_HTTP_CACHE_DIR:-$UV_CACHE_ROOT/http}"
+export UV_PERSISTENT_CACHE_DIR="${UV_PERSISTENT_CACHE_DIR:-$UV_CACHE_ROOT/persistent}"
+export UV_LINK_MODE="${UV_LINK_MODE:-copy}"
+TMP_WORK_DIR="$SERVICE_DIR/.tmp"
+mkdir -p "$TMP_WORK_DIR"
+export TMPDIR="${TMPDIR:-$TMP_WORK_DIR}"
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -154,16 +166,35 @@ pre_pull_images() {
         return
     fi
 
-    local pull_args=(pull --no-parallel)
+    local progress_args=()
     if [ "$compose_cmd" = "docker compose" ]; then
         # Only add --progress flag if it's supported
         if $compose_cmd pull --help 2>/dev/null | grep -q -- "--progress"; then
-            pull_args+=(--progress plain)
+            progress_args+=(--progress plain)
         fi
     fi
 
     print_status "Pre-pulling Docker images (serial download for slow connections)..."
-    if ! $compose_cmd "${pull_args[@]}"; then
+
+    local services
+    local pulled_ok=true
+    if services="$($compose_cmd config --services 2>/dev/null)"; then
+        while IFS= read -r service; do
+            [ -z "$service" ] && continue
+            print_status "Pulling Docker image for service: $service"
+            if ! $compose_cmd pull "${progress_args[@]}" "$service"; then
+                pulled_ok=false
+                print_warning "Failed to pull Docker image for service: $service"
+            fi
+        done <<< "$services"
+    else
+        print_warning "Falling back to parallel Docker image pull; unable to enumerate services"
+        if ! $compose_cmd pull "${progress_args[@]}"; then
+            pulled_ok=false
+        fi
+    fi
+
+    if ! $pulled_ok; then
         print_warning "Docker image pre-pull encountered errors. Containers will retry during startup."
     else
         print_success "Docker images pulled successfully"
@@ -272,13 +303,26 @@ install_dependencies() {
     ensure_venv_activated
 
     print_status "Installing data-warehouse dependencies in virtual environment..."
-    
-    print_status "Installing data-warehouse dependencies in virtual environment..."
-    uv pip install .
-    
+    if ! uv pip install .; then
+        print_warning "uv pip install failed; falling back to legacy setup.py install"
+        if ! TMPDIR="${TMPDIR:-$SERVICE_DIR/.tmp}" python setup.py install; then
+            print_error "Fallback setup.py install failed"
+            exit 1
+        fi
+    fi
+
     # Also install connectors package in editable mode
     print_status "Installing connectors package in virtual environment..."
-    uv pip install -e ../connectors
+    if ! uv pip install -e ../connectors; then
+        print_warning "uv pip install for connectors failed; falling back to setup.py install"
+        pushd ../connectors >/dev/null
+        if ! TMPDIR="${TMPDIR:-$SERVICE_DIR/.tmp}" python setup.py install; then
+            popd >/dev/null
+            print_error "Fallback connectors setup.py install failed"
+            exit 1
+        fi
+        popd >/dev/null
+    fi
     
     print_success "Data warehouse dependencies installed successfully in virtual environment"
 

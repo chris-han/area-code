@@ -7,7 +7,16 @@ echo "🚀 Setting up service-level virtual environments for ODW..."
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
+RED='\033[0;31m'
 NC='\033[0m' # No Color
+
+ensure_envsubst() {
+    if ! command -v envsubst >/dev/null 2>&1; then
+        echo -e "${RED}❌ Missing dependency: envsubst (GNU gettext).${NC}"
+        echo -e "${YELLOW}   Install with 'sudo apt-get install -y gettext-base' or the equivalent for your OS, then re-run this script.${NC}"
+        exit 1
+    fi
+}
 
 # Function to setup a service venv
 setup_service_venv() {
@@ -33,7 +42,15 @@ setup_service_venv() {
     fi
     
     if [ -f "setup.py" ]; then
-        uv pip install -e .
+        if ! uv pip install -e .; then
+            echo "  uv pip install failed; falling back to setup.py install"
+            if ! python setup.py install; then
+                echo -e "${RED}  ❌ Failed to install ${service_name} via setup.py${NC}"
+                deactivate >/dev/null 2>&1 || true
+                cd - > /dev/null
+                exit 1
+            fi
+        fi
     fi
     
     echo -e "${GREEN}  ✅ ${service_name} setup complete${NC}"
@@ -44,6 +61,12 @@ setup_service_venv() {
 ORIGINAL_DIR=$(pwd)
 
 # Setup Backend Services (Shared venv)
+ensure_envsubst
+export UV_LINK_MODE="${UV_LINK_MODE:-copy}"
+TMP_WORK_ROOT="$PWD/.tmp"
+mkdir -p "$TMP_WORK_ROOT"
+export TMPDIR="${TMPDIR:-$TMP_WORK_ROOT}"
+
 echo -e "${BLUE}📦 Setting up Backend Services (Shared)...${NC}"
 cd "services"
 
@@ -60,7 +83,16 @@ source .venv/bin/activate
 # Install connectors package first (editable)
 if [ -d "connectors" ]; then
     echo "  Installing connectors package (editable)..."
-    uv pip install -e connectors
+    if ! uv pip install -e connectors; then
+        echo "  uv install failed; falling back to setup.py install"
+        pushd connectors >/dev/null
+        if ! python setup.py install; then
+            popd >/dev/null
+            echo -e "${RED}  ❌ Failed to install connectors via setup.py${NC}"
+            exit 1
+        fi
+        popd >/dev/null
+    fi
 fi
 
 # Install data-warehouse package (editable)
@@ -71,7 +103,15 @@ if [ -d "data-warehouse" ]; then
         uv pip install -r requirements.txt
     fi
     if [ -f "setup.py" ]; then
-        uv pip install -e .
+        if ! uv pip install -e .; then
+            echo "  uv install failed; falling back to setup.py install"
+            if ! python setup.py install; then
+                echo -e "${RED}  ❌ Failed to install data-warehouse via setup.py${NC}"
+                deactivate >/dev/null 2>&1 || true
+                cd - > /dev/null
+                exit 1
+            fi
+        fi
     fi
     cd ..
 fi

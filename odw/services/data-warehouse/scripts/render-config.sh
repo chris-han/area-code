@@ -146,7 +146,7 @@ services:
 EOF
 
     if [[ "$clickhouse_external" == true ]]; then
-        cat >> "$OVERRIDE_FILE" << 'EOF'
+        cat >> "$OVERRIDE_FILE" << EOF
   # ClickHouse services disabled - using external ClickHouse
   clickhousedb:
     deploy:
@@ -164,24 +164,27 @@ EOF
     ports: []  # Remove all port mappings
 EOF
     else
-        cat >> "$OVERRIDE_FILE" << 'EOF'
+        cat >> "$OVERRIDE_FILE" <<'EOF'
   # ClickHouse services enabled for local development
   clickhousedb:
+    image: docker.io/clickhouse/clickhouse-server:25.6
     profiles:
       - clickhouse
   clickhouse-keeper:
+    image: docker.io/clickhouse/clickhouse-keeper:25.6
     profiles:
       - clickhouse
 EOF
     fi
 
     if [[ "$temporal_db_external" == true ]]; then
-        cat >> "$OVERRIDE_FILE" << 'EOF'
+        cat >> "$OVERRIDE_FILE" << EOF
   # Disable local PostgreSQL since using external database
   postgresql:
     profiles:
       - disabled
   temporal:
+    image: temporalio/auto-setup:1.29.0
     profiles:
       - temporal
     depends_on: []  # No local dependencies since using external PostgreSQL
@@ -194,6 +197,7 @@ EOF
       - DYNAMIC_CONFIG_FILE_PATH=/etc/temporal/config/dynamicconfig/development-sql.yaml
     restart: on-failure
   temporal-admin-tools:
+    image: temporalio/admin-tools:1.29
     profiles:
       - temporal
     depends_on:
@@ -203,6 +207,7 @@ EOF
       - TEMPORAL_ADDRESS=${MOOSE_TEMPORAL_HOST:-temporal}:${MOOSE_TEMPORAL_PORT:-17233}
       - TEMPORAL_CLI_ADDRESS=${MOOSE_TEMPORAL_HOST:-temporal}:${MOOSE_TEMPORAL_PORT:-17233}
   temporal-ui:
+    image: temporalio/ui:2.41.0
     profiles:
       - temporal
     depends_on:
@@ -212,18 +217,21 @@ EOF
       - TEMPORAL_ADDRESS=${MOOSE_TEMPORAL_HOST:-temporal}:${MOOSE_TEMPORAL_PORT:-17233}
 EOF
     else
-        cat >> "$OVERRIDE_FILE" << 'EOF'
+        cat >> "$OVERRIDE_FILE" << EOF
   # Local PostgreSQL and Temporal services enabled
   postgresql:
     profiles:
       - temporal-db
   temporal:
+    image: temporalio/auto-setup:1.29.0
     profiles:
       - temporal
   temporal-admin-tools:
+    image: temporalio/admin-tools:1.29
     profiles:
       - temporal
   temporal-ui:
+    image: temporalio/ui:2.41.0
     profiles:
       - temporal
 EOF
@@ -231,7 +239,12 @@ EOF
 
     echo "[render-config] Generated Docker Compose override: $OVERRIDE_FILE"
     echo "[render-config] ClickHouse external: $clickhouse_external (host: $MOOSE_CLICKHOUSE_HOST)"
+    echo "[render-config] ClickHouse server image: docker.io/clickhouse/clickhouse-server:25.6"
+    echo "[render-config] ClickHouse keeper image: docker.io/clickhouse/clickhouse-keeper:25.6"
     echo "[render-config] Temporal DB external: $temporal_db_external (host: $TEMPORAL_DB_HOST)"
+    echo "[render-config] Temporal server image: temporalio/auto-setup:1.29.0"
+    echo "[render-config] Temporal admin-tools image: temporalio/admin-tools:1.29"
+    echo "[render-config] Temporal UI image: temporalio/ui:2.41.0"
 }
 
 generate_docker_override

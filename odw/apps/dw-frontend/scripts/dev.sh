@@ -8,6 +8,17 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SERVICE_DIR="$(dirname "$SCRIPT_DIR")"
 cd "$SERVICE_DIR"
 
+# Force uv to operate within the workspace to avoid permission issues.
+UV_CACHE_ROOT="$SERVICE_DIR/.uv-cache"
+mkdir -p "$UV_CACHE_ROOT" "$UV_CACHE_ROOT/http" "$UV_CACHE_ROOT/persistent"
+export UV_CACHE_DIR="${UV_CACHE_DIR:-$UV_CACHE_ROOT}"
+export UV_HTTP_CACHE_DIR="${UV_HTTP_CACHE_DIR:-$UV_CACHE_ROOT/http}"
+export UV_PERSISTENT_CACHE_DIR="${UV_PERSISTENT_CACHE_DIR:-$UV_CACHE_ROOT/persistent}"
+export UV_LINK_MODE="${UV_LINK_MODE:-copy}"
+TMP_WORK_DIR="$SERVICE_DIR/.tmp"
+mkdir -p "$TMP_WORK_DIR"
+export TMPDIR="${TMPDIR:-$TMP_WORK_DIR}"
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -141,7 +152,13 @@ install_dependencies() {
     ensure_venv_activated
 
     print_status "Installing dw-frontend dependencies in virtual environment..."
-    uv pip install -r requirements.txt
+    if ! uv pip install -r requirements.txt; then
+        print_warning "uv pip install failed; falling back to pip install"
+        if ! python -m pip install -r requirements.txt; then
+            print_error "Failed to install Streamlit dependencies"
+            exit 1
+        fi
+    fi
     
     print_success "DW-Frontend dependencies installed successfully in virtual environment"
 

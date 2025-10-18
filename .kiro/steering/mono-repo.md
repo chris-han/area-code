@@ -4,7 +4,7 @@ inclusion: always
 
 NEVER USE NPM. ALWAYS USE BUN.
 NEVER USE PIP directly. ALWAYS USE UV.
-DON'T EVER OVERRIDE THE .ENV FILE.
+DON'T EVER CHANGE THE .ENV FILE.
 
 This is a mono repo. It leverages turbo repo.
 

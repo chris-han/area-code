@@ -8,6 +8,17 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SERVICE_DIR="$(dirname "$SCRIPT_DIR")"
 cd "$SERVICE_DIR"
 
+# Keep uv caches inside the repo so sandboxed environments can install packages.
+UV_CACHE_ROOT="$SERVICE_DIR/.uv-cache"
+mkdir -p "$UV_CACHE_ROOT" "$UV_CACHE_ROOT/http" "$UV_CACHE_ROOT/persistent"
+export UV_CACHE_DIR="${UV_CACHE_DIR:-$UV_CACHE_ROOT}"
+export UV_HTTP_CACHE_DIR="${UV_HTTP_CACHE_DIR:-$UV_CACHE_ROOT/http}"
+export UV_PERSISTENT_CACHE_DIR="${UV_PERSISTENT_CACHE_DIR:-$UV_CACHE_ROOT/persistent}"
+export UV_LINK_MODE="${UV_LINK_MODE:-copy}"
+TMP_WORK_DIR="$SERVICE_DIR/.tmp"
+mkdir -p "$TMP_WORK_DIR"
+export TMPDIR="${TMPDIR:-$TMP_WORK_DIR}"
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -129,7 +140,13 @@ install_dependencies() {
     ensure_venv_activated
 
     print_status "Installing connectors dependencies in virtual environment..."
-    uv pip install -e .
+    if ! uv pip install -e .; then
+        print_warning "uv pip install failed; falling back to legacy setup.py install"
+        if ! TMPDIR="${TMPDIR:-$SERVICE_DIR/.tmp}" python setup.py install; then
+            print_error "Fallback setup.py install failed"
+            exit 1
+        fi
+    fi
     
     print_success "Connectors dependencies installed successfully in virtual environment"
 }

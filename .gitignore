@@ -40,3 +40,5 @@ services/*/.moose/
 odw/scripts/__pycache__/seed-data.cpython-312.pyc
 odw/scripts/memo_*
 odw/services/data-warehouse/moose.config.toml
+odw/services/data-warehouse/.tmp/
+
