@@ -28,6 +28,6 @@ NODE_ENV=${NODE_ENV:-development} moose-cli dev | while IFS= read -r line; do
         echo "----------------------------------------"
         
         # Start workflow in background so we can continue showing moose output
-        NODE_ENV=${NODE_ENV:-development} pnpm dev:workflow &
+        NODE_ENV=${NODE_ENV:-development} bun run dev:workflow &
     fi
 done

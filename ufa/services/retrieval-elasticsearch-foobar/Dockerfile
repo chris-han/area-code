@@ -1,13 +1,10 @@
 # Simple Dockerfile that replicates development environment
-FROM node:slim
+FROM oven/bun:1.2.21
 
 WORKDIR /app
 
-# Install pnpm
-RUN npm install -g pnpm
-
 # Copy package files
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY package.json bun.lockb turbo.json ./
 COPY ufa/services/retrieval-elasticsearch-foobar/package.json ./ufa/services/retrieval-elasticsearch-foobar/
 COPY ufa/packages/models/package.json ./ufa/packages/models/
 COPY ufa/packages/eslint-config/package.json ./ufa/packages/eslint-config/
@@ -17,7 +14,7 @@ COPY ufa/packages/typescript-config/package.json ./ufa/packages/typescript-confi
 COPY ufa/packages ./ufa/packages
 
 # Install all dependencies (including dev dependencies like tsx)
-RUN pnpm install
+RUN bun install --frozen-lockfile
 
 # Copy service source code
 COPY ufa/services/retrieval-elasticsearch-foobar ./ufa/services/retrieval-elasticsearch-foobar
@@ -26,7 +23,7 @@ COPY ufa/services/retrieval-elasticsearch-foobar ./ufa/services/retrieval-elasti
 WORKDIR /app/ufa/services/retrieval-elasticsearch-foobar
 
 # Build the TypeScript code
-RUN pnpm build
+RUN bun run build
 
 # Set production environment
 ENV NODE_ENV=production
@@ -38,4 +35,4 @@ ENV SKIP_ES_WAIT=true
 EXPOSE 8083
 
 # Run the bundled JavaScript
-CMD ["node", "dist/server.js"]
+CMD ["bun", "dist/server.js"]

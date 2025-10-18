@@ -1,8 +1,8 @@
-kafka-python-ng==2.2.2
-clickhouse-connect==0.7.16
-requests==2.32.4
-moose-cli==0.4.310
-moose-lib==0.4.310
+kafka-python-ng>=2.2.2
+clickhouse-connect
+requests>=2.32.4
+moose-cli
+moose-lib
 Pillow>=10.0.0
 boto3>=1.26.0
 toml>=0.10.0 

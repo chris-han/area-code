@@ -8,11 +8,30 @@ export function findWorkspaceRoot(startPath: string): string {
     // Check for workspace markers
     const packageJsonPath = path.join(currentPath, "package.json");
     const pnpmWorkspacePath = path.join(currentPath, "pnpm-workspace.yaml");
+    const bunLockPath = path.join(currentPath, "bun.lockb");
     const turboJsonPath = path.join(currentPath, "turbo.json");
+    let packageJsonHasWorkspaces = false;
+
+    if (fs.existsSync(packageJsonPath)) {
+      try {
+        const packageJsonContent = fs.readFileSync(packageJsonPath, "utf8");
+        const packageJson = JSON.parse(packageJsonContent);
+        packageJsonHasWorkspaces =
+          Array.isArray(packageJson.workspaces) &&
+          packageJson.workspaces.length > 0;
+      } catch (error) {
+        console.warn(
+          `Failed to parse package.json at ${packageJsonPath}:`,
+          error
+        );
+      }
+    }
 
     if (
       fs.existsSync(packageJsonPath) &&
-      fs.existsSync(pnpmWorkspacePath) &&
+      (fs.existsSync(pnpmWorkspacePath) ||
+        fs.existsSync(bunLockPath) ||
+        packageJsonHasWorkspaces) &&
       fs.existsSync(turboJsonPath)
     ) {
       return currentPath;
@@ -22,7 +41,7 @@ export function findWorkspaceRoot(startPath: string): string {
   }
 
   throw new Error(
-    "Could not find workspace root. Looking for directory with package.json, pnpm-workspace.yaml, and turbo.json"
+    "Could not find workspace root. Looking for directory with package.json, bun.lockb (or pnpm-workspace.yaml), and turbo.json"
   );
 }
 

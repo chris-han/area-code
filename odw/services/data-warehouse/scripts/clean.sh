@@ -37,7 +37,7 @@ DATA_WAREHOUSE_PORT=4200
 
 # Virtual environment utility functions
 check_venv_exists() {
-    if [ -d "venv" ]; then
+    if [ -d ".venv" ]; then
         return 0  # venv exists
     else
         return 1  # venv does not exist
@@ -54,7 +54,7 @@ ensure_venv_activated() {
     # Check if we're already in the virtual environment
     if [ -z "$VIRTUAL_ENV" ]; then
         print_status "Activating virtual environment..."
-        source venv/bin/activate
+        source .venv/bin/activate
 
         if [ -n "$VIRTUAL_ENV" ]; then
             print_success "Virtual environment activated: $VIRTUAL_ENV"

@@ -20,21 +20,21 @@ The Sloan MCP provides AI-powered tools for interacting with your Moose analytic
 
 ```bash
 # Development
-pnpm dev                 # Start with database setup
-pnpm ufa:dev            # Alias for dev script
-pnpm dev:server-only    # Start server only (skip DB setup)
-pnpm dev:migrate        # Run database migrations in dev mode
+bun run dev                 # Start with database setup
+bun run ufa:dev            # Alias for dev script
+bun run dev:server-only    # Start server only (skip DB setup)
+bun run dev:migrate        # Run database migrations in dev mode
 
 # Production
-pnpm build              # Compile TypeScript
-pnpm start              # Start production server
+bun run build              # Compile TypeScript
+bun run start              # Start production server
 
 # Database
-pnpm db:generate        # Generate Drizzle schema
-pnpm db:migrate         # Run database migrations
-pnpm db:studio          # Open Drizzle Studio
+bun run db:generate        # Generate Drizzle schema
+bun run db:migrate         # Run database migrations
+bun run db:studio          # Open Drizzle Studio
 
 # Utilities
-pnpm clean              # Remove build artifacts
-pnpm typecheck          # Type checking without build
+bun run clean              # Remove build artifacts
+bun run typecheck          # Type checking without build
 ```

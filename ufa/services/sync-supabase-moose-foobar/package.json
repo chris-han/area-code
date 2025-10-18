@@ -24,7 +24,7 @@
     "@514labs/moose-cli": "latest",
     "@types/node": "^20.12.12",
     "@types/pg": "^8.10.0",
-    "typescript": "catalog:"
+    "typescript": "5.9.2"
   },
   "engines": {
     "node": ">=22"

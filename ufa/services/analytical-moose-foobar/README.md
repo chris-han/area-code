@@ -6,15 +6,15 @@ A MooseJS-powered analytical service that provides consumption APIs for Foo and 
 
 ```bash
 # MooseJS CLI access
-pnpm moose
+bun run moose
 
 # Build Docker image
-pnpm build
+bun run build
 
 # Start development server
-pnpm dev
-pnpm ufa:dev
+bun run dev
+bun run ufa:dev
 
 # Clean development environment
-pnpm ufa:dev:clean
+bun run ufa:dev:clean
 ```

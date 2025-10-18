@@ -23,19 +23,19 @@ The service will automatically detect production mode (`NODE_ENV=production`) an
 
 ```bash
 # MooseJS CLI access
-pnpm moose
+bun run moose
 
 # Build Docker image
-pnpm build
+bun run build
 
 # Start development server
-pnpm dev
-pnpm ufa:dev
+bun run dev
+bun run ufa:dev
 
 # Clean development environment
-pnpm ufa:dev:clean
+bun run ufa:dev:clean
 
 # Workflow management
-pnpm dev:workflow        # Run Supabase listener workflow
-pnpm dev:workflow:stop   # Stop Supabase listener workflow
+bun run dev:workflow        # Run Supabase listener workflow
+bun run dev:workflow:stop   # Stop Supabase listener workflow
 ```

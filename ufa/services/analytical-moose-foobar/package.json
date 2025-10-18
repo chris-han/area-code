@@ -18,6 +18,6 @@
   "devDependencies": {
     "@514labs/moose-cli": "latest",
     "@types/node": "^20.12.12",
-    "typescript": "catalog:"
+    "typescript": "5.9.2"
   }
 }

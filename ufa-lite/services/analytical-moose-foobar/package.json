@@ -25,7 +25,7 @@
     "@kubb/plugin-oas": "^3.18.3",
     "@kubb/plugin-ts": "^3.18.3",
     "@types/node": "^20.12.12",
-    "typescript": "catalog:"
+    "typescript": "5.9.2"
   },
   "engines": {
     "node": "22.x"
