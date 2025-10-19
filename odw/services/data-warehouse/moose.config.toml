@@ -7,12 +7,12 @@ retention_ms = 30000
 replication_factor = 1
 
 [clickhouse_config]
-db_name = "finops-odw"
-user = "finops"
-password = "cU2f947&9T{6d"
-use_ssl = true
-host = "ck.mightytech.cn"
-host_port = 8443
+db_name = "local"
+user = "panda"
+password = "pandapass"
+use_ssl = false
+host = "localhost"
+host_port = 18123
 native_port = 9000
 
 [http_server_config]
@@ -51,13 +51,12 @@ api_key = ""
 [authentication]
 
 [s3_config]
-# S3/MinIO configuration for unstructured data storage. Credentials should be supplied via
-# environment variables or a secure secret manager — never commit real keys to source control.
-endpoint_url = ""  # MinIO endpoint, set to empty string for AWS S3
-access_key_id = ""
-secret_access_key = ""
-region_name = "us-east-2"
-bucket_name = "yl-billing-data"
+# S3/MinIO configuration for unstructured data storage
+endpoint_url = "http://localhost:9500"  # MinIO endpoint, set to empty string for AWS S3
+access_key_id = "minioadmin"
+secret_access_key = "minioadmin"
+region_name = "us-east-1"
+bucket_name = "unstructured-data"
 signature_version = "s3v4"
 
 [features]

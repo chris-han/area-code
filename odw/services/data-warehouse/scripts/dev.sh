@@ -160,11 +160,10 @@ from pathlib import Path
 compose_path = Path(__import__("sys").argv[1])
 text = compose_path.read_text()
 
-# Get values from both MOOSE_* and TEMPORAL_* variables
-host = os.getenv("TEMPORAL_DB_HOST") or os.getenv("MOOSE_TEMPORAL_DB_HOST")
-user = os.getenv("TEMPORAL_DB_USER") or os.getenv("MOOSE_TEMPORAL_DB_USER")
-password = os.getenv("TEMPORAL_DB_PASSWORD") or os.getenv("MOOSE_TEMPORAL_DB_PASSWORD")
-port = os.getenv("TEMPORAL_DB_PORT") or os.getenv("MOOSE_TEMPORAL_DB_PORT")
+# Temporal/PostgreSQL defaults to the local dockerised instance unless overridden
+host = os.getenv("TEMPORAL_DB_HOST") or "postgresql"
+user = os.getenv("TEMPORAL_DB_USER") or "temporal"
+password = os.getenv("TEMPORAL_DB_PASSWORD") or "temporal"
 
 if host:
     safe_host = host.replace('"', '\\"')
@@ -172,7 +171,7 @@ if host:
 
 if user:
     safe_user = user.replace('"', '\\"')
-    # Replace both TEMPORAL_DB_USER and MOOSE_TEMPORAL_DB_USER patterns
+    # Replace both TEMPORAL_DB_USER and legacy MOOSE_TEMPORAL_DB_USER patterns
     text = re.sub(r"POSTGRES_USER=\$\{TEMPORAL_DB_USER:-[^}]+\}", f"POSTGRES_USER={safe_user}", text)
     text = re.sub(r"POSTGRES_USER: \$\{TEMPORAL_DB_USER:-[^}]+\}", f"POSTGRES_USER: {safe_user}", text)
     text = re.sub(r"POSTGRES_USER=\$\{MOOSE_TEMPORAL_DB_USER:-[^}]+\}", f"POSTGRES_USER={safe_user}", text)
@@ -180,7 +179,7 @@ if user:
 
 if password:
     safe_password = password.replace('"', '\\"').replace("'", "\\'")
-    # Replace both TEMPORAL_DB_PASSWORD and MOOSE_TEMPORAL_DB_PASSWORD patterns
+    # Replace both TEMPORAL_DB_PASSWORD and legacy MOOSE_TEMPORAL_DB_PASSWORD patterns
     text = re.sub(r"POSTGRES_PWD=\$\{TEMPORAL_DB_PASSWORD:-[^}]+\}", f"POSTGRES_PWD={safe_password}", text)
     text = re.sub(r"POSTGRES_PASSWORD: \$\{TEMPORAL_DB_PASSWORD:-[^}]+\}", f"POSTGRES_PASSWORD: {safe_password}", text)
     text = re.sub(r"POSTGRES_PWD=\$\{MOOSE_TEMPORAL_DB_PASSWORD:-[^}]+\}", f"POSTGRES_PWD={safe_password}", text)
@@ -194,8 +193,8 @@ generate_override_file() {
     local override_file="./.moose/docker-compose.override.yml"
     mkdir -p "$(dirname "$override_file")"
 
-    cat > "$override_file" <<EOF
-# Auto-generated override: Use local PostgreSQL for Temporal (Azure PostgreSQL doesn't support required extensions)
+    cat > "$override_file" <<'EOF'
+# Auto-generated overrides for local development.
 services:
   postgresql:
     # Use local PostgreSQL for Temporal since Azure PostgreSQL doesn't support btree_gin extension
@@ -209,7 +208,7 @@ services:
     networks:
       - temporal-network
     ports:
-      - "\${TEMPORAL_DB_PORT:-5432}:5432"
+      - "${TEMPORAL_DB_PORT:-5432}:5432"
   temporal:
     environment:
       - DB=postgres12
@@ -222,11 +221,65 @@ services:
       - postgresql
   temporal-admin-tools:
     environment:
-      - TEMPORAL_ADDRESS=\${TEMPORAL_ADDRESS:-temporal:\${TEMPORAL_PORT:-7233}}
-      - TEMPORAL_CLI_ADDRESS=\${TEMPORAL_CLI_ADDRESS:-temporal:\${TEMPORAL_PORT:-7233}}
+      - TEMPORAL_ADDRESS=${TEMPORAL_ADDRESS:-temporal:${TEMPORAL_PORT:-7233}}
+      - TEMPORAL_CLI_ADDRESS=${TEMPORAL_CLI_ADDRESS:-temporal:${TEMPORAL_PORT:-7233}}
   temporal-ui:
     environment:
-      - TEMPORAL_ADDRESS=\${TEMPORAL_ADDRESS:-temporal:\${TEMPORAL_PORT:-7233}}
+      - TEMPORAL_ADDRESS=${TEMPORAL_ADDRESS:-temporal:${TEMPORAL_PORT:-7233}}
+  clickhouse-server:
+    environment:
+      CLICKHOUSE_DB: "${CLICKHOUSE_DB_NAME}"
+      CLICKHOUSE_USER: "${CLICKHOUSE_USER}"
+      CLICKHOUSE_PASSWORD: "${CLICKHOUSE_PASSWORD}"
+    command:
+      - sh
+      - -c
+      - |
+        mkdir -p /etc/clickhouse-server/config.d
+        cat > /etc/clickhouse-server/config.d/keeper.xml <<'EOF_KEEPER'
+        <clickhouse>
+          <zookeeper>
+            <node>
+              <host>clickhouse-keeper</host>
+              <port>9181</port>
+            </node>
+          </zookeeper>
+          <distributed_ddl>
+            <path>/clickhouse/task_queue/ddl</path>
+          </distributed_ddl>
+          <macros>
+            <shard>01</shard>
+            <replica>replica_1</replica>
+            <database>local</database>
+          </macros>
+          <!-- Macros are used for ReplicatedMergeTree default paths -->
+          <!-- Default path: /clickhouse/tables/{uuid}/{shard} works with Atomic database (default) -->
+        </clickhouse>
+        EOF_KEEPER
+
+        mkdir -p /etc/clickhouse-server/users.d
+        cat > /etc/clickhouse-server/users.d/default-user.xml <<EOF_USER
+        <clickhouse>
+          <!-- Docs: <https://clickhouse.com/docs/operations/settings/settings_users/> -->
+          <users>
+            <!-- Remove default user -->
+            <default remove="remove">
+            </default>
+
+            <${CLICKHOUSE_USER}>
+              <profile>default</profile>
+              <networks>
+                <ip>::/0</ip>
+              </networks>
+              <password><![CDATA[${CLICKHOUSE_PASSWORD}]]></password>
+              <quota>default</quota>
+              <access_management>1</access_management>
+            </${CLICKHOUSE_USER}>
+          </users>
+        </clickhouse>
+        EOF_USER
+
+        exec /entrypoint.sh
 EOF
 }
 
@@ -245,28 +298,33 @@ start_data_warehouse_service() {
 
     load_env_file
 
-    # Ensure environment variables are exported for Docker Compose
-    export MOOSE_TEMPORAL_DB_USER
-    export MOOSE_TEMPORAL_DB_PASSWORD
-    export MOOSE_TEMPORAL_DB_HOST
-    export MOOSE_TEMPORAL_DB_PORT
+    # Ensure Docker Compose picks up ClickHouse credentials
+    if [ -n "$CLICKHOUSE_DB_NAME" ]; then
+        export DB_NAME="$CLICKHOUSE_DB_NAME"
+    fi
 
-    # Also export the variable names that the main docker-compose.yml expects
-    export TEMPORAL_DB_USER="$MOOSE_TEMPORAL_DB_USER"
-    export TEMPORAL_DB_PASSWORD="$MOOSE_TEMPORAL_DB_PASSWORD"
-    export TEMPORAL_DB_HOST="$MOOSE_TEMPORAL_DB_HOST"
-    export TEMPORAL_DB_PORT="$MOOSE_TEMPORAL_DB_PORT"
+    # Determine Temporal/PostgreSQL connection details (defaults to local Docker instance)
+    local temporal_db_host="${TEMPORAL_DB_HOST:-postgresql}"
+    local temporal_db_user="${TEMPORAL_DB_USER:-temporal}"
+    local temporal_db_password="${TEMPORAL_DB_PASSWORD:-temporal}"
+    local temporal_db_port="${TEMPORAL_DB_PORT:-5432}"
+
+    export TEMPORAL_DB_HOST="$temporal_db_host"
+    export TEMPORAL_DB_USER="$temporal_db_user"
+    export TEMPORAL_DB_PASSWORD="$temporal_db_password"
+    export TEMPORAL_DB_PORT="$temporal_db_port"
 
     # Export Temporal version variables from moose.config.toml
     export TEMPORAL_VERSION="1.29.0"
     export TEMPORAL_ADMINTOOLS_VERSION="1.29"
     export TEMPORAL_UI_VERSION="2.41.0"
 
-    print_status "Using database credentials: $MOOSE_TEMPORAL_DB_USER@$MOOSE_TEMPORAL_DB_HOST:$MOOSE_TEMPORAL_DB_PORT"
+    print_status "Temporal/PostgreSQL: $TEMPORAL_DB_USER@$TEMPORAL_DB_HOST:$TEMPORAL_DB_PORT"
 
     generate_override_file
     patch_temporal_compose
-    exec moose-cli dev
+
+    moose-cli dev
 }
 
 main() {

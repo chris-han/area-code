@@ -132,6 +132,35 @@ The application uses a modern data architecture:
 3. **Temporal** (Workflow Engine)
 4. **Redis** (Caching)
 
+## ⚙️ Configuration Workflow
+
+The operational data warehouse uses a layered configuration model so that secrets stay local while shared defaults live in version control.
+
+**Key Files**
+
+- `services/data-warehouse/.env`: Local developer secrets (ignored by git). Populate ClickHouse credentials and any machine-specific overrides here.
+- `services/data-warehouse/env.example`: Safe template that documents required variables. Update placeholders when the default setup changes.
+- `services/data-warehouse/moose.config.toml`: Moose service configuration checked into git. It references `${CLICKHOUSE_*}` placeholders so no credentials are committed.
+- `services/data-warehouse/scripts/dev.sh`: Loads `.env`, regenerates `.moose/docker-compose.override.yml`, and starts the Moose service. The generated override injects credentials into Docker and rewrites the ClickHouse `default-user.xml` on each run.
+
+```mermaid
+flowchart LR
+    A[env.example] -. copy & edit .-> B[.env]
+    B -->|load| C[scripts/dev.sh]
+    C -->|templates| D[.moose/docker-compose.override.yml]
+    C -->|reads placeholders| E[moose.config.toml]
+    D -->|docker compose up| F[ClickHouse container]
+    F -->|entrypoint| G["users.d/default-user.xml"]
+```
+
+**Updating ClickHouse credentials**
+
+1. Edit `services/data-warehouse/.env` with the new values (and mirror the placeholder in `env.example` if the team needs to know about the change).
+2. Rerun `services/data-warehouse/scripts/dev.sh` (or `bun run odw:dev`) so the Docker override and container user config are regenerated.
+3. Restart the stack; no direct edits to `moose.config.toml` or Docker volumes are required.
+
+This flow keeps credentials out of source control while ensuring the running containers always receive the latest configuration.
+
 ## 🚀 Production Deployment (Coming Soon)
 
 > 🚧 **UNDER DEVELOPMENT** - Production deployment capabilities are actively being developed and tested. The current focus is on stability and compatibility across different machine configurations.
