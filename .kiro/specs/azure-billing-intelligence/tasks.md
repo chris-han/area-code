@@ -1,5 +1,7 @@
 # Azure Billing Intelligence Implementation Plan
 
+> **Port Configuration Verified**: All tasks updated to reflect actual Docker container port mappings verified from running ODW system. Key services: Moose API (4200), ClickHouse (18123/9000), Temporal (7233), Temporal UI (8080), Kafdrop (9999), MinIO (9500/9501), Redis (6379), PostgreSQL (5432), Redpanda (19092).
+
 - [ ] 1. Project Setup and Infrastructure Foundation
   - Initialize Moose project with FOCUS specification and DataLens integration
   - Configure development environment with UV and Bun package managers
@@ -13,18 +15,25 @@
   - _Requirements: 6.1, 6.4_
 
 - [ ] 1.2 Configure Development Environment
-  - Set up UV for Python backend package management with requirements.txt
+  - Set up UV for Python backend package management following ODW patterns
   - Configure Bun for frontend package management with package.json
-  - Create development scripts for environment setup and service orchestration
+  - Create development scripts following ODW structure: `bun run abi:dev`, `bun run abi:dev:clean`
+  - Set up .env file with verified service configurations and port mappings
   - _Requirements: 11.1, 11.2, 11.3_
 
 - [ ] 1.3 Set up Docker Infrastructure Services
-  - Configure Docker Compose with services from .moose/docker-compose.yml
-  - Set up external ClickHouse and PostgreSQL connections using environment variables
-  - Configure local Redis, RedPanda, Temporal, and MinIO services with management UIs
+  - Configure Docker Compose with verified port mappings: ClickHouse (18123/9000), Temporal (7233), Temporal UI (8080), PostgreSQL (5432), Redpanda (19092), Kafdrop (9999), Redis (6379), MinIO (9500/9501)
+  - Set up hybrid architecture with local Docker services and external ClickHouse/PostgreSQL connections
+  - Configure service health checks and dependency management following ODW patterns
   - _Requirements: 8.1, 8.2, 8.3, 10.1, 10.2_
 
-- [ ]* 1.4 Create Infrastructure Health Monitoring
+- [ ] 1.4 Resolve Port Conflicts and Service Integration
+  - Address DataLens and Temporal UI port conflict (both default to 8080) by configuring DataLens on port 8081 or implementing reverse proxy
+  - Verify all service port mappings match verified Docker configuration
+  - Set up service discovery and health monitoring for hybrid architecture
+  - _Requirements: 8.1, 8.2, 10.1, 10.4_
+
+- [ ]* 1.5 Create Infrastructure Health Monitoring
   - Implement health check endpoints for all Docker services
   - Set up service dependency validation and startup ordering
   - Create monitoring dashboard for infrastructure component status
@@ -104,17 +113,17 @@
   - Set up plugin compatibility checking and dependency resolution
   - _Requirements: 9.5_
 
-- [ ] 4. FastAPI Backend Development
-  - Create FastAPI application with plugin management and workflow APIs
-  - Implement ClickHouse integration for FOCUS-compliant analytics queries
-  - Develop Temporal workflow management endpoints
-  - Set up authentication, validation, and error handling
+- [ ] 4. Moose Backend API Development
+  - Extend Moose API (localhost:4200) with plugin management and FOCUS-compliant endpoints
+  - Implement ClickHouse integration using verified port configuration (18123/9000)
+  - Develop Temporal workflow management endpoints connecting to localhost:7233
+  - Set up authentication, validation, and error handling following ODW patterns
   - _Requirements: 1.1, 1.2, 4.1, 4.2, 4.3_
 
-- [ ] 4.1 Set up FastAPI Application Structure
-  - Create FastAPI app with modular router structure for different API domains
-  - Implement dependency injection for database connections and plugin manager
-  - Set up Pydantic models for request/response validation
+- [ ] 4.1 Extend Moose API Application Structure
+  - Extend existing Moose API framework with ABI-specific endpoints and routers
+  - Implement dependency injection for ClickHouse (localhost:18123), Temporal (localhost:7233), and plugin manager connections
+  - Set up Pydantic models for FOCUS-compliant request/response validation
   - _Requirements: 1.1, 1.2_
 
 - [ ] 4.2 Implement ClickHouse Analytics APIs
@@ -186,7 +195,8 @@
   - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 9.1, 10.1, 10.2, 10.3, 13.1, 13.2, 13.3, 13.4_
 
 - [ ] 6.1 Set up DataLens Base Platform
-  - Install and configure DataLens platform with ClickHouse connection
+  - Install and configure DataLens platform with ClickHouse connection (localhost:18123)
+  - Resolve port conflict with Temporal UI (both use port 8080) by configuring DataLens on alternative port or using reverse proxy
   - Set up DataLens development environment with custom extension capabilities
   - Configure DataLens authentication and user management for ABI system
   - _Requirements: 13.1, 13.2_
@@ -210,9 +220,10 @@
   - _Requirements: 9.1, 9.4, 9.5_
 
 - [ ] 6.5 Build Infrastructure Management UI
-  - Create infrastructure service monitoring dashboard with health status
-  - Implement MinIO configuration interface with connection testing
-  - Develop Temporal workflow monitoring integration within DataLens
+  - Create infrastructure service monitoring dashboard with health status for all verified services
+  - Implement MinIO configuration interface (localhost:9500 API, localhost:9501 Console) with connection testing
+  - Develop Temporal workflow monitoring integration (localhost:7233 server, localhost:8080 UI) within DataLens
+  - Integrate Kafdrop UI (localhost:9999) for Redpanda monitoring and management
   - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5_
 
 - [ ]* 6.6 Implement Advanced Analytics Features

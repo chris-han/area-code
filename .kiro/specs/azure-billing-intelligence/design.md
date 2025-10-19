@@ -96,27 +96,28 @@ graph TB
 graph TB
     subgraph "Development Environment"
         subgraph "Frontend Services"
-            REACT_L[React Dev Server<br/>localhost:3000]
-            PLUGIN_MARKET[Plugin Marketplace UI<br/>localhost:3000/plugins]
-            INFRA_MGMT[Infrastructure Management<br/>localhost:3000/infrastructure]
+            DATALENS_L[DataLens Frontend<br/>localhost:8080]
+            ABI_EXT[ABI Extensions<br/>FOCUS Dashboards]
+            PLUGIN_UI[Plugin Marketplace<br/>localhost:8080/plugins]
         end
         
         subgraph "Backend Services"
-            FASTAPI_L[FastAPI Backend<br/>localhost:8000]
-            PLUGIN_SVC[Plugin Service<br/>localhost:8001]
+            MOOSE_L[Moose API<br/>localhost:4200]
+            PLUGIN_SVC[Plugin Service<br/>localhost:4201]
         end
         
         subgraph "Local Docker Services"
             REDIS_L[Redis<br/>localhost:6379]
             REDPANDA_L[Redpanda<br/>localhost:19092]
-            TEMPORAL_L[Temporal Server<br/>localhost:17233]
-            MOOSE_L[Moose API<br/>localhost:4200]
-            MINIO_L[MinIO<br/>localhost:9500/9501]
+            TEMPORAL_L[Temporal Server<br/>localhost:7233]
+            POSTGRESQL_L[PostgreSQL<br/>localhost:5432]
+            CLICKHOUSE_L[ClickHouse<br/>localhost:18123/9000]
+            MINIO_L[MinIO API<br/>localhost:9500]
         end
         
         subgraph "Management UIs"
-            TEMPORAL_UI[Temporal UI<br/>localhost:8082]
-            REDPANDA_UI_L[Redpanda UI<br/>localhost:9999]
+            TEMPORAL_UI[Temporal UI<br/>localhost:8080]
+            KAFDROP_UI[Kafdrop UI<br/>localhost:9999]
             MINIO_UI_L[MinIO Console<br/>localhost:9501]
         end
         
@@ -136,11 +137,10 @@ graph TB
         end
     end
     
-    REACT_L --> FASTAPI_L
-    PLUGIN_MARKET --> PLUGIN_SVC
-    INFRA_MGMT --> FASTAPI_L
+    DATALENS_L --> MOOSE_L
+    ABI_EXT --> DATALENS_L
+    PLUGIN_UI --> PLUGIN_SVC
     
-    FASTAPI_L --> MOOSE_L
     PLUGIN_SVC --> PLUGIN_DIR
     
     MOOSE_L --> TEMPORAL_L
@@ -157,9 +157,9 @@ graph TB
     
     PLUGIN_SVC -.->|Registry Metadata| PG_REMOTE
     
-    INFRA_MGMT -.->|Monitor| TEMPORAL_UI
-    INFRA_MGMT -.->|Monitor| REDPANDA_UI_L
-    INFRA_MGMT -.->|Configure| MINIO_UI_L
+    DATALENS_L -.->|Monitor| TEMPORAL_UI
+    DATALENS_L -.->|Monitor| KAFDROP_UI
+    DATALENS_L -.->|Configure| MINIO_UI_L
     
     style CH_REMOTE fill:#e1f5fe
     style PG_REMOTE fill:#e1f5fe
@@ -190,7 +190,7 @@ graph TB
 - Tailwind CSS for custom styling
 - DataLens native visualization engine
 - TanStack Query for additional data fetching
-- Vite for build tooling and development
+- Bun for package management and fast JavaScript runtime
 - Bun for package management and fast JavaScript runtime
 
 **Interfaces**:
@@ -382,12 +382,9 @@ class ConnectorStatusResponse(BaseModel):
 - **Workflow Integration**: Temporal workflow execution and monitoring
 - **Connector Registry**: Dynamic plugin discovery and lifecycle management
 
-**Moose Configuration**:
+**Moose Configuration** (moose.config.toml):
 ```toml
-[project]
-name = "azure-billing-intelligence"
-language = "python"
-version = "0.1.0"
+language = "Python"
 
 [data_model]
 specification = "focus"
@@ -396,36 +393,64 @@ target_model = "focus_billing_data"
 transformation_engine = "datalens"
 
 [clickhouse_config]
-host = "ck.mightytech.cn"
-host_port = 8443
-use_ssl = true
 db_name = "finops-odw"
 user = "finops"
 password = "cU2f947&9T{6d"
+use_ssl = true
+host = "ck.mightytech.cn"
+host_port = 8443
+native_port = 9000
 
 [temporal_config]
-temporal_host = "localhost"
-temporal_port = 17233
-db_user = "maradmin"
-db_password = "XQdaYh^4q&K9"
-db_host = "marspbi.postgres.database.chinacloudapi.cn"
+db_user = "temporal"
+db_password = "temporal"
 db_port = 5432
+temporal_host = "localhost"
+temporal_port = 7233
+temporal_version = "1.29.0"
+admin_tools_version = "1.29"
+ui_version = "2.41.0"
+ui_port = 8080
+ui_cors_origins = "http://localhost:3000"
+config_path = "config/dynamicconfig/development-sql.yaml"
+postgresql_version = "13"
 
 [redpanda_config]
-host = "localhost"
-port = 19092
-ui_port = 9999
+broker = "localhost:19092"
+message_timeout_ms = 1000
+retention_ms = 30000
+replication_factor = 1
+
+[kafdrop_config]
+port = 9999
+kafka_brokerconnect = "redpanda:9092"
+server_servlet_contextpath = "/"
 
 [redis_config]
-host = "localhost"
-port = 6379
+url = "redis://127.0.0.1:6379"
+key_prefix = "ABI"
 
-[minio_config]
+[http_server_config]
+host = "localhost"
+port = 4200
+management_port = 5001
+proxy_port = 4201
+
+[s3_config]
 endpoint_url = "http://localhost:9500"
-console_port = 9501
-access_key = "minioadmin"
-secret_key = "minioadmin"
-default_bucket = "abi-data"
+access_key_id = "minioadmin"
+secret_access_key = "minioadmin"
+region_name = "us-east-1"
+bucket_name = "abi-data"
+signature_version = "s3v4"
+
+[git_config]
+main_branch_name = "main"
+
+[features]
+streaming_engine = true
+workflows = true
+data_model_v2 = true
 
 [plugin_system]
 plugin_directory = "./plugins"
@@ -442,11 +467,6 @@ user = "maradmin"
 password = "XQdaYh^4q&K9"
 schema = "plugin_registry"
 
-[ui_config]
-redpanda_ui_url = "http://localhost:9999"
-minio_console_url = "http://localhost:9501"
-temporal_ui_url = "http://localhost:8082"
-
 [datalens_config]
 base_url = "http://localhost:8080"
 api_endpoint = "/api/v1"
@@ -459,6 +479,46 @@ specification_version = "1.0"
 validation_strict = true
 required_dimensions = ["billing_account_id", "usage_date", "billed_cost"]
 currency_default = "USD"
+```
+
+**Environment Configuration** (.env):
+```bash
+# Azure EA API Configuration
+AZURE_ENROLLMENT_NUMBER=V5702303S0121
+AZURE_API_KEY=eyJhbGciOiJSUzI1NiIsImtpZCI6IkY0QzA3NjhGOEJCOURBMjRGQzY5QUMzQjc5NTZDMDNDRjMxRjc3ODIiLCJ0eXAiOiJKV1QifQ...
+
+# ClickHouse Connection (External PaaS)
+CLICKHOUSE_DB_NAME=finops-odw
+CLICKHOUSE_USER=finops
+CLICKHOUSE_PASSWORD="cU2f947&9T{6d"
+CLICKHOUSE_HOST=ck.mightytech.cn
+CLICKHOUSE_USE_SSL=true
+CLICKHOUSE_HOST_PORT=8443
+CLICKHOUSE_NATIVE_PORT=9000
+
+# Temporal/PostgreSQL Connection (External PaaS)
+TEMPORAL_DB_USER=maradmin
+TEMPORAL_DB_PASSWORD="XQdaYh^4q&K9"
+TEMPORAL_DB_HOST=marspbi.postgres.database.chinacloudapi.cn
+TEMPORAL_DB_PORT=5432
+TEMPORAL_HOST=localhost
+TEMPORAL_PORT=7233
+TEMPORAL_UI_PORT=8080
+
+# S3/MinIO Configuration
+S3_ENDPOINT_URL=http://localhost:9500
+S3_ACCESS_KEY_ID=minioadmin
+S3_SECRET_ACCESS_KEY=minioadmin
+S3_REGION_NAME=us-east-1
+S3_BUCKET_NAME=abi-data
+
+# LLM Configuration for Unstructured Data Processing
+ANTHROPIC_API_KEY=
+ANTHROPIC_MODEL=claude-sonnet-4-20250514
+LLM_TEMPERATURE=0.1
+LLM_MAX_TOKENS=4000
+LLM_STRICT_FIELD_VALIDATION=true
+LLM_ENABLE_BATCH_PROCESSING=true
 ```
 
 ### 4. Workflow Engine (Temporal)
@@ -1927,6 +1987,114 @@ bun test
 - **Data Fetching**: Efficient data fetching with React Query
 - **Virtualization**: Virtual scrolling for large data tables
 - **Bundle Optimization**: Tree shaking and minification
+
+## ⚙️ Configuration Workflow
+
+The ABI system follows the ODW layered configuration model where secrets stay local while shared defaults live in version control.
+
+**Key Files**
+
+- `services/data-warehouse/.env`: Local developer secrets (ignored by git). Contains Azure API keys, ClickHouse credentials, and machine-specific overrides.
+- `services/data-warehouse/env.example`: Safe template documenting required variables without exposing credentials.
+- `services/data-warehouse/moose.config.toml`: Moose service configuration checked into git with environment variable references.
+- `services/data-warehouse/scripts/dev.sh`: Loads `.env`, regenerates `.moose/docker-compose.override.yml`, and starts services.
+
+```mermaid
+flowchart LR
+    A[env.example] -. copy & edit .-> B[.env]
+    B -->|load| C[scripts/dev.sh]
+    C -->|templates| D[.moose/docker-compose.override.yml]
+    C -->|reads config| E[moose.config.toml]
+    D -->|docker compose up| F[Local Services]
+    E -->|external connections| G[Remote ClickHouse/PostgreSQL]
+    
+    subgraph "Local Services"
+        H[Redis]
+        I[Redpanda + UI]
+        J[Temporal + UI]
+        K[MinIO + Console]
+    end
+    
+    subgraph "External PaaS"
+        L[ClickHouse<br/>ck.mightytech.cn]
+        M[PostgreSQL<br/>marspbi.postgres...]
+    end
+    
+    F --> H
+    F --> I
+    F --> J
+    F --> K
+    G --> L
+    G --> M
+```
+
+**Configuration Management**
+
+1. **Environment Variables**: All sensitive credentials stored in `.env` file
+2. **Service Discovery**: Automatic detection of local vs external services
+3. **Docker Orchestration**: Dynamic compose file generation based on configuration
+4. **Hybrid Architecture**: Local development services + external PaaS databases
+
+**Port Configuration (Verified from Running Containers)**
+
+| Service | Container Name | Host Port | Container Port | Status |
+|---------|----------------|-----------|----------------|---------|
+| **Moose API** | N/A (host process) | 4200 | N/A | Running |
+| **ClickHouse** | data-warehouse-clickhousedb-1 | 18123, 9000 | 8123, 9000 | ✅ Healthy |
+| **Temporal Server** | data-warehouse-temporal-1 | 7233 | 7233 | ✅ Healthy |
+| **Temporal UI** | data-warehouse-temporal-ui-1 | 8080 | 8080 | ✅ Running |
+| **PostgreSQL** | data-warehouse-postgresql-1 | 5432 | 5432 | ✅ Running |
+| **Redpanda** | data-warehouse-redpanda-1 | 19092 | 19092 | ✅ Healthy |
+| **Kafdrop UI** | data-warehouse-kafdrop | 9999 | 9000 | ✅ Running |
+| **Redis** | data-warehouse-redis-1 | 6379 | 6379 | ✅ Running |
+| **MinIO API** | data-warehouse-minio | 9500 | 9000 | ✅ Running |
+| **MinIO Console** | data-warehouse-minio | 9501 | 9001 | ✅ Running |
+
+**Service Access URLs**
+- Moose API: `http://localhost:4200`
+- ClickHouse HTTP: `http://localhost:18123`
+- ClickHouse Native: `localhost:9000`
+- Temporal UI: `http://localhost:8080`
+- Kafdrop (Redpanda UI): `http://localhost:9999`
+- MinIO Console: `http://localhost:9501`
+- DataLens Frontend: `http://localhost:8080` (shares port with Temporal UI)
+
+## 🚀 Development Workflow
+
+Following ODW patterns for consistent development experience:
+
+**Available Scripts**
+```bash
+# Development
+bun run abi:dev              # Start all ABI services
+bun run abi:dev:clean        # Clean all services
+
+# Individual services
+bun run --cwd services/data-warehouse dev     # Moose backend only
+bun run --cwd apps/abi-frontend dev           # DataLens frontend only
+```
+
+**Project Structure**
+```
+azure-billing-intelligence/
+├── services/
+│   ├── data-warehouse/          # Main Moose ABI service
+│   │   ├── app/
+│   │   │   ├── apis/           # REST API endpoints
+│   │   │   ├── azure_billing/  # Azure billing workflows
+│   │   │   ├── ingest/         # FOCUS data models
+│   │   │   ├── plugins/        # Data source plugins
+│   │   │   └── views/          # Materialized views
+│   │   ├── .env                # Local secrets
+│   │   ├── moose.config.toml   # Moose configuration
+│   │   └── requirements.txt    # Python dependencies
+│   └── plugin-manager/         # Plugin marketplace service
+└── apps/
+    └── abi-frontend/           # DataLens-based frontend
+        ├── components/         # ABI-specific components
+        ├── dashboards/         # FOCUS dashboards
+        └── plugins/            # Plugin marketplace UI
+```
 
 ## Monitoring and Observability
 
