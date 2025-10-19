@@ -1,0 +1,86 @@
+# DataLens Connection Configuration for ABI
+# Simplified configuration focusing on ClickHouse data source
+
+connections:
+  clickhouse_focus:
+    type: clickhouse
+    name: "FOCUS Billing Data"
+    description: "ClickHouse connection for FOCUS-compliant Azure billing data"
+    host: "${CLICKHOUSE_HOST}"
+    port: ${CLICKHOUSE_PORT}
+    username: "${CLICKHOUSE_USER}"
+    password: "${CLICKHOUSE_PASSWORD}"
+    database: "${CLICKHOUSE_DB}"
+    secure: ${CLICKHOUSE_USE_SSL}
+    settings:
+      # ClickHouse-specific settings for optimal performance
+      max_execution_time: 300
+      max_memory_usage: 10000000000
+      use_uncompressed_cache: 1
+      load_balancing: random
+      # Connection pool settings
+      max_connections: 10
+      connection_timeout: 30
+      query_timeout: 300
+
+datasets:
+  focus_billing_data:
+    connection: clickhouse_focus
+    name: "FOCUS Billing Data"
+    description: "Standardized Azure billing data following FOCUS specification"
+    source_type: table
+    source: focus_billing_data
+    fields:
+      - name: billing_account_id
+        type: string
+        description: "Unique identifier for the billing account"
+      - name: usage_date
+        type: date
+        description: "Date when the resource usage occurred"
+      - name: billed_cost
+        type: float
+        description: "Cost billed for the resource usage"
+      - name: service_category
+        type: string
+        description: "High-level category of the service"
+      - name: service_name
+        type: string
+        description: "Specific name of the service"
+      - name: resource_type
+        type: string
+        description: "Type of resource consumed"
+      - name: resource_id
+        type: string
+        description: "Unique identifier for the resource"
+      - name: resource_name
+        type: string
+        description: "Human-readable name of the resource"
+      - name: region
+        type: string
+        description: "Geographic region where resource is deployed"
+      - name: subscription_id
+        type: string
+        description: "Azure subscription identifier"
+      - name: resource_group
+        type: string
+        description: "Azure resource group name"
+      - name: currency
+        type: string
+        description: "Currency code for the billed cost"
+      - name: tags
+        type: json
+        description: "Resource tags as JSON object"
+
+  service_categories:
+    connection: clickhouse_focus
+    name: "Service Categories"
+    description: "FOCUS service category dimension table"
+    source_type: table
+    source: focus_service_categories
+    
+  resource_types:
+    connection: clickhouse_focus
+    name: "Resource Types"
+    description: "FOCUS resource type dimension table"
+    source_type: table
+    source: focus_resource_types

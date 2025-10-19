@@ -46,6 +46,14 @@
     "odw:dev:clean": {
       "cache": false,
       "persistent": true
+    },
+    "abi:dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "abi:dev:clean": {
+      "cache": false,
+      "persistent": true
     }
   }
 }

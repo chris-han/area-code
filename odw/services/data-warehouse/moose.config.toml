@@ -1,5 +1,11 @@
 language = "Python"
 
+[data_model]
+specification = "focus"
+source_models = ["azure_ea", "s3_csv", "custom_plugins"]
+target_model = "focus_billing_data"
+transformation_engine = "datalens"
+
 [redpanda_config]
 broker = "localhost:19092"
 message_timeout_ms = 1000
@@ -7,12 +13,12 @@ retention_ms = 30000
 replication_factor = 1
 
 [clickhouse_config]
-db_name = "local"
-user = "panda"
-password = "pandapass"
-use_ssl = false
-host = "localhost"
-host_port = 18123
+db_name = "finops-odw"
+user = "finops"
+password = "cU2f947&9T{6d"
+use_ssl = true
+host = "ck.mightytech.cn"
+host_port = 8443
 native_port = 9000
 
 [http_server_config]
@@ -63,3 +69,32 @@ signature_version = "s3v4"
 streaming_engine = true
 workflows = true
 data_model_v2 = true
+
+[plugin_system]
+plugin_directory = "./plugins"
+marketplace_url = "https://abi-plugins.registry.com"
+auto_update = false
+lazy_loading = true
+cache_plugins = true
+
+[plugin_registry_db]
+host = "marspbi.postgres.database.chinacloudapi.cn"
+port = 5432
+database = "abi_registry"
+user = "maradmin"
+password = "XQdaYh^4q&K9"
+schema = "plugin_registry"
+
+[datalens_config]
+base_url = "http://localhost:8081"
+api_endpoint = "/api/v1"
+auth_type = "none"
+default_connection = "clickhouse_focus"
+enable_abi_extensions = true
+port = 8081
+
+[focus_config]
+specification_version = "1.0"
+validation_strict = true
+required_dimensions = ["billing_account_id", "usage_date", "billed_cost"]
+currency_default = "USD"

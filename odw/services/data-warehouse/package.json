@@ -6,6 +6,8 @@
     "dev": "./scripts/dev.sh",
     "clean": "./scripts/clean.sh",
     "odw:dev": "./scripts/dev.sh",
-    "odw:dev:clean": "./scripts/clean.sh"
+    "odw:dev:clean": "./scripts/clean.sh",
+    "abi:dev": "./scripts/dev.sh",
+    "abi:dev:clean": "./scripts/clean.sh"
   }
 }

@@ -8,7 +8,7 @@ from app.events.extract import events_workflow, events_task
 from app.unstructured_data.extract import unstructured_data_workflow, unstructured_data_task
 from app.views.daily_pageviews import daily_pageviews_mv
 
-
+# Import existing APIs
 import app.apis.get_blobs
 import app.apis.get_logs
 import app.apis.extract_blob
@@ -19,4 +19,7 @@ import app.apis.get_daily_pageviews
 import app.apis.extract_unstructured_data
 import app.apis.get_unstructured_data
 import app.apis.get_medical
+
+# Import ABI APIs - this registers them with Moose
+import app.apis.abi
 

@@ -1,0 +1,145 @@
+# ABI Service Integration Configuration
+# This file defines how services integrate with each other and resolves port conflicts
+
+[service_discovery]
+enabled = true
+health_check_interval = 30  # seconds
+timeout = 5  # seconds
+retry_attempts = 3
+
+[port_mapping]
+# Fixed port assignments to prevent conflicts
+moose_api = 4200
+clickhouse_http = 18123
+clickhouse_native = 9000
+temporal_server = 7233
+temporal_ui = 8080
+datalens_frontend = 8081  # Resolved conflict with Temporal UI
+kafdrop_ui = 9999
+minio_api = 9500
+minio_console = 9501
+redis = 6379
+postgresql = 5432
+redpanda = 19092
+
+[service_dependencies]
+# Define service startup dependencies
+[service_dependencies.temporal]
+depends_on = ["postgresql"]
+health_check = "grpc://localhost:7233"
+
+[service_dependencies.temporal_ui]
+depends_on = ["temporal"]
+health_check = "http://localhost:8080"
+
+[service_dependencies.clickhousedb]
+depends_on = ["clickhouse-keeper"]
+health_check = "http://localhost:18123/ping"
+
+[service_dependencies.kafdrop]
+depends_on = ["redpanda"]
+health_check = "http://localhost:9999"
+
+[service_dependencies.moose_api]
+depends_on = ["clickhousedb", "temporal", "redis", "redpanda"]
+health_check = "http://localhost:4200/health"
+
+[conflict_resolution]
+# Port conflict resolution strategies
+[conflict_resolution.temporal_ui_datalens]
+description = "Temporal UI and DataLens both default to port 8080"
+resolution = "Configure DataLens to use port 8081"
+temporal_ui_port = 8080
+datalens_port = 8081
+
+[hybrid_architecture]
+# Configuration for hybrid local/external services
+[hybrid_architecture.clickhouse]
+mode = "external"  # Use external ClickHouse PaaS
+local_port = 18123  # Local proxy/tunnel port
+external_host = "ck.mightytech.cn"
+external_port = 8443
+ssl_enabled = true
+
+[hybrid_architecture.postgresql]
+mode = "local"  # Use local PostgreSQL for Temporal
+# External PostgreSQL for plugin registry
+external_host = "marspbi.postgres.database.chinacloudapi.cn"
+external_port = 5432
+external_database = "abi_registry"
+
+[health_monitoring]
+# Health check endpoints for each service
+[health_monitoring.endpoints]
+moose_api = "http://localhost:4200/health"
+clickhouse = "http://localhost:18123/ping"
+temporal = "grpc://localhost:7233"
+temporal_ui = "http://localhost:8080"
+kafdrop = "http://localhost:9999"
+minio = "http://localhost:9500/minio/health/live"
+redis = "tcp://localhost:6379"
+postgresql = "tcp://localhost:5432"
+redpanda = "tcp://localhost:19092"
+
+[health_monitoring.thresholds]
+response_time_warning = 1000  # ms
+response_time_critical = 5000  # ms
+availability_warning = 95  # percent
+availability_critical = 90  # percent
+
+[load_balancing]
+# Load balancing configuration for scalable services
+enabled = false  # Disabled for development
+strategy = "round_robin"
+
+[service_mesh]
+# Service mesh configuration (future enhancement)
+enabled = false
+mesh_type = "istio"  # or "linkerd", "consul_connect"
+
+[monitoring_integration]
+# Integration with monitoring systems
+[monitoring_integration.prometheus]
+enabled = false
+scrape_interval = "15s"
+metrics_path = "/metrics"
+
+[monitoring_integration.grafana]
+enabled = false
+dashboard_port = 3000
+
+[logging_integration]
+# Centralized logging configuration
+[logging_integration.elasticsearch]
+enabled = false
+host = "localhost"
+port = 9200
+
+[logging_integration.kibana]
+enabled = false
+host = "localhost"
+port = 5601
+
+[security]
+# Security configuration for service communication
+[security.tls]
+enabled = false  # Disabled for development
+cert_path = "/etc/ssl/certs"
+key_path = "/etc/ssl/private"
+
+[security.authentication]
+# Inter-service authentication
+enabled = false  # Disabled for development
+method = "jwt"  # or "mtls", "api_key"
+
+[backup_integration]
+# Backup service integration
+[backup_integration.postgresql]
+enabled = true
+backup_schedule = "0 2 * * *"  # Daily at 2 AM
+retention_days = 30
+
+[backup_integration.clickhouse]
+enabled = false  # External service handles backups
+backup_schedule = "0 3 * * *"
+retention_days = 90

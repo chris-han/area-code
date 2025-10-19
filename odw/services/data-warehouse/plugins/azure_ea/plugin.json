@@ -1,0 +1,74 @@
+{
+  "name": "azure-ea-api",
+  "display_name": "Azure Enterprise Agreement API",
+  "description": "Azure Enterprise Agreement API connector for billing data extraction with FOCUS transformation support",
+  "version": "1.0.0",
+  "author": "ABI Team",
+  "category": "data_source",
+  "plugin_type": "data_source",
+  "entry_point": "plugin.py",
+  "tags": ["azure", "billing", "enterprise", "ea", "api", "focus"],
+  "requirements": [
+    "aiohttp>=3.8.0",
+    "azure-identity>=1.12.0",
+    "pydantic>=2.0.0"
+  ],
+  "license": "MIT",
+  "icon_url": "https://azure.microsoft.com/favicon.ico",
+  "documentation_url": "https://docs.microsoft.com/en-us/rest/api/consumption/",
+  "repository_url": "https://github.com/abi-team/azure-ea-plugin",
+  "config_schema": {
+    "type": "object",
+    "properties": {
+      "enrollment_number": {
+        "type": "string",
+        "description": "Azure EA enrollment number",
+        "pattern": "^[0-9]+$"
+      },
+      "api_key": {
+        "type": "string",
+        "description": "Azure EA API key for authentication",
+        "format": "password"
+      },
+      "base_url": {
+        "type": "string",
+        "default": "https://consumption.azure.com",
+        "description": "Azure EA API base URL"
+      },
+      "api_version": {
+        "type": "string",
+        "default": "2019-10-01",
+        "description": "Azure EA API version"
+      },
+      "timeout": {
+        "type": "integer",
+        "default": 30,
+        "minimum": 5,
+        "maximum": 300,
+        "description": "Request timeout in seconds"
+      },
+      "rate_limit_delay": {
+        "type": "number",
+        "default": 1.0,
+        "minimum": 0.1,
+        "maximum": 10.0,
+        "description": "Delay between API requests in seconds"
+      },
+      "batch_size": {
+        "type": "integer",
+        "default": 1000,
+        "minimum": 100,
+        "maximum": 10000,
+        "description": "Number of records to process in each batch"
+      }
+    },
+    "required": ["enrollment_number", "api_key"]
+  },
+  "default_config": {
+    "base_url": "https://consumption.azure.com",
+    "api_version": "2019-10-01",
+    "timeout": 30,
+    "rate_limit_delay": 1.0,
+    "batch_size": 1000
+  }
+}

@@ -21,7 +21,7 @@ graph TB
     
     subgraph "External Infrastructure"
         REMOTE_CH[Remote ClickHouse<br/>ck.mightytech.cn:8443]
-        REMOTE_PG[Remote PostgreSQL<br/>marspbi.postgres...<br/>Temporal + Plugin Registry]
+        REMOTE_PG[Remote PostgreSQL<br/>marspbi.postgres...<br/>Plugin Registry Only]
     end
     
     subgraph "ABI System"
@@ -69,7 +69,7 @@ graph TB
     CUSTOM_PLUGIN --> MOOSE
     
     MOOSE -.->|Analytics Queries| REMOTE_CH
-    TEMPORAL -.->|Metadata Storage| REMOTE_PG
+    TEMPORAL -.->|Local Storage| POSTGRESQL_L
     
     REACT --> FASTAPI
     PLUGIN_UI --> PLUGIN_API
@@ -149,7 +149,7 @@ graph TB
     MOOSE_L --> MINIO_L
     
     MOOSE_L -.->|Analytics| CH_REMOTE
-    TEMPORAL_L -.->|Metadata| PG_REMOTE
+    TEMPORAL_L -.->|Local DB| POSTGRESQL_L
     
     AZURE_P -.->|Billing Data| AZURE_API
     S3_P -.->|File Data| S3_REMOTE
@@ -571,46 +571,51 @@ azure_billing_workflow = Workflow(
 
 ### 5. Plugin Marketplace Architecture
 
-**Purpose**: Extensible plugin system for data source connectors with lazy loading and dynamic configuration.
+**Purpose**: Extensible plugin system for data source connectors with lazy loading and dynamic configuration, integrated with frontend plugin management and backend data warehouse plugin system. The current implementation includes Azure Blob Storage plugin for NCEI data source with FOCUS-compliant parquet files.
 
 **Plugin Architecture**:
 ```mermaid
 graph TB
-    subgraph "Plugin Marketplace"
-        PM[Plugin Manager]
-        PR[Plugin Registry]
-        PL[Plugin Loader]
-        PC[Plugin Cache]
+    subgraph "Frontend Plugin Management"
+        PLUGIN_UI[Plugin Marketplace UI]
+        PLUGIN_CONFIG[Plugin Configuration UI]
+        AZURE_BLOB_UI[Azure Blob Storage Plugin UI]
+        PLUGIN_MGMT[Plugin Management Dashboard]
     end
     
-    subgraph "Core Plugins"
-        AZURE_P[Azure EA API Plugin]
-        S3_P[S3/MinIO Plugin]
-        SALESFORCE_P[Salesforce Plugin]
-        CUSTOM_P[Custom Plugin Template]
+    subgraph "Backend Plugin System"
+        PLUGIN_INTEGRATION[Plugin Integration Service]
+        PLUGIN_REGISTRY[PostgreSQL Plugin Registry]
+        PLUGIN_MANAGER[Plugin Manager]
+        MARKETPLACE_API[Marketplace API]
     end
     
-    subgraph "Plugin Lifecycle"
-        DISCOVER[Discover]
-        INSTALL[Install]
-        CONFIGURE[Configure]
-        ACTIVATE[Activate]
-        MONITOR[Monitor]
+    subgraph "Data Source Plugins"
+        AZURE_EA[Azure EA API Plugin]
+        AZURE_BLOB[Azure Blob Storage Plugin]
+        NCEI_WORKFLOW[NCEI Workflow Plugin]
+        CUSTOM_PLUGINS[Custom Plugins]
     end
     
-    PM --> PR
-    PM --> PL
-    PM --> PC
+    subgraph "Workflow Integration"
+        TEMPORAL_WORKFLOWS[Temporal Workflows]
+        NCEI_SCHEDULER[NCEI Scheduler]
+        WORKFLOW_API[Workflow API Endpoints]
+    end
     
-    PR --> AZURE_P
-    PR --> S3_P
-    PR --> SALESFORCE_P
-    PR --> CUSTOM_P
+    PLUGIN_UI --> MARKETPLACE_API
+    PLUGIN_CONFIG --> PLUGIN_INTEGRATION
+    AZURE_BLOB_UI --> PLUGIN_INTEGRATION
+    PLUGIN_MGMT --> MARKETPLACE_API
     
-    DISCOVER --> INSTALL
-    INSTALL --> CONFIGURE
-    CONFIGURE --> ACTIVATE
-    ACTIVATE --> MONITOR
+    MARKETPLACE_API --> PLUGIN_REGISTRY
+    PLUGIN_INTEGRATION --> PLUGIN_MANAGER
+    PLUGIN_INTEGRATION --> PLUGIN_REGISTRY
+    
+    AZURE_BLOB --> NCEI_WORKFLOW
+    NCEI_WORKFLOW --> TEMPORAL_WORKFLOWS
+    NCEI_SCHEDULER --> TEMPORAL_WORKFLOWS
+    WORKFLOW_API --> NCEI_SCHEDULER
 ```
 
 **Plugin Interface**:
@@ -867,6 +872,256 @@ class S3MinIOPlugin(DataSourcePlugin):
         # Implementation for extracting data from S3/MinIO
         pass
 ```
+
+**Current Implementation: Azure Blob Storage Plugin for NCEI**:
+
+The system currently implements a comprehensive Azure Blob Storage plugin specifically designed for NCEI (National Cloud Economics Intelligence) data source with FOCUS-compliant parquet files.
+
+**Azure Blob Storage Plugin Implementation**:
+```python
+class AzureNCEIParquetModel(BaseModel):
+    """FOCUS-compliant parquet model for NCEI data source"""
+    
+    # Pre-configured NCEI settings
+    account_url: str = "https://finopsbilling.blob.core.chinacloudapi.cn"
+    sas_token: str = "sv=2024-11-04&ss=bfqt&srt=sco&sp=rltfx&se=2045-10-19T12:52:39Z..."
+    container_name: str = "billing-data"
+    secondary_container: Optional[str] = None
+    path_prefix: str = "focus-data/"
+    
+    # FOCUS compliance fields
+    billing_account_id: str
+    usage_date: date
+    billed_cost: Decimal
+    effective_cost: Optional[Decimal]
+    service_category: Optional[str]
+    service_name: Optional[str]
+    resource_id: Optional[str]
+    region: Optional[str]
+    provider: str = "Azure"
+
+class AzureNCEIToFOCUSTransformer:
+    """Minimal transformation for FOCUS-compliant parquet files"""
+    
+    async def transform_batch(self, parquet_files: List[str]) -> List[Dict[str, Any]]:
+        """Transform NCEI parquet files to FOCUS format"""
+        focus_records = []
+        
+        for file_path in parquet_files:
+            # Read parquet file
+            df = pd.read_parquet(file_path)
+            
+            # Minimal transformation (data should already be FOCUS-compliant)
+            for _, row in df.iterrows():
+                focus_record = {
+                    "billing_account_id": row.get("billing_account_id"),
+                    "usage_date": row.get("usage_date"),
+                    "billed_cost": row.get("billed_cost"),
+                    "effective_cost": row.get("effective_cost"),
+                    "service_category": row.get("service_category"),
+                    "service_name": row.get("service_name"),
+                    "resource_id": row.get("resource_id"),
+                    "region": row.get("region"),
+                    "provider": "Azure"
+                }
+                focus_records.append(focus_record)
+        
+        return focus_records
+
+class AzureNCEIToFOCUSWorkflow:
+    """Temporal workflow for processing NCEI parquet files"""
+    
+    @workflow.defn
+    class AzureNCEIToFOCUSWorkflow:
+        @workflow.run
+        async def run(self, params: AzureNCEIWorkflowParams) -> WorkflowResult:
+            # List parquet files from Azure Blob Storage
+            files = await workflow.execute_activity(
+                list_ncei_parquet_files,
+                params,
+                start_to_close_timeout=timedelta(minutes=10)
+            )
+            
+            # Process files in batches
+            batch_size = params.batch_size or 10
+            for i in range(0, len(files), batch_size):
+                batch = files[i:i + batch_size]
+                
+                await workflow.execute_activity(
+                    process_ncei_parquet_batch,
+                    ProcessBatchParams(
+                        files=batch,
+                        container_name=params.container_name,
+                        account_url=params.account_url,
+                        sas_token=params.sas_token
+                    ),
+                    start_to_close_timeout=timedelta(minutes=30)
+                )
+            
+            return WorkflowResult(
+                success=True,
+                files_processed=len(files),
+                records_imported=sum(len(batch) for batch in batches)
+            )
+```
+
+**Frontend Plugin Integration**:
+```typescript
+interface AzureBlobStorageConfig {
+  id?: string;
+  name: string;
+  accountUrl: string;
+  sasToken: string;
+  containerName: string;
+  secondaryContainer?: string;
+  pathPrefix?: string;
+  syncFrequency: 'hourly' | 'daily' | 'weekly' | 'manual';
+  isActive: boolean;
+  lastSync?: string;
+  description?: string;
+}
+
+export const AzureBlobStoragePlugin: React.FC<AzureBlobStoragePluginProps> = ({
+  config,
+  onSave,
+  onTest,
+  onCancel,
+  mode
+}) => {
+  // Pre-configured NCEI settings
+  const [formData, setFormData] = useState<AzureBlobStorageConfig>({
+    name: '',
+    accountUrl: 'https://finopsbilling.blob.core.chinacloudapi.cn',
+    sasToken: 'sv=2024-11-04&ss=bfqt&srt=sco&sp=rltfx&se=2045-10-19T12:52:39Z...',
+    containerName: '',
+    secondaryContainer: '',
+    pathPrefix: 'focus-data/',
+    syncFrequency: 'daily',
+    isActive: true,
+    description: 'NCEI Azure Blob Storage data source for FOCUS-compliant billing data',
+    ...config
+  });
+
+  // Plugin configuration UI with dual container support
+  // FOCUS validation and connection testing
+  // Integration with backend plugin system
+};
+
+export class AzureBlobStorageService {
+  private baseUrl = '/api/v1/plugins/azure-blob-storage';
+
+  async saveConfiguration(config: AzureBlobStorageConfig): Promise<AzureBlobStorageConfig> {
+    // Save configuration to PostgreSQL via plugin integration service
+  }
+
+  async testConnection(config: AzureBlobStorageConfig): Promise<boolean> {
+    // Test Azure Blob Storage connection and FOCUS compliance
+  }
+
+  async syncData(configId: string): Promise<SyncResult> {
+    // Trigger NCEI workflow for data synchronization
+  }
+
+  async validateFOCUSCompliance(configId: string, filePath: string): Promise<{ isCompliant: boolean; issues: string[] }> {
+    // Validate FOCUS compliance of parquet files
+  }
+}
+```
+
+**Plugin Integration Service**:
+```python
+class PluginIntegrationService:
+    """Bridges frontend plugin management with backend plugin system"""
+    
+    async def get_marketplace_plugins(self) -> List[Dict[str, Any]]:
+        """Get available plugins including Azure Blob Storage"""
+        plugins = [
+            {
+                "id": "azure-blob-storage",
+                "name": "Azure Blob Storage",
+                "version": "1.0.0",
+                "description": "FOCUS-compliant data source for Azure Blob Storage parquet files",
+                "author": "ABI Team",
+                "category": "storage",
+                "tags": ["azure", "blob", "parquet", "focus", "ncei"],
+                "configSchema": {
+                    "type": "object",
+                    "properties": {
+                        "accountUrl": {"type": "string", "title": "Account URL"},
+                        "sasToken": {"type": "string", "title": "SAS Token", "format": "password"},
+                        "containerName": {"type": "string", "title": "Container Name"},
+                        "secondaryContainer": {"type": "string", "title": "Secondary Container"},
+                        "pathPrefix": {"type": "string", "title": "Path Prefix"}
+                    },
+                    "required": ["accountUrl", "sasToken", "containerName"]
+                },
+                "isInstalled": False,
+                "isConfigured": False,
+                "isActive": False
+            }
+        ]
+        return plugins
+
+    async def install_plugin(self, plugin_name: str, version: Optional[str] = None, auto_activate: bool = False) -> bool:
+        """Install plugin and integrate with workflow system"""
+        if plugin_name == "azure-blob-storage":
+            # Register NCEI workflow
+            # Setup plugin configuration
+            # Enable automatic sync if requested
+            return True
+        return False
+
+    async def configure_plugin(self, plugin_name: str, connector_name: str, config: Dict[str, Any]) -> bool:
+        """Configure plugin with FOCUS validation"""
+        if plugin_name == "azure-blob-storage":
+            # Validate Azure Blob Storage configuration
+            # Test connection and FOCUS compliance
+            # Store configuration in PostgreSQL
+            return True
+        return False
+```
+
+**API Endpoints**:
+```python
+@router.get("/marketplace", response_model=Dict[str, List[PluginMetadataResponse]])
+async def get_marketplace_plugins():
+    """Get available plugins from marketplace"""
+    # Returns Azure Blob Storage plugin and others
+
+@router.post("/azure-blob-storage/test-connection")
+async def test_azure_blob_connection(config: AzureBlobStorageConfig):
+    """Test Azure Blob Storage connection and FOCUS compliance"""
+    # Test connection to NCEI account
+    # Validate parquet file structure
+    # Check FOCUS compliance
+
+@router.post("/azure-blob-storage/configurations/{id}/sync")
+async def sync_azure_blob_data(id: str):
+    """Trigger NCEI workflow for data synchronization"""
+    # Start AzureNCEIToFOCUSWorkflow
+    # Return workflow ID and status
+```
+
+**Key Features of Current Implementation**:
+
+1. **Pre-configured NCEI Integration**: Ready-to-use configuration for NCEI Azure Blob Storage account
+2. **FOCUS Compliance**: Native support for FOCUS-compliant parquet files with minimal transformation
+3. **Dual Container Support**: Primary and secondary container configuration for backup data sources
+4. **Temporal Workflow Integration**: Automated data processing with retry policies and error handling
+5. **Frontend Plugin UI**: Complete configuration interface with connection testing and validation
+6. **PostgreSQL Integration**: Plugin metadata and configuration storage in PostgreSQL registry
+7. **API Integration**: RESTful endpoints for plugin management and workflow triggering
+
+**Replaces S3 CSV System**:
+
+| Component | S3 CSV (Old) | Azure NCEI (New) |
+|-----------|--------------|-------------------|
+| **Data Source** | S3-compatible CSV files | Azure Blob Storage parquet files |
+| **Models** | `S3CSVSourceModel` | `AzureNCEIParquetModel` |
+| **Transformation** | `S3CSVToFOCUSTransformer` | `AzureNCEIToFOCUSTransformer` |
+| **Workflow** | S3 CSV workflow | `AzureNCEIToFOCUSWorkflow` |
+| **Format** | CSV with schema detection | FOCUS-compliant parquet |
+| **Complexity** | High (CSV parsing + mapping) | Low (minimal transformation) |
 
 ### 6. Data Model Architecture
 

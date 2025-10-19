@@ -1,0 +1,45 @@
+# Docker Compose Override for Development
+# Includes reverse proxy to resolve port conflicts
+
+version: '3.8'
+
+services:
+  # Nginx reverse proxy to handle port conflicts
+  nginx-proxy:
+    image: nginx:alpine
+    ports:
+      - "9080:9080"  # Unified access point
+      - "8081:8081"  # Direct DataLens access
+    volumes:
+      - ./config/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - datalens-frontend
+      - datalens-backend
+    networks:
+      - datalens-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  datalens-backend:
+    environment:
+      # Additional environment variables for development
+      - DEBUG=true
+      - LOG_LEVEL=info
+      - ENABLE_CORS=true
+    volumes:
+      # Mount ABI extensions for development
+      - ./frontend/abi-extensions:/app/abi-extensions:ro
+      - ./config:/app/config:ro
+
+  datalens-frontend:
+    environment:
+      # Development-specific settings
+      - NODE_ENV=development
+      - REACT_APP_API_URL=http://localhost:8082
+      - REACT_APP_ENABLE_ABI_EXTENSIONS=true
+    volumes:
+      # Hot reload for development
+      - ./frontend/abi-extensions/src:/app/src/abi-extensions:ro

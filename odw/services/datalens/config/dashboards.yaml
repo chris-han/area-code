@@ -1,0 +1,145 @@
+# DataLens Dashboard Templates for ABI
+# Pre-configured dashboards for Azure Billing Intelligence
+
+dashboards:
+  cost_optimization:
+    name: "Cost Optimization Dashboard"
+    description: "Comprehensive cost analysis and optimization recommendations"
+    layout:
+      - widget: cost_trend_chart
+        position: { x: 0, y: 0, w: 12, h: 6 }
+        config:
+          title: "Daily Cost Trends"
+          chart_type: line
+          dataset: focus_billing_data
+          x_axis: usage_date
+          y_axis: billed_cost
+          group_by: service_category
+          
+      - widget: service_breakdown_pie
+        position: { x: 0, y: 6, w: 6, h: 6 }
+        config:
+          title: "Cost by Service Category"
+          chart_type: pie
+          dataset: focus_billing_data
+          dimension: service_category
+          measure: billed_cost
+          
+      - widget: resource_utilization_heatmap
+        position: { x: 6, y: 6, w: 6, h: 6 }
+        config:
+          title: "Resource Utilization Heatmap"
+          chart_type: heatmap
+          dataset: focus_billing_data
+          x_axis: region
+          y_axis: resource_type
+          measure: billed_cost
+          
+      - widget: top_cost_resources
+        position: { x: 0, y: 12, w: 12, h: 4 }
+        config:
+          title: "Top 10 Cost Resources"
+          chart_type: table
+          dataset: focus_billing_data
+          columns: [resource_name, resource_type, billed_cost, region]
+          sort_by: billed_cost
+          sort_order: desc
+          limit: 10
+
+  resource_utilization:
+    name: "Resource Utilization Dashboard"
+    description: "Resource efficiency metrics and utilization analysis"
+    layout:
+      - widget: utilization_overview
+        position: { x: 0, y: 0, w: 12, h: 4 }
+        config:
+          title: "Utilization Overview"
+          chart_type: metric_cards
+          metrics:
+            - name: "Total Resources"
+              query: "SELECT count(DISTINCT resource_id) FROM focus_billing_data"
+            - name: "Active Resources"
+              query: "SELECT count(DISTINCT resource_id) FROM focus_billing_data WHERE usage_date >= today() - 7"
+            - name: "Avg Daily Cost"
+              query: "SELECT avg(daily_cost) FROM (SELECT usage_date, sum(billed_cost) as daily_cost FROM focus_billing_data GROUP BY usage_date)"
+              
+      - widget: efficiency_by_service
+        position: { x: 0, y: 4, w: 8, h: 6 }
+        config:
+          title: "Cost Efficiency by Service"
+          chart_type: bar
+          dataset: focus_billing_data
+          x_axis: service_name
+          y_axis: billed_cost
+          color_by: service_category
+          
+      - widget: regional_distribution
+        position: { x: 8, y: 4, w: 4, h: 6 }
+        config:
+          title: "Regional Cost Distribution"
+          chart_type: donut
+          dataset: focus_billing_data
+          dimension: region
+          measure: billed_cost
+
+  budget_tracking:
+    name: "Budget Tracking Dashboard"
+    description: "Budget monitoring, variance analysis, and forecasting"
+    layout:
+      - widget: budget_vs_actual
+        position: { x: 0, y: 0, w: 12, h: 6 }
+        config:
+          title: "Budget vs Actual Spending"
+          chart_type: combo
+          dataset: focus_billing_data
+          x_axis: usage_date
+          series:
+            - name: "Actual Spend"
+              type: line
+              y_axis: billed_cost
+            - name: "Budget"
+              type: line
+              y_axis: budget_amount
+              
+      - widget: variance_analysis
+        position: { x: 0, y: 6, w: 6, h: 6 }
+        config:
+          title: "Budget Variance by Service"
+          chart_type: waterfall
+          dataset: focus_billing_data
+          dimension: service_category
+          measure: budget_variance
+          
+      - widget: forecast_projection
+        position: { x: 6, y: 6, w: 6, h: 6 }
+        config:
+          title: "Cost Forecast"
+          chart_type: area
+          dataset: focus_billing_data
+          x_axis: usage_date
+          y_axis: forecasted_cost
+          confidence_interval: true
+
+filters:
+  global:
+    - name: date_range
+      type: date_range
+      default: last_30_days
+      
+    - name: subscription_filter
+      type: multi_select
+      source:
+        dataset: focus_billing_data
+        field: subscription_id
+        
+    - name: service_category_filter
+      type: multi_select
+      source:
+        dataset: focus_billing_data
+        field: service_category
+        
+    - name: region_filter
+      type: multi_select
+      source:
+        dataset: focus_billing_data
+        field: region
