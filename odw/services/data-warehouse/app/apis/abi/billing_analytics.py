@@ -29,7 +29,7 @@ class CostTrendQuery(BaseModel):
     """Cost trend analysis query parameters"""
     start_date: date
     end_date: date
-    granularity: str = Field(default="daily", regex="^(daily|weekly|monthly)$")
+    granularity: str = Field(default="daily", pattern="^(daily|weekly|monthly)$")
     billing_account_ids: Optional[List[str]] = None
     service_categories: Optional[List[str]] = None
     regions: Optional[List[str]] = None

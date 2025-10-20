@@ -72,8 +72,8 @@ class FOCUSDataQuery(BaseModel):
     providers: Optional[List[str]] = None
     
     # Sorting
-    sort_by: Optional[str] = Field(default="usage_date", regex="^(usage_date|billed_cost|created_at)$")
-    sort_order: Optional[str] = Field(default="desc", regex="^(asc|desc)$")
+    sort_by: Optional[str] = Field(default="usage_date", pattern="^(usage_date|billed_cost|created_at)$")
+    sort_order: Optional[str] = Field(default="desc", pattern="^(asc|desc)$")
     
     @validator('end_date')
     def validate_date_range(cls, v, values):
@@ -105,12 +105,16 @@ class FOCUSAggregationQuery(BaseModel):
     end_date: Optional[date] = None
     
     # Grouping dimensions
-    group_by: List[str] = Field(default=["service_category"], 
-                               regex="^(service_category|service_name|region|billing_account_id|usage_date|provider)$")
+    group_by: List[str] = Field(
+        default=["service_category"],
+        pattern="^(service_category|service_name|region|billing_account_id|usage_date|provider)$",
+    )
     
     # Aggregation metrics
-    metrics: List[str] = Field(default=["total_cost", "record_count"],
-                              regex="^(total_cost|avg_cost|min_cost|max_cost|total_usage|record_count)$")
+    metrics: List[str] = Field(
+        default=["total_cost", "record_count"],
+        pattern="^(total_cost|avg_cost|min_cost|max_cost|total_usage|record_count)$",
+    )
     
     # Filtering (same as FOCUSDataQuery)
     billing_account_ids: Optional[List[str]] = None

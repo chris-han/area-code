@@ -8,6 +8,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SERVICE_DIR="$(dirname "$SCRIPT_DIR")"
 cd "$SERVICE_DIR"
 
+UV_CACHE_DIR="$SERVICE_DIR/.uv-cache"
+export UV_CACHE_DIR
+mkdir -p "$UV_CACHE_DIR"
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -82,6 +86,22 @@ ensure_venv_activated() {
     fi
 }
 
+install_connectors_package() {
+    local connectors_path="../connectors"
+    if [ ! -d "$connectors_path" ]; then
+        print_warning "Connectors package not found at $connectors_path. Skipping configuration."
+        return
+    fi
+
+    print_status "Configuring local connectors package..."
+    # Prepend the package root so Python can resolve the connectors package directly from the source tree.
+    case ":$PYTHONPATH:" in
+        *":$connectors_path:"*) ;;
+        *) export PYTHONPATH="$connectors_path${PYTHONPATH:+:$PYTHONPATH}" ;;
+    esac
+    print_success "Connectors package available from $connectors_path"
+}
+
 is_port_in_use() {
     local port=$1
     if lsof -i ":$port" >/dev/null 2>&1; then
@@ -118,6 +138,8 @@ install_dependencies() {
 
     create_venv_if_missing
     ensure_venv_activated
+
+    install_connectors_package
 
     print_status "Installing data-warehouse dependencies in virtual environment..."
     uv pip install .

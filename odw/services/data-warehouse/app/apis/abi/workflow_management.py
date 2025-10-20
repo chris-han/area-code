@@ -88,7 +88,7 @@ class WorkflowTriggerResponse(BaseModel):
 class WorkflowControlRequest(BaseModel):
     """Workflow control request (cancel, retry, etc.)"""
     workflow_id: str
-    action: str = Field(regex="^(cancel|retry|terminate)$")
+    action: str = Field(pattern="^(cancel|retry|terminate)$")
     reason: Optional[str] = None
 
 
@@ -117,7 +117,7 @@ class WorkflowMetricsQuery(BaseModel):
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
     workflow_type: Optional[WorkflowType] = None
-    granularity: str = Field(default="daily", regex="^(hourly|daily|weekly|monthly)$")
+    granularity: str = Field(default="daily", pattern="^(hourly|daily|weekly|monthly)$")
 
 
 class WorkflowMetrics(BaseModel):

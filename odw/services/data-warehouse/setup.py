@@ -7,14 +7,7 @@ with open(requirements_path, "r") as f:
     for line in f:
         line = line.strip()
         if line and not line.startswith('#'):
-            if line == '../connectors':
-                # Convert relative path to absolute file:// URL
-                connectors_path = os.path.abspath(
-                    os.path.join(os.path.dirname(__file__), '..', 'connectors')
-                )
-                requirements.append(f'connectors @ file://{connectors_path}')
-            else:
-                requirements.append(line)
+            requirements.append(line)
 
 setup(
     name='data-warehouse',
