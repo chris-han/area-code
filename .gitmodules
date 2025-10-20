@@ -1,0 +1,9 @@
+[submodule "odw/path/to/datalens-ui"]
+	path = odw/path/to/datalens-ui
+	url = https://github.com/chris-han/datalens-ui.git
+[submodule "odw/datalens-ui"]
+	path = odw/datalens-ui
+	url = https://github.com/chris-han/datalens-ui.git
+[submodule "odw/datalens-backend"]
+	path = odw/datalens-backend
+	url = https://github.com/chris-han/datalens-backend.git
