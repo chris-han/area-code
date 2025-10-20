@@ -1,43 +1,40 @@
 # DataLens Frontend with ABI Extensions
-FROM node:18-alpine as builder
+FROM oven/bun:1.1.16-alpine as builder
 
 WORKDIR /app
 
-# Install system dependencies
-RUN apk add --no-cache git python3 make g++
+# Copy source code and dependencies
+COPY datalens-ui/package*.json ./
+RUN if ls package*.json >/dev/null 2>&1; then bun install --production; fi
 
-# Copy package files
-COPY package*.json ./
-RUN npm ci
-
-# Copy source code
-COPY . .
+# Copy full source after installing deps
+COPY datalens-ui/ .
 
 # Copy ABI extensions
-COPY ../../frontend/abi-extensions /app/src/abi-extensions
+COPY services/datalens/frontend/abi-extensions /app/src/abi-extensions
 
 # Create ABI configuration
 RUN mkdir -p /app/src/ui/constants/abi
-COPY ../../config/connections.yaml /app/src/ui/constants/abi/
-COPY ../../config/dashboards.yaml /app/src/ui/constants/abi/
+COPY services/datalens/config/connections.yaml /app/src/ui/constants/abi/
+COPY services/datalens/config/dashboards.yaml /app/src/ui/constants/abi/
 
 # Build application with ABI extensions
 ENV NODE_ENV=production
 ENV ENABLE_ABI_EXTENSIONS=true
-RUN npm run build
+RUN if ls package*.json >/dev/null 2>&1; then bun run build; fi
 
 # Production stage
-FROM node:18-alpine
+FROM oven/bun:1.1.16-alpine
 
 WORKDIR /app
 
 # Install serve for production
-RUN npm install -g serve
+RUN bun install -g serve
 
 # Copy built application
 COPY --from=builder /app/dist /app/dist
 
-# Create nginx-like configuration for serve
+# Create serve configuration
 RUN cat > /app/serve.json << 'EOF'
 {
   "public": "dist",

@@ -8,7 +8,7 @@ set -e
 echo "🔧 Integrating ABI extensions with DataLens repositories..."
 
 # Check if repositories exist
-if [ ! -d "backend/datalens-backend" ] || [ ! -d "frontend/datalens-ui" ]; then
+if [ ! -d "datalens-backend" ] || [ ! -d "datalens-ui" ]; then
     echo "❌ DataLens repositories not found. Please run setup first."
     exit 1
 fi
@@ -17,8 +17,8 @@ fi
 echo "🔧 Integrating backend ABI extensions..."
 
 # Create ABI connector for ClickHouse with FOCUS schema
-mkdir -p backend/datalens-backend/lib/dl_connector_abi
-cat > backend/datalens-backend/lib/dl_connector_abi/__init__.py << 'EOF'
+mkdir -p datalens-backend/lib/dl_connector_abi
+cat > datalens-backend/lib/dl_connector_abi/__init__.py << 'EOF'
 """
 Azure Billing Intelligence Connector for DataLens
 Provides FOCUS-compliant data access and specialized billing analytics
@@ -30,7 +30,7 @@ from .focus_schema import FOCUSSchema
 __all__ = ['ABIConnector', 'FOCUSSchema']
 EOF
 
-cat > backend/datalens-backend/lib/dl_connector_abi/connector.py << 'EOF'
+cat > datalens-backend/lib/dl_connector_abi/connector.py << 'EOF'
 """
 ABI Connector for DataLens
 Extends ClickHouse connector with FOCUS-specific functionality
@@ -65,7 +65,7 @@ class ABIConnector(ClickHouseConnector):
         }
 EOF
 
-cat > backend/datalens-backend/lib/dl_connector_abi/focus_schema.py << 'EOF'
+cat > datalens-backend/lib/dl_connector_abi/focus_schema.py << 'EOF'
 """
 FOCUS Schema Definitions for ABI
 Provides FOCUS specification compliance validation and schema definitions
@@ -123,11 +123,11 @@ EOF
 echo "🔧 Integrating frontend ABI extensions..."
 
 # Create ABI module in DataLens UI
-mkdir -p frontend/datalens-ui/src/ui/modules/abi
-cp -r frontend/abi-extensions/src/* frontend/datalens-ui/src/ui/modules/abi/
+mkdir -p datalens-ui/src/ui/modules/abi
+cp -r datalens-ui/abi-extensions/src/* datalens-ui/src/ui/modules/abi/
 
 # Create ABI plugin registration
-cat > frontend/datalens-ui/src/ui/modules/abi/plugin.ts << 'EOF'
+cat > datalens-ui/src/ui/modules/abi/plugin.ts << 'EOF'
 /**
  * ABI Plugin Registration for DataLens
  * Registers Azure Billing Intelligence extensions
@@ -173,7 +173,7 @@ EOF
 
 # Update DataLens UI package.json to include ABI dependencies
 echo "📦 Updating frontend dependencies..."
-cd frontend/datalens-ui
+cd datalens-ui
 
 # Add ABI-specific dependencies to package.json if not present
 if ! grep -q "abi-extensions" package.json; then
@@ -190,14 +190,14 @@ cd ../..
 echo "📝 Creating ABI configuration integration..."
 
 # Create backend configuration
-mkdir -p backend/datalens-backend/abi-config
-cp config/connections.yaml backend/datalens-backend/abi-config/
-cp config/dashboards.yaml backend/datalens-backend/abi-config/
+mkdir -p datalens-backend/abi-config
+cp config/connections.yaml datalens-backend/abi-config/
+cp config/dashboards.yaml datalens-backend/abi-config/
 
 # Create frontend configuration
-mkdir -p frontend/datalens-ui/src/ui/constants/abi
-cp config/connections.yaml frontend/datalens-ui/src/ui/constants/abi/
-cp config/dashboards.yaml frontend/datalens-ui/src/ui/constants/abi/
+mkdir -p datalens-ui/src/ui/constants/abi
+cp config/connections.yaml datalens-ui/src/ui/constants/abi/
+cp config/dashboards.yaml datalens-ui/src/ui/constants/abi/
 
 echo "✅ ABI integration completed!"
 echo ""

@@ -15,19 +15,19 @@ DataLens is configured to connect to the ClickHouse database using credentials f
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Nginx Proxy   │    │ DataLens Frontend│    │ DataLens Backend│
-│   Port: 9080    │────│   Port: 8081     │────│   Port: 8082    │
+│   Nginx Proxy   │    │ DataLens Frontend│   │ DataLens Backend│
+│   Port: 9080    │────│   Port: 8081     │───│   Port: 8082    │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
          │                       │                       │
          │                       │                       │
          ▼                       ▼                       ▼
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│ Existing Temporal│    │  ABI Extensions │    │   ClickHouse    │
+│Existing Temporal│    │  ABI Extensions │    │   ClickHouse    │
 │ UI (Port 8080)  │    │ FOCUS Widgets   │    │ External PaaS   │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
          │                                             │
          │              ┌─────────────────┐            │
-         └──────────────│ Existing Temporal│────────────┘
+         └──────────────│Existing Temporal│────────────┘
                         │ PostgreSQL      │
                         │ (Shared DB)     │
                         └─────────────────┘
@@ -76,7 +76,7 @@ This will:
 
 ```bash
 # Clone DataLens repositories for full customization
-git clone --depth 1 https://github.com/chris-han/datalens-backend.git backend/datalens-backend
+git clone --depth 1 https://github.com/chris-han/datalens-backend.git datalens-backend
 git clone --depth 1 https://github.com/chris-han/datalens-ui.git frontend/datalens-ui
 ```
 

@@ -18,11 +18,11 @@ else
 fi
 
 # Build backend
-if [ -d "backend/datalens-backend" ]; then
+if [ -d "datalens-backend" ]; then
     echo "🔨 Building DataLens backend..."
     
     # Check if backend has proper structure
-    if [ -f "backend/datalens-backend/pyproject.toml" ]; then
+    if [ -f "datalens-backend/pyproject.toml" ]; then
         echo "✅ DataLens backend repository structure verified"
     else
         echo "❌ DataLens backend repository structure invalid"
@@ -36,11 +36,11 @@ else
 fi
 
 # Build frontend
-if [ -d "frontend/datalens-ui" ]; then
+if [ -d "datalens-ui" ]; then
     echo "🔨 Building DataLens frontend..."
     
     # Check if frontend has proper structure
-    if [ -f "frontend/datalens-ui/package.json" ]; then
+    if [ -f "datalens-ui/package.json" ]; then
         echo "✅ DataLens frontend repository structure verified"
     else
         echo "❌ DataLens frontend repository structure invalid"

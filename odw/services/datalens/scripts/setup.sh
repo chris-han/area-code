@@ -11,17 +11,17 @@ echo "🚀 Setting up DataLens platform for Azure Billing Intelligence..."
 mkdir -p backend frontend config
 
 # Clone DataLens backend
-if [ ! -d "backend/datalens-backend" ]; then
+if [ ! -d "datalens-backend" ]; then
     echo "📦 Cloning DataLens backend..."
-    cd backend
+    cd .
     git clone https://github.com/chris-han/datalens-backend.git
     cd ..
 fi
 
 # Clone DataLens frontend
-if [ ! -d "frontend/datalens-ui" ]; then
+if [ ! -d "datalens-ui" ]; then
     echo "📦 Cloning DataLens frontend..."
-    cd frontend
+    cd .
     git clone https://github.com/chris-han/datalens-ui.git
     cd ..
 fi

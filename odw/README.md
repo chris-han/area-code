@@ -60,6 +60,10 @@ bun run --cwd odw/services/kafdrop dev            # Kafdrop only
 | **Infrastructure**   | Docker, Docker Compose                             |
 | **Build Tool**       | Python setuptools, pip                             |
 
+## 🔗 Reference Sources
+
+- [datalens-ui](https://github.com/chris-han/datalens-ui.git)
+
 ## 📁 Project Structure
 
 ```

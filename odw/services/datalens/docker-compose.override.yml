@@ -1,15 +1,14 @@
 # Docker Compose Override for Development
-# Includes reverse proxy to resolve port conflicts
+# Adds nginx proxy and development-specific configurations
 
 version: '3.8'
 
 services:
-  # Nginx reverse proxy to handle port conflicts
+  # Nginx reverse proxy for unified access
   nginx-proxy:
     image: nginx:alpine
     ports:
-      - "9080:9080"  # Unified access point
-      - "8081:8081"  # Direct DataLens access
+      - "9081:9080"  # Changed from 9080 to avoid potential conflicts
     volumes:
       - ./config/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
@@ -25,21 +24,27 @@ services:
 
   datalens-backend:
     environment:
-      # Additional environment variables for development
+      # Development-specific environment variables
       - DEBUG=true
       - LOG_LEVEL=info
       - ENABLE_CORS=true
+      # Use Moose Redis with different database (1 instead of 0)
+      - DL_REDIS_URL=redis://redis:6379/1
+      # Kafka/Redpanda configuration for DataLens events (different topics)
+      - KAFKA_BROKERS=redpanda:9092
+      - KAFKA_TOPIC_PREFIX=datalens_
+      - KAFKA_CONSUMER_GROUP=datalens-consumers
+      - KAFKA_DEBUG=true
     volumes:
-      # Mount ABI extensions for development
-      - ./frontend/abi-extensions:/app/abi-extensions:ro
-      - ./config:/app/config:ro
+      # Additional development mounts
+      - ./datalens-ui/abi-extensions:/app/abi-extensions:ro
 
   datalens-frontend:
     environment:
-      # Development-specific settings
+      # Development-specific frontend settings
       - NODE_ENV=development
-      - REACT_APP_API_URL=http://localhost:8082
+      - REACT_APP_API_URL=http://localhost:8083  # Updated to match new backend port
       - REACT_APP_ENABLE_ABI_EXTENSIONS=true
     volumes:
-      # Hot reload for development
-      - ./frontend/abi-extensions/src:/app/src/abi-extensions:ro
+      # Hot reload support for development
+      - ./datalens-ui/abi-extensions/src:/app/src/abi-extensions:ro

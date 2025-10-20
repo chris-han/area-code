@@ -1,5 +1,5 @@
 # DataLens Backend with ABI Extensions
-FROM python:3.11-slim
+FROM python:3.12-slim
 
 WORKDIR /app
 
@@ -11,20 +11,23 @@ RUN apt-get update && apt-get install -y \
     netcat-openbsd \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy the entire DataLens backend source
-COPY . /app/
+# Install uv for fast dependency management
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh -s -- --install-dir /usr/local/bin
+ENV PATH="/usr/local/bin:${PATH}"
+ENV UV_LINK_MODE=copy
 
-# Install Python dependencies
-RUN pip install --no-cache-dir poetry && \
-    poetry config virtualenvs.create false && \
-    poetry install --no-dev
+# Copy the DataLens backend source
+COPY services/datalens/datalens-backend/ /app/
+
+# Install Python dependencies using uv
+RUN uv pip install --system --no-cache .
 
 # Create ABI configuration directory
 RUN mkdir -p /app/abi-config
 
 # Copy ABI-specific configuration
-COPY ../../config/connections.yaml /app/abi-config/
-COPY ../../config/dashboards.yaml /app/abi-config/
+COPY services/datalens/config/connections.yaml /app/abi-config/
+COPY services/datalens/config/dashboards.yaml /app/abi-config/
 
 # Set environment variables for DataLens
 ENV DL_CORE_CONNECTOR_WHITELIST=clickhouse
