@@ -220,96 +220,6 @@ wheels = [
 ]
 
 [[package]]
-name = "azure-billing-intelligence"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "aiohttp" },
-    { name = "anthropic" },
-    { name = "azure-identity" },
-    { name = "boto3" },
-    { name = "clickhouse-connect" },
-    { name = "clickhouse-driver" },
-    { name = "faker" },
-    { name = "fastapi" },
-    { name = "kafka-python-ng" },
-    { name = "minio" },
-    { name = "moose-cli" },
-    { name = "moose-lib" },
-    { name = "pillow" },
-    { name = "psycopg2-binary" },
-    { name = "pydantic" },
-    { name = "python-dotenv" },
-    { name = "redis" },
-    { name = "requests" },
-    { name = "temporalio" },
-    { name = "toml" },
-    { name = "uvicorn" },
-]
-
-[package.optional-dependencies]
-dev = [
-    { name = "black" },
-    { name = "mypy" },
-    { name = "pytest" },
-    { name = "pytest-asyncio" },
-    { name = "ruff" },
-    { name = "testcontainers" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "black" },
-    { name = "mypy" },
-    { name = "pytest" },
-    { name = "pytest-asyncio" },
-    { name = "ruff" },
-    { name = "testcontainers" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "aiohttp", specifier = ">=3.8.0" },
-    { name = "anthropic", specifier = ">=0.57.1" },
-    { name = "azure-identity", specifier = ">=1.12.0" },
-    { name = "black", marker = "extra == 'dev'", specifier = ">=23.0.0" },
-    { name = "boto3", specifier = ">=1.26.0" },
-    { name = "clickhouse-connect" },
-    { name = "clickhouse-driver", specifier = ">=0.2.6" },
-    { name = "faker" },
-    { name = "fastapi", specifier = ">=0.104.0" },
-    { name = "kafka-python-ng", specifier = ">=2.2.2" },
-    { name = "minio", specifier = ">=7.1.0" },
-    { name = "moose-cli" },
-    { name = "moose-lib" },
-    { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.7.0" },
-    { name = "pillow", specifier = ">=10.0.0" },
-    { name = "psycopg2-binary", specifier = ">=2.9.0" },
-    { name = "pydantic", specifier = ">=2.5.0" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.4.0" },
-    { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.21.0" },
-    { name = "python-dotenv", specifier = ">=1.0.0" },
-    { name = "redis", specifier = ">=5.0.0" },
-    { name = "requests", specifier = ">=2.32.4" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.1.0" },
-    { name = "temporalio", specifier = ">=1.5.0" },
-    { name = "testcontainers", marker = "extra == 'dev'", specifier = ">=3.7.0" },
-    { name = "toml", specifier = ">=0.10.0" },
-    { name = "uvicorn", specifier = ">=0.24.0" },
-]
-provides-extras = ["dev"]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "black", specifier = ">=23.0.0" },
-    { name = "mypy", specifier = ">=1.7.0" },
-    { name = "pytest", specifier = ">=7.4.0" },
-    { name = "pytest-asyncio", specifier = ">=0.21.0" },
-    { name = "ruff", specifier = ">=0.1.0" },
-    { name = "testcontainers", specifier = ">=3.7.0" },
-]
-
-[[package]]
 name = "azure-core"
 version = "1.36.0"
 source = { registry = "https://pypi.org/simple" }
@@ -699,6 +609,96 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/0a/6e/1c8331ddf91ca4730ab3086a0f1be19c65510a33b5a441cb334e7a2d2560/cryptography-46.0.3-cp38-abi3-win32.whl", hash = "sha256:6276eb85ef938dc035d59b87c8a7dc559a232f954962520137529d77b18ff1df", size = 3036695, upload-time = "2025-10-15T23:18:08.672Z" },
     { url = "https://files.pythonhosted.org/packages/90/45/b0d691df20633eff80955a0fc7695ff9051ffce8b69741444bd9ed7bd0db/cryptography-46.0.3-cp38-abi3-win_amd64.whl", hash = "sha256:416260257577718c05135c55958b674000baef9a1c7d9e8f306ec60d71db850f", size = 3501720, upload-time = "2025-10-15T23:18:10.632Z" },
     { url = "https://files.pythonhosted.org/packages/e8/cb/2da4cc83f5edb9c3257d09e1e7ab7b23f049c7962cae8d842bbef0a9cec9/cryptography-46.0.3-cp38-abi3-win_arm64.whl", hash = "sha256:d89c3468de4cdc4f08a57e214384d0471911a3830fcdaf7a8cc587e42a866372", size = 2918740, upload-time = "2025-10-15T23:18:12.277Z" },
+]
+
+[[package]]
+name = "data-warehouse"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "aiohttp" },
+    { name = "anthropic" },
+    { name = "azure-identity" },
+    { name = "boto3" },
+    { name = "clickhouse-connect" },
+    { name = "clickhouse-driver" },
+    { name = "faker" },
+    { name = "fastapi" },
+    { name = "kafka-python-ng" },
+    { name = "minio" },
+    { name = "moose-cli" },
+    { name = "moose-lib" },
+    { name = "pillow" },
+    { name = "psycopg2-binary" },
+    { name = "pydantic" },
+    { name = "python-dotenv" },
+    { name = "redis" },
+    { name = "requests" },
+    { name = "temporalio" },
+    { name = "toml" },
+    { name = "uvicorn" },
+]
+
+[package.optional-dependencies]
+dev = [
+    { name = "black" },
+    { name = "mypy" },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "ruff" },
+    { name = "testcontainers" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "black" },
+    { name = "mypy" },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "ruff" },
+    { name = "testcontainers" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "aiohttp", specifier = ">=3.8.0" },
+    { name = "anthropic", specifier = ">=0.57.1" },
+    { name = "azure-identity", specifier = ">=1.12.0" },
+    { name = "black", marker = "extra == 'dev'", specifier = ">=23.0.0" },
+    { name = "boto3", specifier = ">=1.26.0" },
+    { name = "clickhouse-connect" },
+    { name = "clickhouse-driver", specifier = ">=0.2.6" },
+    { name = "faker" },
+    { name = "fastapi", specifier = ">=0.104.0" },
+    { name = "kafka-python-ng", specifier = ">=2.2.2" },
+    { name = "minio", specifier = ">=7.1.0" },
+    { name = "moose-cli" },
+    { name = "moose-lib" },
+    { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.7.0" },
+    { name = "pillow", specifier = ">=10.0.0" },
+    { name = "psycopg2-binary", specifier = ">=2.9.0" },
+    { name = "pydantic", specifier = ">=2.5.0" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.4.0" },
+    { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.21.0" },
+    { name = "python-dotenv", specifier = ">=1.0.0" },
+    { name = "redis", specifier = ">=5.0.0" },
+    { name = "requests", specifier = ">=2.32.4" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.1.0" },
+    { name = "temporalio", specifier = ">=1.5.0" },
+    { name = "testcontainers", marker = "extra == 'dev'", specifier = ">=3.7.0" },
+    { name = "toml", specifier = ">=0.10.0" },
+    { name = "uvicorn", specifier = ">=0.24.0" },
+]
+provides-extras = ["dev"]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "black", specifier = ">=23.0.0" },
+    { name = "mypy", specifier = ">=1.7.0" },
+    { name = "pytest", specifier = ">=7.4.0" },
+    { name = "pytest-asyncio", specifier = ">=0.21.0" },
+    { name = "ruff", specifier = ">=0.1.0" },
+    { name = "testcontainers", specifier = ">=3.7.0" },
 ]
 
 [[package]]
