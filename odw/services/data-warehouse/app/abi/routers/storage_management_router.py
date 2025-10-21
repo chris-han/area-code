@@ -9,7 +9,7 @@ from typing import Any
 import logging
 
 from app.abi_app import get_clickhouse_client
-from app.apis.abi.storage_management import (
+from app.abi.storage_management import (
     S3ConfigurationRequest, S3ConfigurationResponse, configure_s3_storage,
     S3ConnectionTest, S3ConnectionTestResponse, test_s3_connection,
     S3BucketListQuery, S3BucketListResponse, list_s3_buckets,

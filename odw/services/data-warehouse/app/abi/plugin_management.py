@@ -109,6 +109,8 @@ class PluginConfigResponse(BaseModel):
     success: bool
     message: str
     validation_errors: Optional[List[str]] = None
+    config: Optional[Dict[str, Any]] = None
+    updated_at: Optional[datetime] = None
 
 
 class PluginTestRequest(BaseModel):
@@ -121,6 +123,9 @@ class PluginTestResponse(BaseModel):
     success: bool
     message: str
     test_results: Optional[Dict[str, Any]] = None
+    database: Optional[str] = None
+    host: Optional[str] = None
+    latency_ms: Optional[float] = None
 
 
 class PluginStatusQuery(BaseModel):

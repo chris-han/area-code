@@ -5,7 +5,7 @@ FastAPI router for budget tracking and variance analysis endpoints.
 """
 
 from fastapi import APIRouter
-from app.apis.abi.budget_tracking import router as budget_tracking_api_router
+from app.abi.budget_tracking import router as budget_tracking_api_router
 
 # Create the main budget tracking router
 budget_tracking_router = APIRouter()

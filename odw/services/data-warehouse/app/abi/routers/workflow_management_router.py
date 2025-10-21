@@ -10,8 +10,8 @@ from typing import Any
 import logging
 
 from app.abi_app import get_temporal_client, get_clickhouse_client
-from app.apis.abi.temporal_client import TemporalClient
-from app.apis.abi.workflow_management import (
+from app.abi.temporal_client import TemporalClient
+from app.abi.workflow_management import (
     WorkflowListQuery, WorkflowListResponse, get_workflows,
     WorkflowTriggerRequest, WorkflowTriggerResponse, trigger_workflow,
     WorkflowControlRequest, WorkflowControlResponse, control_workflow,

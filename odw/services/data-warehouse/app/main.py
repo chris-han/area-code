@@ -9,17 +9,16 @@ from app.unstructured_data.extract import unstructured_data_workflow, unstructur
 from app.views.daily_pageviews import daily_pageviews_mv
 
 # Import existing APIs
-import app.apis.get_blobs
-import app.apis.get_logs
-import app.apis.extract_blob
-import app.apis.extract_logs
-import app.apis.extract_events
-import app.apis.get_events
-import app.apis.get_daily_pageviews
-import app.apis.extract_unstructured_data
-import app.apis.get_unstructured_data
-import app.apis.get_medical
+import app.moose_apis.get_blobs
+import app.moose_apis.get_logs
+import app.moose_apis.extract_blob
+import app.moose_apis.extract_logs
+import app.moose_apis.extract_events
+import app.moose_apis.get_events
+import app.moose_apis.get_daily_pageviews
+import app.moose_apis.extract_unstructured_data
+import app.moose_apis.get_unstructured_data
+import app.moose_apis.get_medical
 
 # Import ABI APIs - this registers them with Moose
-import app.apis.abi
-
+import app.abi

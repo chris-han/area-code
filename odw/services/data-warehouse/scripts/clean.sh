@@ -205,11 +205,35 @@ clean_data_warehouse_port() {
     fi
 }
 
+clean_abi_api_port() {
+    local abi_port="${ABI_HTTP_PORT:-4300}"
+    print_status "Checking for process using ABI API port $abi_port..."
+
+    local pid=$(lsof -ti ":$abi_port" 2>/dev/null || true)
+
+    if [ -n "$pid" ]; then
+        print_warning "Found process $pid using ABI API port $abi_port"
+        if kill "$pid" 2>/dev/null; then
+            sleep 1
+            if kill -0 "$pid" 2>/dev/null; then
+                print_warning "Process $pid still running, forcing termination..."
+                kill -9 "$pid" 2>/dev/null || true
+            fi
+            print_success "Cleared ABI API port $abi_port"
+        else
+            print_warning "Could not terminate process $pid on port $abi_port"
+        fi
+    else
+        print_success "No processes found using ABI API port $abi_port"
+    fi
+}
+
 main() {
     print_status "Cleaning up Data Warehouse service..."
 
     clean_moose_infrastructure
     clean_data_warehouse_port
+    clean_abi_api_port
 
     print_success "Data Warehouse service cleanup completed"
 }

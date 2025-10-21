@@ -10,7 +10,7 @@ from typing import Any
 import logging
 
 from app.abi_app import get_clickhouse_client, get_redis_client
-from app.apis.abi.billing_analytics import (
+from app.abi.billing_analytics import (
     CostTrendQuery, CostTrendResponse, get_cost_trends,
     ResourceUtilizationQuery, ResourceUtilizationResponse, get_resource_utilization,
     CostOptimizationQuery, CostOptimizationResponse, get_cost_optimization_opportunities,

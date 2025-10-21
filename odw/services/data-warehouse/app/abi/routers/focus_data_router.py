@@ -10,7 +10,7 @@ from typing import Any
 import logging
 
 from app.abi_app import get_clickhouse_client, get_redis_client
-from app.apis.abi.focus_data import (
+from app.abi.focus_data import (
     FOCUSDataQuery, FOCUSDataResponse, get_focus_billing_data,
     FOCUSAggregationQuery, FOCUSAggregationResponse, get_focus_aggregation
 )

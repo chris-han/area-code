@@ -9,7 +9,7 @@ from typing import Any
 import logging
 
 from app.abi_app import get_clickhouse_client, get_temporal_client, get_redis_client
-from app.apis.abi.health_check import (
+from app.abi.health_check import (
     HealthCheckQuery, HealthCheckResponse, get_health_status
 )
 

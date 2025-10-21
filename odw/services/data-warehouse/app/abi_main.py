@@ -9,7 +9,7 @@ from fastapi import FastAPI
 import logging
 
 from app.abi_app import abi_app
-from app.apis.abi.routers import (
+from app.abi.routers import (
     billing_analytics_router,
     workflow_management_router,
     plugin_management_router,
