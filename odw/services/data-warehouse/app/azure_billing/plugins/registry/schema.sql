@@ -124,6 +124,20 @@ CREATE TABLE IF NOT EXISTS plugin_installations (
     CONSTRAINT valid_health_status CHECK (health_status IN ('healthy', 'unhealthy', 'unknown'))
 );
 
+-- Plugin configuration table
+CREATE TABLE IF NOT EXISTS plugin_configurations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    plugin_name VARCHAR(255) NOT NULL,
+    configuration JSONB NOT NULL,
+    description TEXT,
+    version VARCHAR(50),
+    created_by VARCHAR(255) DEFAULT 'system',
+    updated_by VARCHAR(255),
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Plugin dependencies table
 CREATE TABLE IF NOT EXISTS plugin_dependencies (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -214,12 +228,7 @@ CREATE TABLE IF NOT EXISTS plugin_usage_analytics (
     error_stack_trace TEXT,
     
     -- Timestamps
-    recorded_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    
-    -- Indexes for analytics queries
-    INDEX idx_usage_analytics_installation_recorded (installation_id, recorded_at),
-    INDEX idx_usage_analytics_event_type (event_type),
-    INDEX idx_usage_analytics_recorded_at (recorded_at)
+    recorded_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Create indexes for performance
@@ -238,6 +247,26 @@ CREATE INDEX IF NOT EXISTS idx_plugin_installations_status ON plugin_installatio
 CREATE INDEX IF NOT EXISTS idx_plugin_reviews_plugin_id ON plugin_reviews(plugin_id);
 CREATE INDEX IF NOT EXISTS idx_plugin_reviews_rating ON plugin_reviews(rating);
 
+CREATE UNIQUE INDEX IF NOT EXISTS unique_active_plugin_config 
+    ON plugin_configurations(plugin_name)
+    WHERE is_active = TRUE;
+CREATE INDEX IF NOT EXISTS idx_plugin_configurations_name 
+    ON plugin_configurations(plugin_name);
+CREATE INDEX IF NOT EXISTS idx_plugin_configurations_active 
+    ON plugin_configurations(is_active);
+CREATE INDEX IF NOT EXISTS idx_plugin_configurations_created_at 
+    ON plugin_configurations(created_at);
+
+CREATE INDEX IF NOT EXISTS idx_usage_analytics_installation_recorded 
+    ON plugin_usage_analytics(installation_id, recorded_at);
+CREATE INDEX IF NOT EXISTS idx_usage_analytics_event_type 
+    ON plugin_usage_analytics(event_type);
+CREATE INDEX IF NOT EXISTS idx_usage_analytics_recorded_at 
+    ON plugin_usage_analytics(recorded_at);
+
+CREATE INDEX IF NOT EXISTS idx_plugin_configurations_name 
+    ON plugin_configurations(plugin_name);
+
 -- Create updated_at trigger function
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
@@ -248,16 +277,24 @@ END;
 $$ language 'plpgsql';
 
 -- Create triggers for updated_at columns
+DROP TRIGGER IF EXISTS update_plugins_updated_at ON plugins;
 CREATE TRIGGER update_plugins_updated_at 
     BEFORE UPDATE ON plugins 
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_plugin_installations_updated_at ON plugin_installations;
 CREATE TRIGGER update_plugin_installations_updated_at 
     BEFORE UPDATE ON plugin_installations 
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_plugin_reviews_updated_at ON plugin_reviews;
 CREATE TRIGGER update_plugin_reviews_updated_at 
     BEFORE UPDATE ON plugin_reviews 
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_plugin_configurations_updated_at ON plugin_configurations;
+CREATE TRIGGER update_plugin_configurations_updated_at 
+    BEFORE UPDATE ON plugin_configurations 
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Insert default categories

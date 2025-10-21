@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Launch the ABI FastAPI application on a dedicated port without starting Moose infrastructure.
+# Launch the complete application (ABI + Moose) on a dedicated port.
 
 set -euo pipefail
 
@@ -26,4 +26,4 @@ if [ -d .venv ]; then
   PYTHON_BIN=".venv/bin/python"
 fi
 
-exec "$PYTHON_BIN" -m uvicorn app.abi_main:abi_fastapi_app --reload --host "$HOST" --port "$PORT"
+exec "$PYTHON_BIN" -m uvicorn bia_backend.main:app --reload --host "$HOST" --port "$PORT"

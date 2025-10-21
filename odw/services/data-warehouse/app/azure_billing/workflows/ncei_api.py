@@ -20,6 +20,20 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/azure-ncei", tags=["Azure NCEI"])
 
 
+# Dependency injection functions (must be defined before use in decorators)
+async def get_temporal_client() -> Client:
+    """Get Temporal client instance"""
+    # This would typically be injected from your application setup
+    # For now, return None as placeholder
+    return None
+
+
+async def get_ncei_scheduler() -> NCEIWorkflowScheduler:
+    """Get NCEI workflow scheduler instance"""
+    client = await get_temporal_client()
+    return create_ncei_scheduler(client)
+
+
 class NCEIWorkflowRequest(BaseModel):
     """Request model for NCEI workflow execution"""
     start_date: str = Field(description="Start date (YYYY-MM-DD)")
@@ -167,15 +181,3 @@ async def get_workflow_status(workflow_id: str) -> Dict[str, Any]:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# Dependency injection
-async def get_temporal_client() -> Client:
-    """Get Temporal client instance"""
-    # This would typically be injected from your application setup
-    # For now, return None as placeholder
-    return None
-
-
-async def get_ncei_scheduler() -> NCEIWorkflowScheduler:
-    """Get NCEI workflow scheduler instance"""
-    client = await get_temporal_client()
-    return create_ncei_scheduler(client)

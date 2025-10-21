@@ -78,11 +78,11 @@ lazy_loading = true
 cache_plugins = true
 
 [plugin_registry_db]
-host = "marspbi.postgres.database.chinacloudapi.cn"
+host = "localhost"
 port = 5432
-database = "abi_registry"
-user = "maradmin"
-password = "XQdaYh^4q&K9"
+database = "bia_config"
+user = "temporal"
+password = "temporal"
 schema = "plugin_registry"
 
 [datalens_config]

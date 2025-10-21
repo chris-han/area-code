@@ -64,9 +64,9 @@ ssl_enabled = true
 [hybrid_architecture.postgresql]
 mode = "local"  # Use local PostgreSQL for Temporal
 # External PostgreSQL for plugin registry
-external_host = "marspbi.postgres.database.chinacloudapi.cn"
+external_host = "localhost"
 external_port = 5432
-external_database = "abi_registry"
+external_database = "bia_config"
 
 [health_monitoring]
 # Health check endpoints for each service

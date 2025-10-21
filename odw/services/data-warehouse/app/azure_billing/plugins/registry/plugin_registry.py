@@ -10,11 +10,17 @@ from datetime import datetime
 from uuid import UUID, uuid4
 from dataclasses import dataclass, asdict
 from enum import Enum
+from pathlib import Path
 import json
 import logging
 import asyncio
 
 import asyncpg
+from asyncpg.exceptions import (
+    DuplicateDatabaseError,
+    InvalidCatalogNameError,
+    InvalidSchemaNameError,
+)
 from pydantic import BaseModel, Field, validator
 
 logger = logging.getLogger(__name__)
@@ -125,6 +131,21 @@ class PluginInstallation:
     updated_at: Optional[datetime] = None
 
 
+@dataclass
+class PluginConfigurationRecord:
+    """Stored plugin configuration entry"""
+    id: Optional[UUID]
+    plugin_name: str
+    configuration: Dict[str, Any]
+    description: Optional[str]
+    version: Optional[str]
+    created_by: Optional[str]
+    updated_by: Optional[str]
+    is_active: bool
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
+
+
 class PluginRegistryConfig(BaseModel):
     """Plugin registry configuration"""
     host: str
@@ -132,10 +153,30 @@ class PluginRegistryConfig(BaseModel):
     database: str
     user: str
     password: str
-    schema: str = "plugin_registry"
+    db_schema: str = "plugin_registry"  # Renamed from 'schema' to avoid shadowing BaseModel.schema
     pool_min_size: int = 5
     pool_max_size: int = 20
     command_timeout: int = 60
+    maintenance_database: str = "postgres"
+    auto_create_database: bool = True
+    auto_run_schema: bool = True
+    schema_sql_path: Optional[str] = None
+
+    @classmethod
+    def from_dict(cls, config_dict: dict) -> "PluginRegistryConfig":
+        """
+        Create PluginRegistryConfig from dictionary, handling field name mapping.
+
+        Maps 'schema' to 'db_schema' to avoid Pydantic warning.
+        """
+        # Create a copy to avoid modifying the original
+        config = config_dict.copy()
+
+        # Map 'schema' to 'db_schema' if present
+        if "schema" in config:
+            config["db_schema"] = config.pop("schema")
+
+        return cls(**config)
 
 
 class PluginRegistry:
@@ -155,24 +196,32 @@ class PluginRegistry:
             return
         
         try:
-            self.pool = await asyncpg.create_pool(
-                host=self.config.host,
-                port=self.config.port,
-                database=self.config.database,
-                user=self.config.user,
-                password=self.config.password,
-                min_size=self.config.pool_min_size,
-                max_size=self.config.pool_max_size,
-                command_timeout=self.config.command_timeout
-            )
-            
-            # Set search path for all connections
-            async with self.pool.acquire() as conn:
-                await conn.execute(f"SET search_path TO {self.config.schema}")
-            
+            try:
+                await self._create_pool()
+            except InvalidCatalogNameError as exc:
+                if not self.config.auto_create_database:
+                    logger.error(
+                        "Plugin registry database %s is missing and auto creation is disabled.",
+                        self.config.database,
+                    )
+                    raise
+
+                logger.warning(
+                    "Plugin registry database %s not found. Attempting to create it.",
+                    self.config.database,
+                )
+                await self._ensure_database_exists()
+                await self._create_pool()
+
+            await self._set_search_path(ignore_missing_schema=True)
+
+            if self.config.auto_run_schema:
+                await self._apply_schema()
+                await self._set_search_path()
+
             self._initialized = True
             logger.info("Plugin registry initialized successfully")
-            
+
         except Exception as e:
             logger.error(f"Failed to initialize plugin registry: {e}")
             raise
@@ -182,6 +231,132 @@ class PluginRegistry:
         if self.pool:
             await self.pool.close()
             self._initialized = False
+
+    async def _create_pool(self):
+        """Create asyncpg connection pool"""
+        self.pool = await asyncpg.create_pool(
+            host=self.config.host,
+            port=self.config.port,
+            database=self.config.database,
+            user=self.config.user,
+            password=self.config.password,
+            min_size=self.config.pool_min_size,
+            max_size=self.config.pool_max_size,
+            command_timeout=self.config.command_timeout,
+        )
+
+    async def _set_search_path(self, ignore_missing_schema: bool = False):
+        """Ensure all connections use the configured schema"""
+        if not self.pool:
+            return
+
+        async with self.pool.acquire() as conn:
+            try:
+                await conn.execute(f"SET search_path TO {self.config.db_schema}")
+            except InvalidSchemaNameError:
+                if ignore_missing_schema:
+                    logger.info(
+                        "Plugin registry schema %s not found yet; continuing without search_path update",
+                        self.config.db_schema,
+                    )
+                    return
+                raise
+
+    async def _ensure_database_exists(self):
+        """Create the plugin registry database if it does not exist"""
+        connection = await asyncpg.connect(
+            host=self.config.host,
+            port=self.config.port,
+            database=self.config.maintenance_database,
+            user=self.config.user,
+            password=self.config.password,
+            command_timeout=self.config.command_timeout,
+        )
+
+        try:
+            await connection.execute(f'CREATE DATABASE "{self.config.database}"')
+            logger.info("Created plugin registry database %s", self.config.database)
+        except DuplicateDatabaseError:
+            logger.info("Plugin registry database %s already exists", self.config.database)
+        except Exception as exc:
+            logger.error(
+                "Unable to create plugin registry database %s: %s",
+                self.config.database,
+                exc,
+            )
+            raise
+        finally:
+            await connection.close()
+
+    async def _apply_schema(self):
+        """Run schema SQL to ensure required tables exist"""
+        if not self.pool:
+            return
+
+        schema_path = (
+            Path(self.config.schema_sql_path).resolve()
+            if self.config.schema_sql_path
+            else Path(__file__).resolve().with_name("schema.sql")
+        )
+
+        if not schema_path.exists():
+            logger.warning("Schema file not found at %s; skipping schema initialization", schema_path)
+            return
+
+        sql_statements = self._load_schema_statements(schema_path)
+        if not sql_statements:
+            return
+
+        async with self.pool.acquire() as conn:
+            async with conn.transaction():
+                for statement in sql_statements:
+                    await conn.execute(statement)
+
+        logger.info("Plugin registry schema ensured at %s", schema_path)
+
+    def _load_schema_statements(self, schema_path: Path) -> List[str]:
+        """Load and split schema SQL into executable statements"""
+        try:
+            content = schema_path.read_text(encoding="utf-8")
+        except Exception as exc:
+            logger.error("Unable to read schema file %s: %s", schema_path, exc)
+            return []
+
+        statements: List[str] = []
+        buffer: List[str] = []
+
+        in_dollar_quote = False
+
+        for line in content.splitlines():
+            stripped = line.strip()
+
+            # Skip empty lines and comments
+            if not stripped or stripped.startswith("--"):
+                continue
+
+            buffer.append(line)
+
+            line_no_comment = line.split("--", 1)[0]
+            if line_no_comment.count("$$") % 2 == 1:
+                in_dollar_quote = not in_dollar_quote
+
+            if not in_dollar_quote and line_no_comment.rstrip().endswith(";"):
+                statement = "\n".join(buffer).strip()
+                statements.append(statement)
+                buffer = []
+
+        # Add any remaining statement without trailing semicolon
+        if buffer:
+            statement = "\n".join(buffer).strip()
+            statements.append(statement)
+
+        return statements
+
+    def _table(self, name: str) -> str:
+        """Return fully-qualified table reference for the configured schema."""
+        if self.config.db_schema:
+            return f"{self.config.db_schema}.{name}"
+        return name
     
     async def register_plugin(self, plugin: PluginMetadata) -> UUID:
         """
@@ -623,6 +798,101 @@ class PluginRegistry:
                 "active_installations": len(await self.list_installations(status=InstallationStatus.ACTIVE))
             }
     
+    async def get_plugin_configuration(self, plugin_name: str) -> Optional[PluginConfigurationRecord]:
+        """
+        Retrieve stored configuration for a plugin.
+        """
+        if not self._initialized:
+            await self.initialize()
+
+        async with self.pool.acquire() as conn:
+            row = await conn.fetchrow(
+                f"""
+                SELECT id, plugin_name, configuration, description, version,
+                       created_by, updated_by, is_active, created_at, updated_at
+                FROM {self._table('plugin_configurations')}
+                WHERE plugin_name = $1 AND is_active = TRUE
+                ORDER BY updated_at DESC
+                LIMIT 1
+                """,
+                plugin_name,
+            )
+
+        if not row:
+            return None
+
+        return self._row_to_plugin_configuration(row)
+
+    async def list_plugin_configurations(self) -> List[PluginConfigurationRecord]:
+        """
+        List all plugin configurations.
+        """
+        if not self._initialized:
+            await self.initialize()
+
+        async with self.pool.acquire() as conn:
+            rows = await conn.fetch(
+                f"""
+                SELECT id, plugin_name, configuration, description, version,
+                       created_by, updated_by, is_active, created_at, updated_at
+                FROM {self._table('plugin_configurations')}
+                ORDER BY plugin_name, updated_at DESC
+                """
+            )
+
+        return [self._row_to_plugin_configuration(row) for row in rows]
+
+    async def upsert_plugin_configuration(
+        self,
+        plugin_name: str,
+        configuration: Dict[str, Any],
+        description: Optional[str] = None,
+        version: Optional[str] = None,
+        updated_by: Optional[str] = None,
+    ) -> PluginConfigurationRecord:
+        """
+        Create or update a plugin configuration entry.
+        """
+        if not self._initialized:
+            await self.initialize()
+
+        async with self.pool.acquire() as conn:
+            async with conn.transaction():
+                await conn.execute(
+                    f"""
+                    UPDATE {self._table('plugin_configurations')}
+                    SET is_active = FALSE, updated_at = CURRENT_TIMESTAMP
+                    WHERE plugin_name = $1 AND is_active = TRUE
+                    """,
+                    plugin_name,
+                )
+
+                actor = updated_by or "frontend"
+
+                row = await conn.fetchrow(
+                    f"""
+                    INSERT INTO {self._table('plugin_configurations')} (
+                        plugin_name,
+                        configuration,
+                        description,
+                        version,
+                        created_by,
+                        updated_by,
+                        is_active
+                    ) VALUES ($1, CAST($2 AS jsonb), $3, $4, $5, $6, TRUE)
+                    RETURNING id, plugin_name, configuration, description, version,
+                              created_by, updated_by, is_active, created_at, updated_at
+                    """,
+                    plugin_name,
+                    json.dumps(configuration) if configuration is not None else None,
+                    description,
+                    version,
+                    actor,
+                    actor,
+                )
+
+        return self._row_to_plugin_configuration(row)
+    
     def _row_to_plugin_metadata(self, row) -> PluginMetadata:
         """Convert database row to PluginMetadata"""
         return PluginMetadata(
@@ -673,4 +943,25 @@ class PluginRegistry:
             usage_count=row['usage_count'],
             installed_at=row['installed_at'],
             updated_at=row['updated_at']
+        )
+
+    def _row_to_plugin_configuration(self, row) -> PluginConfigurationRecord:
+        """Convert database row to PluginConfigurationRecord"""
+        configuration = row["configuration"]
+        if isinstance(configuration, str):
+            try:
+                configuration = json.loads(configuration)
+            except json.JSONDecodeError:
+                logger.warning("Stored configuration for %s is not valid JSON", row["plugin_name"])
+        return PluginConfigurationRecord(
+            id=row["id"],
+            plugin_name=row["plugin_name"],
+            configuration=configuration or {},
+            description=row["description"],
+            version=row["version"],
+            created_by=row.get("created_by"),
+            updated_by=row["updated_by"],
+            is_active=row.get("is_active", True),
+            created_at=row["created_at"],
+            updated_at=row["updated_at"],
         )
