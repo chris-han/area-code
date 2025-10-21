@@ -1,5 +1,0 @@
-{
-  "/admin/plugins/page": "app/admin/plugins/page.js",
-  "/analytics/page": "app/analytics/page.js",
-  "/workflows/page": "app/workflows/page.js"
-}
