@@ -1,7 +1,23 @@
 import { z } from 'zod'
 
+const workflowTypeEnum = z.enum([
+  'azure_billing_extraction',
+  'focus_transformation',
+  'data_validation',
+  'scheduled_report',
+])
+
+export const WORKFLOW_TYPE_OPTIONS: { value: WorkflowType; label: string }[] = [
+  { value: 'azure_billing_extraction', label: 'Azure Billing Extraction' },
+  { value: 'focus_transformation', label: 'FOCUS Transformation' },
+  { value: 'data_validation', label: 'Data Quality Check' },
+  { value: 'scheduled_report', label: 'Scheduled Report' },
+]
+
+export type WorkflowType = z.infer<typeof workflowTypeEnum>
+
 export const workflowTriggerSchema = z.object({
-  workflow_type: z.string().min(1, 'Workflow type is required'),
+  workflow_type: workflowTypeEnum,
   parameters: z.record(z.any()).optional().default({}),
   schedule: z.string().optional(),
 })

@@ -80,7 +80,15 @@ export const pluginsApi = {
         database: result.database,
         host: result.host,
         latency_ms: result.latency_ms,
+        object_count: result.object_count,
+        path_prefix: result.path_prefix,
       }
+    }
+    // Mirror key metrics at the top level for callers that expect them there
+    if (result.test_results) {
+      result.object_count ??= result.test_results.object_count
+      result.path_prefix ??= result.test_results.path_prefix
+      result.fileCount ??= result.test_results.object_count
     }
     return result
   },

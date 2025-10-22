@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { workflowTriggerSchema, WorkflowTriggerFormData } from '@/lib/schemas'
+import { workflowTriggerSchema, WorkflowTriggerFormData, WORKFLOW_TYPE_OPTIONS } from '@/lib/schemas'
 import { useTriggerWorkflow } from '@/hooks/useWorkflows'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -52,15 +52,17 @@ export function WorkflowForm() {
           <select
             id="workflow_type"
             {...register('workflow_type')}
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            defaultValue=""
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
-            <option value="">Select a workflow type</option>
-            <option value="azure-to-clickhouse-pipeline">Azure Blob to ClickHouse Pipeline</option>
-            <option value="azure-blob-ingestion">Azure Blob Storage Ingestion</option>
-            <option value="focus-transformation">FOCUS 1.2 Transformation</option>
-            <option value="azure-billing-extraction">Azure Billing Data Extraction</option>
-            <option value="data-quality-check">Data Quality Check</option>
-            <option value="cost-analysis">Cost Analysis Report</option>
+            <option value="" disabled>
+              Select a workflow type
+            </option>
+            {WORKFLOW_TYPE_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </select>
           {errors.workflow_type && (
             <p className="text-sm text-destructive flex items-center gap-1">

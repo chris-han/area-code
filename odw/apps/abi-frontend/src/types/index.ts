@@ -1,17 +1,19 @@
 // Workflow Types
+import { WorkflowType } from '@/lib/schemas'
+
 export interface WorkflowStatus {
   id: string
   name: string
-  status: 'running' | 'completed' | 'failed' | 'cancelled' | 'scheduled'
-  startTime: Date
-  endTime?: Date
+  status: 'running' | 'completed' | 'failed' | 'cancelled' | 'scheduled' | 'terminated' | 'timed_out'
+  startTime: Date | null
+  endTime?: Date | null
   progress?: number
   logs?: string[]
   error?: string
 }
 
 export interface WorkflowTriggerRequest {
-  workflow_type: string
+  workflow_type: WorkflowType
   parameters: Record<string, any>
   schedule?: string
 }

@@ -142,8 +142,19 @@ export function PluginConfigModal({ pluginName, isOpen, onClose, onSave }: Plugi
       setTestStatus('success')
       
       if (pluginName === 'Azure Blob Storage Connector') {
-        const fileCount = result?.fileCount ?? result?.test_results?.fileCount ?? 15
-        setTestMessage(`Connection successful! Found ${fileCount} parquet files in container.`)
+        const fileCount =
+          result?.object_count ??
+          result?.test_results?.object_count ??
+          result?.fileCount ??
+          result?.test_results?.fileCount ??
+          0
+        const prefix =
+          result?.path_prefix ??
+          result?.test_results?.path_prefix ??
+          configPayload?.pathPrefix ??
+          ''
+        const scopeMessage = prefix ? ` under '${prefix}'` : ''
+        setTestMessage(`Connection successful! Found ${fileCount} parquet file(s)${scopeMessage}.`)
       } else if (pluginName === 'ClickHouse Sink') {
         const databaseName = result?.database ?? result?.test_results?.database ?? configPayload?.dbName ?? 'finops-odw'
         setTestMessage(`Connection successful! Connected to database '${databaseName}'.`)

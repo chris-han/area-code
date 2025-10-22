@@ -3,11 +3,11 @@
   "version": "0.0",
   "description": "Operation Data Warehouse with Moose",
   "scripts": {
-    "dev": "./scripts/abi-dev.sh",
+    "dev": "./scripts/dev.sh",
     "clean": "./scripts/clean.sh",
-    "odw:dev": "./scripts/abi-dev.sh",
+    "odw:dev": "./scripts/dev.sh",
     "odw:dev:clean": "./scripts/clean.sh",
-    "abi:dev": "./scripts/abi-dev.sh",
+    "abi:dev": "./scripts/abi-api.sh",
     "abi:dev:clean": "./scripts/clean.sh",
     "odw:moose:dev": "./scripts/dev.sh"
   }

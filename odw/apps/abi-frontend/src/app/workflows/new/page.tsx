@@ -15,58 +15,40 @@ import Link from 'next/link'
 export default function NewWorkflowPage() {
   const workflowTypes = [
     {
-      id: 'azure-blob-ingestion',
-      name: 'Azure Blob Storage Ingestion',
-      description: 'Ingest FOCUS-compliant parquet files from Azure Blob Storage',
-      icon: <Database className="h-6 w-6" />,
-      estimatedTime: '10-25 min',
-      complexity: 'Medium',
-      tags: ['Azure', 'Blob', 'FOCUS', 'Parquet']
-    },
-    {
-      id: 'focus-transformation',
-      name: 'FOCUS 1.2 Transformation',
-      description: 'Transform parquet files to Moose model FOCUS 1.2 data tables',
-      icon: <Zap className="h-6 w-6" />,
-      estimatedTime: '15-30 min',
-      complexity: 'Medium',
-      tags: ['FOCUS', 'Transform', '1.2', 'Moose']
-    },
-    {
-      id: 'azure-to-clickhouse-pipeline',
-      name: 'Azure Blob to ClickHouse Pipeline',
-      description: 'Complete pipeline: Azure Blob → FOCUS Transform → ClickHouse Sink',
-      icon: <Workflow className="h-6 w-6" />,
-      estimatedTime: '25-45 min',
-      complexity: 'High',
-      tags: ['Pipeline', 'Azure', 'ClickHouse', 'End-to-End']
-    },
-    {
-      id: 'azure-billing-extraction',
+      id: 'azure_billing_extraction',
       name: 'Azure Billing Data Extraction',
-      description: 'Extract billing data from Azure Enterprise Agreement',
+      description: 'Extract billing data from Azure Enterprise Agreement sources.',
       icon: <Database className="h-6 w-6" />,
       estimatedTime: '15-30 min',
       complexity: 'Medium',
-      tags: ['Azure', 'Billing', 'EA']
+      tags: ['Azure', 'Billing', 'Extraction']
     },
     {
-      id: 'data-quality-check',
+      id: 'focus_transformation',
+      name: 'FOCUS 1.2 Transformation',
+      description: 'Transform raw billing data into FOCUS 1.2 compliant tables.',
+      icon: <Zap className="h-6 w-6" />,
+      estimatedTime: '10-20 min',
+      complexity: 'Medium',
+      tags: ['FOCUS', 'Transformation']
+    },
+    {
+      id: 'data_validation',
       name: 'Data Quality Check',
-      description: 'Validate data integrity and completeness',
+      description: 'Validate data integrity, completeness, and reconciliation.',
       icon: <Settings className="h-6 w-6" />,
       estimatedTime: '5-10 min',
       complexity: 'Low',
-      tags: ['Quality', 'Validation', 'Check']
+      tags: ['Validation', 'Quality']
     },
     {
-      id: 'cost-analysis',
-      name: 'Cost Analysis Report',
-      description: 'Generate comprehensive cost analysis and insights',
+      id: 'scheduled_report',
+      name: 'Scheduled Cost Report',
+      description: 'Generate and distribute scheduled cost reports and insights.',
       icon: <Workflow className="h-6 w-6" />,
-      estimatedTime: '20-45 min',
+      estimatedTime: '20-40 min',
       complexity: 'High',
-      tags: ['Analysis', 'Report', 'Insights']
+      tags: ['Reporting', 'Scheduling']
     },
   ]
 

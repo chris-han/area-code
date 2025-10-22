@@ -26,6 +26,9 @@ class S3Configuration(BaseModel):
     bucket_name: str
     use_ssl: bool = True
     signature_version: str = "s3v4"
+    path_prefix: Optional[str] = Field(default=None, alias="pathPrefix")
+
+    model_config = {"populate_by_name": True}
 
 
 class S3ConfigurationRequest(BaseModel):
@@ -247,12 +250,34 @@ async def test_s3_connection(client, params: S3ConnectionTest) -> S3ConnectionTe
         # Test 3: List objects permission
         if test_results["bucket_access_test"]:
             try:
-                response = s3_client.list_objects_v2(
-                    Bucket=config.bucket_name,
-                    MaxKeys=1
-                )
+                base_kwargs = {
+                    "Bucket": config.bucket_name,
+                    "MaxKeys": 1000,
+                }
+                normalized_prefix = None
+                if config.path_prefix:
+                    normalized_prefix = config.path_prefix.lstrip("/")
+                    if normalized_prefix and not normalized_prefix.endswith("/"):
+                        normalized_prefix = f"{normalized_prefix}/"
+                    if normalized_prefix:
+                        base_kwargs["Prefix"] = normalized_prefix
+
+                total_count = 0
+                continuation_token = None
+
+                while True:
+                    kwargs = dict(base_kwargs)
+                    if continuation_token:
+                        kwargs["ContinuationToken"] = continuation_token
+                    response = s3_client.list_objects_v2(**kwargs)
+                    total_count += response.get('KeyCount', 0)
+                    if not response.get('IsTruncated'):
+                        break
+                    continuation_token = response.get('NextContinuationToken')
+
                 test_results["list_objects_test"] = True
-                test_results["object_count"] = response.get('KeyCount', 0)
+                test_results["object_count"] = total_count
+                test_results["path_prefix"] = normalized_prefix or ''
             except ClientError as e:
                 test_results["error_details"].append(f"List objects error: {e}")
             except Exception as e:
