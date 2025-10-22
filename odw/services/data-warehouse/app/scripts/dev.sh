@@ -5,7 +5,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SERVICE_DIR="$(dirname "$SCRIPT_DIR")"
+SERVICE_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 cd "$SERVICE_DIR"
 
 UV_CACHE_DIR="$SERVICE_DIR/.uv-cache"

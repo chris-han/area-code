@@ -30,7 +30,7 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 echo "[ABI DEV] Starting Moose development stack..."
-./scripts/dev.sh &
+./app/scripts/dev.sh &
 MOOSE_PID=$!
 
 echo "[ABI DEV] Starting ABI FastAPI server..."

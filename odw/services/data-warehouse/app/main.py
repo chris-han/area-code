@@ -33,18 +33,18 @@ from app.unstructured_data.extract import (
 from app.views.daily_pageviews import daily_pageviews_mv
 
 # Moose consumption APIs (data retrieval)
-import app.moose_apis.get_blobs
-import app.moose_apis.get_logs
-import app.moose_apis.get_events
-import app.moose_apis.get_daily_pageviews
-import app.moose_apis.get_unstructured_data
-import app.moose_apis.get_medical
+import app.apis.get_blobs
+import app.apis.get_logs
+import app.apis.get_events
+import app.apis.get_daily_pageviews
+import app.apis.get_unstructured_data
+import app.apis.get_medical
 
 # Moose ingestion APIs (data extraction/processing)
-import app.moose_apis.extract_blob
-import app.moose_apis.extract_logs
-import app.moose_apis.extract_events
-import app.moose_apis.extract_unstructured_data
+import app.apis.extract_blob
+import app.apis.extract_logs
+import app.apis.extract_events
+import app.apis.extract_unstructured_data
 
 # Bare FastAPI application for Moose-managed endpoints. Moose CLI mounts
 # ingestion and consumption routes automatically; no bespoke routers are added here.

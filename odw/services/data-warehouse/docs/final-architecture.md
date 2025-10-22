@@ -15,7 +15,8 @@ This separation keeps the Moose runtime focused on Moose-native contracts while 
 app/
 ├── main.py                # Moose CLI entry point (Moose-only FastAPI shell)
 ├── abi/                   # ABI analytics registered as Moose Consumption APIs
-├── moose_apis/            # Moose ingestion & consumption endpoints
+├── apis/                  # Moose ingestion & consumption endpoints
+├── scripts/               # Moose stack helpers (dev/clean)
 └── …
 
 bia_backend/
