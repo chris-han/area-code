@@ -14,9 +14,9 @@ export default function WorkflowsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Active Workflows</CardTitle>
+          <CardTitle>All Workflows</CardTitle>
           <CardDescription>
-            Monitor running and scheduled workflows
+            Monitor all workflow executions - running, completed, failed, and scheduled
           </CardDescription>
         </CardHeader>
         <CardContent>

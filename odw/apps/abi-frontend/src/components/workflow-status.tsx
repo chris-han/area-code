@@ -42,8 +42,10 @@ export function WorkflowStatus() {
       case 'failed':
         return 'destructive'
       case 'cancelled':
+      case 'terminated':
         return 'secondary'
       case 'scheduled':
+      case 'timed_out':
         return 'warning'
       default:
         return 'outline'
@@ -85,56 +87,112 @@ export function WorkflowStatus() {
     )
   }
 
+  // Group workflows by status
+  const groupedWorkflows = workflows.reduce((acc, workflow) => {
+    const status = workflow.status
+    if (!acc[status]) {
+      acc[status] = []
+    }
+    acc[status].push(workflow)
+    return acc
+  }, {} as Record<string, typeof workflows>)
+
+  // Status order for display
+  const statusOrder = ['running', 'scheduled', 'completed', 'failed', 'cancelled', 'terminated', 'timed_out']
+
+  const statusCounts = {
+    running: groupedWorkflows.running?.length || 0,
+    completed: groupedWorkflows.completed?.length || 0,
+    failed: groupedWorkflows.failed?.length || 0,
+    other: workflows.length - (groupedWorkflows.running?.length || 0) - (groupedWorkflows.completed?.length || 0) - (groupedWorkflows.failed?.length || 0)
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium">Active Workflows</h3>
-        <Badge variant="outline">{workflows.length} total</Badge>
+        <h3 className="text-lg font-medium">Workflow Executions</h3>
+        <div className="flex items-center gap-2">
+          {statusCounts.running > 0 && (
+            <Badge variant="default">{statusCounts.running} running</Badge>
+          )}
+          {statusCounts.completed > 0 && (
+            <Badge variant="success">{statusCounts.completed} completed</Badge>
+          )}
+          {statusCounts.failed > 0 && (
+            <Badge variant="destructive">{statusCounts.failed} failed</Badge>
+          )}
+          <Badge variant="outline">{workflows.length} total</Badge>
+        </div>
       </div>
-      
-      <div className="space-y-3">
-        {workflows.map((workflow) => (
-          <Card key={workflow.id}>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <h4 className="font-medium">{workflow.name}</h4>
-                    <Badge variant={getStatusVariant(workflow.status) as any}>
-                      {getStatusIcon(workflow.status)}
-                      <span className="ml-1 capitalize">{workflow.status}</span>
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Started: {formatDate(workflow.startTime)}
-                  </p>
-                  {workflow.progress !== undefined && (
-                    <div className="space-y-1">
-                      <div className="text-xs text-muted-foreground">
-                        Progress: {Math.round(workflow.progress * 100)}%
+
+      <div className="space-y-4">
+        {statusOrder.map(status => {
+          const statusWorkflows = groupedWorkflows[status]
+          if (!statusWorkflows || statusWorkflows.length === 0) return null
+
+          return (
+            <div key={status} className="space-y-2">
+              <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                {status} ({statusWorkflows.length})
+              </h4>
+              <div className="space-y-2">
+                {statusWorkflows.map((workflow) => (
+                  <Card key={workflow.id}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-1 flex-1">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-medium">{workflow.name}</h4>
+                            <Badge variant={getStatusVariant(workflow.status) as any}>
+                              {getStatusIcon(workflow.status)}
+                              <span className="ml-1 capitalize">{workflow.status}</span>
+                            </Badge>
+                          </div>
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                            <span>ID: {workflow.id}</span>
+                            {workflow.startTime && (
+                              <span>Started: {formatDate(workflow.startTime)}</span>
+                            )}
+                            {workflow.endTime && (
+                              <span>Ended: {formatDate(workflow.endTime)}</span>
+                            )}
+                          </div>
+                          {workflow.error && (
+                            <p className="text-sm text-destructive">
+                              Error: {workflow.error}
+                            </p>
+                          )}
+                          {workflow.progress !== undefined && (
+                            <div className="space-y-1">
+                              <div className="text-xs text-muted-foreground">
+                                Progress: {Math.round(workflow.progress * 100)}%
+                              </div>
+                              <div className="w-full bg-secondary rounded-full h-1.5">
+                                <div
+                                  className="bg-primary h-1.5 rounded-full transition-all duration-300"
+                                  style={{ width: `${workflow.progress * 100}%` }}
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => alert(`Viewing details for workflow: ${workflow.name} (${workflow.id})`)}
+                          >
+                            Details
+                          </Button>
+                        </div>
                       </div>
-                      <div className="w-full bg-secondary rounded-full h-1.5">
-                        <div 
-                          className="bg-primary h-1.5 rounded-full transition-all duration-300"
-                          style={{ width: `${workflow.progress * 100}%` }}
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => alert(`Viewing details for workflow: ${workflow.name}`)}
-                  >
-                    Details
-                  </Button>
-                </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
-            </CardContent>
-          </Card>
-        ))}
+            </div>
+          )
+        })}
       </div>
     </div>
   )

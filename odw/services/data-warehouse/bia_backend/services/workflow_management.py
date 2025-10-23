@@ -183,7 +183,7 @@ async def get_workflows(temporal_client: TemporalClient, params: WorkflowListQue
         elif isinstance(workflow_type_attr, str):
             workflow_class = workflow_type_attr
         else:
-            workflow_class = None
+            workflow_class = str(workflow_type_attr) if workflow_type_attr else None
 
         workflow_type_value = TemporalClient.resolve_workflow_type(workflow_class)
         if workflow_type_value is None:
@@ -196,11 +196,12 @@ async def get_workflows(temporal_client: TemporalClient, params: WorkflowListQue
 
         status_attr = getattr(description, "status", None)
         if hasattr(status_attr, "name"):
-            status_name = status_attr.name
+            # For Temporal enum status, the name gives us the correct mapping
+            status_name = f"WORKFLOW_EXECUTION_STATUS_{status_attr.name}"
         elif isinstance(status_attr, str):
             status_name = status_attr
         else:
-            status_name = None
+            status_name = str(status_attr) if status_attr else None
 
         status_enum = workflow_status_mapping.get(status_name, WorkflowStatus.RUNNING)
 
@@ -218,13 +219,14 @@ async def get_workflows(temporal_client: TemporalClient, params: WorkflowListQue
                 datetime.utcnow() - description.execution_time.replace(tzinfo=None)
             ).total_seconds()
 
-        execution = getattr(description, "workflow_execution", None) or getattr(description, "execution", None)
-        if not execution:
+        # Get workflow ID directly from description
+        workflow_id = getattr(description, "id", None)
+        if not workflow_id:
             continue
 
         workflow_records.append(
             WorkflowExecution(
-                workflow_id=execution.workflow_id,
+                workflow_id=workflow_id,
                 workflow_type=workflow_type_enum,
                 status=status_enum,
                 start_time=start_time,
