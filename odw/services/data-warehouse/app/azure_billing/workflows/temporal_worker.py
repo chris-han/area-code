@@ -18,11 +18,14 @@ from .temporal_workflows import (
     FOCUSTransformationWorkflow,
     DataValidationWorkflow,
     AzureBlobIngestWorkflow,
+    AzureBillingTestWorkflow,
     extract_azure_billing_data_activity,
     transform_to_focus_activity,
     validate_focus_compliance_activity,
     store_focus_data_activity,
     run_azure_blob_ingest_activity,
+    generate_mock_azure_billing_data_activity,
+    write_mock_azure_billing_data_activity,
 )
 
 logger = logging.getLogger(__name__)
@@ -54,6 +57,7 @@ class TemporalWorkerManager:
                     FOCUSTransformationWorkflow,
                     DataValidationWorkflow,
                     AzureBlobIngestWorkflow,
+                    AzureBillingTestWorkflow,
                 ],
                 activities=[
                     extract_azure_billing_data_activity,
@@ -61,6 +65,8 @@ class TemporalWorkerManager:
                     validate_focus_compliance_activity,
                     store_focus_data_activity,
                     run_azure_blob_ingest_activity,
+                    generate_mock_azure_billing_data_activity,
+                    write_mock_azure_billing_data_activity,
                 ]
             )
             
@@ -88,9 +94,19 @@ class TemporalWorkerManager:
         if self.worker:
             logger.info("Stopping Temporal worker...")
             await self.worker.shutdown()
-            
+
         if self.client:
-            await self.client.close()
+            close_method = getattr(self.client, "close", None)
+            disconnect_method = getattr(self.client, "disconnect", None)
+
+            if close_method:
+                result = close_method()
+                if asyncio.iscoroutine(result):
+                    await result
+            elif disconnect_method:
+                result = disconnect_method()
+                if asyncio.iscoroutine(result):
+                    await result
 
 
 async def run_worker(config: Dict[str, Any] = None):

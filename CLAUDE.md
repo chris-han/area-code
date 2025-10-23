@@ -39,3 +39,55 @@ curl -X POST "http://localhost:4300/api/v1/workflows/list" -H "Content-Type: app
 # Test worker connection (from data-warehouse directory)
 python run_worker_with_correct_host.py
 ```
+
+## How to Start Temporal Workflows Correctly
+
+### 1. Workflow System Architecture
+- **Workflows**: Defined in `app/azure_billing/workflows/temporal_workflows.py`
+- **Worker**: `app/azure_billing/workflows/temporal_worker.py`
+- **API**: BIA backend at `localhost:4300/api/v1/workflows/`
+- **Temporal Server**: Docker container at `172.18.0.3:7233`
+
+### 2. Available Workflow Types
+- `test_workflow` → `AzureBillingTestWorkflow` (generates mock data)
+- `azure_billing_extraction` → `AzureBillingWorkflow`
+- `focus_transformation` → `FOCUSTransformationWorkflow`
+- `data_validation` → `DataValidationWorkflow`
+- `azure_blob_ingest` → `AzureBlobIngestWorkflow`
+
+### 3. Starting a Workflow
+```bash
+# 1. Start the worker first
+cd odw/services/data-warehouse
+python run_worker_with_correct_host.py
+
+# 2. Trigger workflow via API
+curl -X POST "http://localhost:4300/api/v1/workflows/trigger" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "workflow_type": "test_workflow",
+    "parameters": {
+      "record_count": 10,
+      "currency": "USD",
+      "lookback_days": 3
+    }
+  }'
+
+# 3. Check workflow status
+curl -X POST "http://localhost:4300/api/v1/workflows/status" \
+  -H "Content-Type: application/json" \
+  -d '{"workflow_id": "WORKFLOW_ID_FROM_RESPONSE"}'
+```
+
+### 4. Critical Requirements
+✅ **Worker must be running** before triggering workflows
+✅ **Temporal server** must be accessible at `172.18.0.3:7233`
+✅ **BIA backend** must be running on port 4300
+✅ **Datetime handling**: Activities must handle both datetime objects and ISO strings
+✅ **Connection**: Use `run_worker_with_correct_host.py` for proper Docker network connection
+
+### 5. Common Issues & Solutions
+- **Worker connection**: Use container IP (`172.18.0.3:7233`) not localhost
+- **Datetime errors**: Ensure activities handle string/datetime conversion properly
+- **Import errors**: Avoid FastAPI imports in workflow sandbox (keep in activities only)
+- **Worker registration**: All workflows/activities must be registered in `temporal_worker.py`

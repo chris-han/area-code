@@ -6,6 +6,7 @@ const workflowTypeEnum = z.enum([
   'data_validation',
   'azure_blob_ingest',
   'scheduled_report',
+  'test_workflow',
 ])
 
 export const WORKFLOW_TYPE_OPTIONS: { value: WorkflowType; label: string }[] = [
@@ -14,6 +15,7 @@ export const WORKFLOW_TYPE_OPTIONS: { value: WorkflowType; label: string }[] = [
   { value: 'data_validation', label: 'Data Quality Check' },
   { value: 'azure_blob_ingest', label: 'Azure Blob Ingest' },
   { value: 'scheduled_report', label: 'Scheduled Report' },
+  { value: 'test_workflow', label: 'Test Workflow (Mock Ingest)' },
 ]
 
 export type WorkflowType = z.infer<typeof workflowTypeEnum>

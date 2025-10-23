@@ -6,10 +6,14 @@ transformation, and processing with error handling and monitoring.
 """
 
 import asyncio
-from datetime import datetime, timedelta
-from typing import Dict, Any, List, Optional
 import logging
+import os
+import random
 from dataclasses import dataclass
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+from uuid import uuid4
 
 from temporalio import workflow, activity
 from temporalio.common import RetryPolicy
@@ -26,6 +30,12 @@ from temporalio.exceptions import ApplicationError
 #     execute_azure_blob_ingest,
 # )
 
+try:  # Python 3.11+
+    import tomllib  # type: ignore[attr-defined]
+except ModuleNotFoundError:  # pragma: no cover - fallback for older versions
+    import tomli as tomllib  # type: ignore[no-redef]
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -40,6 +50,148 @@ class WorkflowResult:
     error_message: Optional[str] = None
     metadata: Optional[Dict[str, Any]] = None
 
+
+DEFAULT_TEST_WORKFLOW_TABLE = "moose_azure_billing"
+
+
+def _load_clickhouse_config() -> Dict[str, Any]:
+    """Load ClickHouse connection settings from env or moose.config.toml."""
+
+    host = os.environ.get("CLICKHOUSE_HOST")
+    port = os.environ.get("CLICKHOUSE_PORT")
+    username = os.environ.get("CLICKHOUSE_USER")
+    password = os.environ.get("CLICKHOUSE_PASSWORD")
+    database = os.environ.get("CLICKHOUSE_DB")
+    secure_env = os.environ.get("CLICKHOUSE_SECURE")
+
+    if not all([host, port, username, password, database]):
+        config_path = Path(__file__).resolve().parents[3] / "moose.config.toml"
+        if config_path.exists():
+            with config_path.open("rb") as fh:
+                config_data = tomllib.load(fh)
+            clickhouse_cfg = config_data.get("clickhouse_config", {})
+            host = host or clickhouse_cfg.get("host")
+            port = port or clickhouse_cfg.get("host_port")
+            username = username or clickhouse_cfg.get("user")
+            password = password or clickhouse_cfg.get("password")
+            database = database or clickhouse_cfg.get("db_name")
+            if secure_env is None:
+                secure_env = str(clickhouse_cfg.get("use_ssl", True))
+
+    host = host or "ck.mightytech.cn"
+    port = int(port or 8443)
+    username = username or "finops"
+    password = password or "cU2f947&9T{6d"
+    database = database or "finops-odw"
+    secure = True
+    if secure_env is not None:
+        secure = str(secure_env).lower() not in {"0", "false", "no"}
+
+    return {
+        "host": host,
+        "port": port,
+        "username": username,
+        "password": password,
+        "database": database,
+        "secure": secure,
+    }
+
+
+def _create_clickhouse_client(settings: Dict[str, Any]):
+    import clickhouse_connect
+
+    return clickhouse_connect.get_client(
+        host=settings["host"],
+        port=settings["port"],
+        username=settings["username"],
+        password=settings["password"],
+        database=settings["database"],
+        secure=settings["secure"],
+    )
+
+
+def _ensure_valid_table_name(table_name: str) -> str:
+    table = (table_name or DEFAULT_TEST_WORKFLOW_TABLE).strip()
+    if not table:
+        raise ValueError("Table name must not be empty")
+    allowed = set("abcdefghijklmnopqrstuvwxyz0123456789_")
+    if any(ch.lower() not in allowed for ch in table):
+        raise ValueError("Table name contains invalid characters")
+    return table
+
+
+def _write_mock_records_to_clickhouse(records: List[Dict[str, Any]], table_name: str) -> Dict[str, Any]:
+    settings = _load_clickhouse_config()
+    client = _create_clickhouse_client(settings)
+
+    ddl = f"""
+    CREATE TABLE IF NOT EXISTS {table_name} (
+        usage_date DateTime,
+        subscription_id String,
+        resource_group String,
+        service_name String,
+        meter_category String,
+        usage_quantity Float64,
+        unit_price Float64,
+        cost Float64,
+        currency String,
+        created_at DateTime
+    )
+    ENGINE = MergeTree
+    ORDER BY (subscription_id, usage_date)
+    """
+
+    try:
+        client.command(ddl)
+
+        if records:
+            rows = []
+            for record in records:
+                # Convert string timestamps back to datetime objects if needed
+                usage_date = record["usage_date"]
+                if isinstance(usage_date, str):
+                    usage_date = datetime.fromisoformat(usage_date.replace('Z', '+00:00')).replace(tzinfo=None)
+
+                created_at = record["created_at"]
+                if isinstance(created_at, str):
+                    created_at = datetime.fromisoformat(created_at.replace('Z', '+00:00')).replace(tzinfo=None)
+
+                rows.append((
+                    usage_date,
+                    record["subscription_id"],
+                    record["resource_group"],
+                    record["service_name"],
+                    record["meter_category"],
+                    record["usage_quantity"],
+                    record["unit_price"],
+                    record["cost"],
+                    record["currency"],
+                    created_at,
+                ))
+
+            client.insert(
+                table_name,
+                rows,
+                column_names=[
+                    "usage_date",
+                    "subscription_id",
+                    "resource_group",
+                    "service_name",
+                    "meter_category",
+                    "usage_quantity",
+                    "unit_price",
+                    "cost",
+                    "currency",
+                    "created_at",
+                ],
+            )
+
+        return {"success": True, "inserted_rows": len(records)}
+
+    finally:
+        close_method = getattr(client, "close", None)
+        if close_method:
+            close_method()
 
 @activity.defn
 async def extract_azure_billing_data_activity(
@@ -258,6 +410,121 @@ async def run_azure_blob_ingest_activity(params: Dict[str, Any]) -> Dict[str, An
             "success": False,
             "error_message": str(e),
             "rows_ingested": 0
+        }
+
+
+@activity.defn
+async def generate_mock_azure_billing_data_activity(
+    record_count: int = 20,
+    subscription_id: Optional[str] = None,
+    currency: str = "USD",
+    lookback_days: int = 7,
+) -> Dict[str, Any]:
+    """Generate mock Azure billing records for testing workflows."""
+
+    try:
+        rng = random.Random()
+        now = datetime.utcnow()
+        total_records = max(int(record_count or 0), 1)
+        subscription = subscription_id or f"sub-{uuid4().hex[:8]}"
+        services = [
+            "Azure Virtual Machines",
+            "Azure Storage",
+            "Azure SQL Database",
+            "Azure Kubernetes Service",
+            "Azure Functions",
+        ]
+        meter_categories = [
+            "Compute",
+            "Storage",
+            "Database",
+            "Networking",
+            "Serverless",
+        ]
+
+        records: List[Dict[str, Any]] = []
+        for _ in range(total_records):
+            usage_date = now - timedelta(hours=rng.randint(0, max(lookback_days, 1) * 24))
+            resource_group = f"rg-{rng.randint(100, 999)}"
+            service_name = rng.choice(services)
+            meter_category = rng.choice(meter_categories)
+            usage_quantity = round(rng.uniform(5.0, 250.0), 3)
+            unit_price = round(rng.uniform(0.05, 2.5), 4)
+            cost = round(usage_quantity * unit_price, 4)
+
+            records.append(
+                {
+                    "usage_date": usage_date.replace(microsecond=0),
+                    "subscription_id": subscription,
+                    "resource_group": resource_group,
+                    "service_name": service_name,
+                    "meter_category": meter_category,
+                    "usage_quantity": usage_quantity,
+                    "unit_price": unit_price,
+                    "cost": cost,
+                    "currency": currency,
+                    "created_at": now.replace(microsecond=0),
+                }
+            )
+
+        records.sort(key=lambda item: item["usage_date"], reverse=True)
+
+        return {
+            "success": True,
+            "records": records,
+            "record_count": len(records),
+            "subscription_id": subscription,
+            "currency": currency,
+            "generated_at": now.isoformat(),
+        }
+
+    except Exception as exc:  # pragma: no cover - defensive logging
+        logger.error(f"Failed to generate mock Azure billing data: {exc}")
+        return {"success": False, "error_message": str(exc), "records": []}
+
+
+@activity.defn
+async def write_mock_azure_billing_data_activity(
+    records: List[Dict[str, Any]],
+    table_name: str = DEFAULT_TEST_WORKFLOW_TABLE,
+) -> Dict[str, Any]:
+    """Persist mock Azure billing records into ClickHouse."""
+
+    try:
+        resolved_table = _ensure_valid_table_name(table_name)
+        result = await asyncio.to_thread(_write_mock_records_to_clickhouse, records, resolved_table)
+
+        response: Dict[str, Any] = {
+            **result,
+            "table": resolved_table,
+        }
+
+        if records:
+            sample = dict(records[0])
+            # Convert datetime objects to ISO strings for JSON response
+            usage_date = sample["usage_date"]
+            if isinstance(usage_date, datetime):
+                sample["usage_date"] = usage_date.isoformat()
+            elif isinstance(usage_date, str):
+                sample["usage_date"] = usage_date
+
+            created_at = sample["created_at"]
+            if isinstance(created_at, datetime):
+                sample["created_at"] = created_at.isoformat()
+            elif isinstance(created_at, str):
+                sample["created_at"] = created_at
+
+            response["sample_record"] = sample
+
+        return response
+
+    except Exception as exc:
+        logger.error(f"Failed to write mock Azure billing data: {exc}")
+        return {
+            "success": False,
+            "error_message": str(exc),
+            "inserted_rows": 0,
+            "table": table_name or DEFAULT_TEST_WORKFLOW_TABLE,
         }
 
 
@@ -613,4 +880,87 @@ class AzureBlobIngestWorkflow:
                 success=False,
                 execution_time_seconds=execution_time,
                 error_message=str(e),
+            )
+
+
+@workflow.defn
+class AzureBillingTestWorkflow:
+    """Simple workflow that generates mock Azure billing data and stores it in ClickHouse."""
+
+    @workflow.run
+    async def run(self, parameters: Optional[Dict[str, Any]] = None) -> WorkflowResult:
+        params = parameters or {}
+        workflow_start_time = workflow.now()
+
+        record_count = int(params.get("record_count", 20))
+        subscription_id = params.get("subscription_id")
+        currency = params.get("currency", "USD")
+        lookback_days = int(params.get("lookback_days", 7))
+        table_name = params.get("table_name", DEFAULT_TEST_WORKFLOW_TABLE)
+
+        try:
+            mock_data = await workflow.execute_activity(
+                generate_mock_azure_billing_data_activity,
+                args=[record_count, subscription_id, currency, lookback_days],
+                start_to_close_timeout=timedelta(minutes=1),
+                retry_policy=RetryPolicy(
+                    initial_interval=timedelta(seconds=2),
+                    maximum_interval=timedelta(seconds=30),
+                    maximum_attempts=3,
+                    backoff_coefficient=2.0,
+                ),
+            )
+
+            if not mock_data.get("success"):
+                raise ApplicationError(mock_data.get("error_message", "Mock data generation failed"))
+
+            write_result = await workflow.execute_activity(
+                write_mock_azure_billing_data_activity,
+                args=[mock_data.get("records", []), table_name],
+                start_to_close_timeout=timedelta(minutes=2),
+                retry_policy=RetryPolicy(
+                    initial_interval=timedelta(seconds=2),
+                    maximum_interval=timedelta(seconds=30),
+                    maximum_attempts=3,
+                    backoff_coefficient=2.0,
+                ),
+            )
+
+            if not write_result.get("success"):
+                raise ApplicationError(write_result.get("error_message", "Mock data persistence failed"))
+
+            execution_time = (workflow.now() - workflow_start_time).total_seconds()
+
+            inserted_rows = int(write_result.get("inserted_rows", 0))
+            metadata: Dict[str, Any] = {
+                "table": write_result.get("table", table_name),
+                "record_count": mock_data.get("record_count", inserted_rows),
+                "subscription_id": mock_data.get("subscription_id"),
+                "currency": mock_data.get("currency"),
+                "generated_at": mock_data.get("generated_at"),
+            }
+
+            if "sample_record" in write_result:
+                metadata["sample_record"] = write_result["sample_record"]
+
+            return WorkflowResult(
+                success=True,
+                records_processed=inserted_rows,
+                records_validated=inserted_rows,
+                records_failed=0,
+                execution_time_seconds=execution_time,
+                metadata=metadata,
+            )
+
+        except Exception as exc:
+            execution_time = (workflow.now() - workflow_start_time).total_seconds()
+            logger.error(f"Azure billing test workflow failed: {exc}")
+
+            return WorkflowResult(
+                success=False,
+                records_processed=0,
+                records_validated=0,
+                records_failed=record_count,
+                execution_time_seconds=execution_time,
+                error_message=str(exc),
             )

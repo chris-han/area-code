@@ -36,6 +36,7 @@ class TemporalClient:
         "data_validation": "DataValidationWorkflow",
         "scheduled_report": "ScheduledReportWorkflow",
         "azure_blob_ingest": "AzureBlobIngestWorkflow",
+        "test_workflow": "AzureBillingTestWorkflow",
     }
 
     STATUS_MAP = {
