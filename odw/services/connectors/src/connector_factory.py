@@ -4,6 +4,10 @@ from .blob_connector import BlobConnector, BlobConnectorConfig
 from .logs_connector import LogsConnector, LogsConnectorConfig
 from .events_connector import EventsConnector, EventsConnectorConfig
 from .s3_connector import S3Connector, S3ConnectorConfig
+from .azure_blob_connector import (
+    AzureBlobConnector,
+    AzureBlobConnectorConfig,
+)
 
 T = TypeVar('T')
 
@@ -12,15 +16,30 @@ class ConnectorType(Enum):
     Logs = "Logs" 
     Events = "Events"
     S3 = "S3"
+    AzureBlob = "AzureBlob"
 
 # Add unions for future connector types
-Connector = Union[BlobConnector[T], LogsConnector[T], EventsConnector[T], S3Connector[T]]
+Connector = Union[
+    BlobConnector[T],
+    LogsConnector[T],
+    EventsConnector[T],
+    S3Connector[T],
+    AzureBlobConnector,
+]
 
 class ConnectorFactory(Generic[T]):
     @staticmethod
     def create(
         connector_type: ConnectorType,
-        config: Optional[Union[BlobConnectorConfig, LogsConnectorConfig, EventsConnectorConfig, S3ConnectorConfig]] = None
+        config: Optional[
+            Union[
+                BlobConnectorConfig,
+                LogsConnectorConfig,
+                EventsConnectorConfig,
+                S3ConnectorConfig,
+                AzureBlobConnectorConfig,
+            ]
+        ] = None
     ):
         if connector_type == ConnectorType.Blob:
             return BlobConnector[T](config or BlobConnectorConfig())
@@ -30,5 +49,10 @@ class ConnectorFactory(Generic[T]):
             return EventsConnector[T](config or EventsConnectorConfig())
         elif connector_type == ConnectorType.S3:
             return S3Connector[T](config or S3ConnectorConfig("s3://bucket/*"))
+        elif connector_type == ConnectorType.AzureBlob:
+            cfg = config or AzureBlobConnectorConfig()
+            if not isinstance(cfg, AzureBlobConnectorConfig):
+                raise TypeError("AzureBlob connector requires AzureBlobConnectorConfig")
+            return AzureBlobConnector(cfg)
         else:
             raise ValueError(f"Unknown connector type: {connector_type}")

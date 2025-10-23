@@ -84,7 +84,8 @@ class TemporalClient:
                 "azure_billing_extraction": "AzureBillingWorkflow",
                 "focus_transformation": "FOCUSTransformationWorkflow",
                 "data_validation": "DataValidationWorkflow",
-                "scheduled_report": "ScheduledReportWorkflow"
+                "scheduled_report": "ScheduledReportWorkflow",
+                "azure_blob_ingest": "AzureBlobIngestWorkflow",
             }
             
             workflow_class = workflow_classes.get(workflow_type)

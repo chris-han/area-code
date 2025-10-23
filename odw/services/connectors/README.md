@@ -11,9 +11,9 @@ The connectors package implements a factory pattern to create data extractors th
 ### Core Components
 
 - **`ConnectorFactory`**: Factory class for creating connector instances
-- **`ConnectorType`**: Enum defining available connector types
+- **`ConnectorType`**: Enum defining available connector types (Blob, Logs, Events, S3, AzureBlob)
 - **Connector Classes**: Individual implementations for each data source type
-- **Configuration Classes**: Customizable settings for each connector
+- **Configuration Classes**: Customizable settings for each connector (e.g. `AzureBlobConnectorConfig`)
 
 ### Example from data-warehouse
 
@@ -28,4 +28,19 @@ connector = ConnectorFactory[BlobSource].create(
 )
 
 data = connector.extract()
+```
+
+### Azure Blob Storage Connector
+
+```python
+from connectors.azure_blob_connector import AzureBlobConnector, AzureBlobConnectorConfig
+
+config = AzureBlobConnectorConfig(
+    local_data_dir="odw/services/data-warehouse/app/blobs",
+    containers=["focus-data"],
+    path_prefix=None,
+)
+
+connector = AzureBlobConnector(config)
+rows = connector.extract()  # Flattened parquet rows with JSON-serialisable payloads
 ```

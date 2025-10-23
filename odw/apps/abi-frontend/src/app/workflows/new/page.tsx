@@ -8,7 +8,8 @@ import {
   Clock,
   Database,
   Settings,
-  Zap
+  Zap,
+  Cloud
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -22,6 +23,15 @@ export default function NewWorkflowPage() {
       estimatedTime: '15-30 min',
       complexity: 'Medium',
       tags: ['Azure', 'Billing', 'Extraction']
+    },
+    {
+      id: 'azure_blob_ingest',
+      name: 'Azure Blob Parquet Ingest',
+      description: 'Ingest FOCUS parquet files from Azure Blob Storage into staging tables.',
+      icon: <Cloud className="h-6 w-6" />,
+      estimatedTime: '5-15 min',
+      complexity: 'Medium',
+      tags: ['Azure', 'Blob', 'Ingestion']
     },
     {
       id: 'focus_transformation',

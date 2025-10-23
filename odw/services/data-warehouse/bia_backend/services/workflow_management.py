@@ -32,6 +32,7 @@ class WorkflowType(str, Enum):
     FOCUS_TRANSFORMATION = "focus_transformation"
     DATA_VALIDATION = "data_validation"
     SCHEDULED_REPORT = "scheduled_report"
+    AZURE_BLOB_INGEST = "azure_blob_ingest"
 
 
 class WorkflowExecution(BaseModel):
@@ -267,7 +268,8 @@ async def trigger_workflow(temporal_client: TemporalClient, params: WorkflowTrig
             WorkflowType.AZURE_BILLING_EXTRACTION: "15-30 minutes",
             WorkflowType.FOCUS_TRANSFORMATION: "5-15 minutes",
             WorkflowType.DATA_VALIDATION: "2-10 minutes",
-            WorkflowType.SCHEDULED_REPORT: "1-5 minutes"
+            WorkflowType.SCHEDULED_REPORT: "1-5 minutes",
+            WorkflowType.AZURE_BLOB_INGEST: "5-15 minutes",
         }
         
         # Start workflow via Temporal
@@ -511,4 +513,3 @@ def get_workflow_metrics(client, params: WorkflowMetricsQuery) -> WorkflowMetric
         metrics=filtered_metrics,
         summary=summary
     )
-

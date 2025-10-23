@@ -4,6 +4,7 @@ const workflowTypeEnum = z.enum([
   'azure_billing_extraction',
   'focus_transformation',
   'data_validation',
+  'azure_blob_ingest',
   'scheduled_report',
 ])
 
@@ -11,6 +12,7 @@ export const WORKFLOW_TYPE_OPTIONS: { value: WorkflowType; label: string }[] = [
   { value: 'azure_billing_extraction', label: 'Azure Billing Extraction' },
   { value: 'focus_transformation', label: 'FOCUS Transformation' },
   { value: 'data_validation', label: 'Data Quality Check' },
+  { value: 'azure_blob_ingest', label: 'Azure Blob Ingest' },
   { value: 'scheduled_report', label: 'Scheduled Report' },
 ]
 

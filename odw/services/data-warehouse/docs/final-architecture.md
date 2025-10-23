@@ -63,6 +63,13 @@ bia_backend/
 | `scripts/run-abi-standalone.sh`           | Manual launch of the BIA FastAPI app        | `bia_backend.main:app`
 | `scripts/abi-dev.sh`                      | Concurrent Moose stack + BIA backend dev     | `app/main.py` + `bia_backend/main.py`
 
+## Azure Blob Staging Workflow
+
+- New connector + workflow pair (`connectors.azure_blob_connector`, `app/azure_billing/workflows/azure_blob_ingest_workflow.py`) reads parquet blobs described by plugin metadata.
+- Rows land in the Moose-managed ingest pipeline `AzureBlobStaging`, providing a ClickHouse staging table for follow-on transformations.
+- The workflow honours the Azure Blob Storage connector metadata, validating required fields before iterating containers and pushing records through Moose ingest.
+- Temporal integration exposes the workflow through the ABI admin UI’s “Create New Workflow → Azure Blob Parquet Ingest” entry and the `/api/v1/workflows/trigger` endpoint (`workflow_type="azure_blob_ingest"`).
+
 ## Verification Tips
 
 1. **Moose APIs** – Execute `moose dev` and confirm `/consumption/*` endpoints continue to resolve (via Moose CLI or curl).

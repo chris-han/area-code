@@ -93,6 +93,15 @@ class UnstructuredData(BaseModel):
     transform_timestamp: str
 
 
+class AzureBlobStagingRecord(BaseModel):
+    id: Key[str]
+    container_name: str
+    blob_path: str
+    record_index: int
+    payload_json: str
+    ingested_at: str
+
+
 # Source ingest pipelines
 blobSourceModel = IngestPipeline[BlobSource]("BlobSource", IngestPipelineConfig(
     ingest=True,
@@ -168,3 +177,13 @@ medicalModel = IngestPipeline[Medical]("Medical", IngestPipelineConfig(
     table=True,
     dead_letter_queue=True
 ))
+
+azureBlobStagingModel = IngestPipeline[AzureBlobStagingRecord](
+    "AzureBlobStaging",
+    IngestPipelineConfig(
+        ingest=True,
+        stream=True,
+        table=True,
+        dead_letter_queue=True
+    )
+)

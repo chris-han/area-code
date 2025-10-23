@@ -19,6 +19,10 @@ from app.azure_billing.transformations.transformation_engine import Transformati
 from app.azure_billing.validation.focus_validator import FOCUSValidator
 from app.azure_billing.models.azure_ea_models import AzureEABillingDetail
 from app.azure_billing.models.focus_models import FOCUSBillingRecord
+from app.azure_billing.workflows.azure_blob_ingest_workflow import (
+    AzureBlobIngestParams,
+    execute_azure_blob_ingest,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -82,6 +86,23 @@ async def store_focus_data_activity(
             "error_message": str(e),
             "records_stored": 0
         }
+
+
+@activity.defn
+async def run_azure_blob_ingest_activity(params: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Activity wrapper that executes the Azure Blob ingestion workflow logic.
+    """
+
+    try:
+        ingest_params = AzureBlobIngestParams(**(params or {}))
+    except TypeError:
+        # Filter out unexpected keys before instantiating the model
+        allowed_keys = getattr(AzureBlobIngestParams, "model_fields", {}).keys()  # type: ignore[attr-defined]
+        filtered = {k: v for k, v in (params or {}).items() if k in allowed_keys}
+        ingest_params = AzureBlobIngestParams(**filtered)
+
+    return execute_azure_blob_ingest(ingest_params)
 
 
 # Workflow Definitions
@@ -387,4 +408,53 @@ class DataValidationWorkflow:
                 success=False,
                 execution_time_seconds=execution_time,
                 error_message=str(e)
+            )
+
+
+@workflow.defn
+class AzureBlobIngestWorkflow:
+    """
+    Orchestrates the Azure Blob ingestion pipeline via Temporal.
+
+    The workflow delegates ingestion to an activity that reuses the Moose task
+    implementation, ensuring Temporal can track execution status.
+    """
+
+    @workflow.run
+    async def run(self, parameters: Dict[str, Any]) -> WorkflowResult:
+        workflow_start_time = datetime.utcnow()
+        params_payload = parameters or {}
+
+        try:
+            ingest_result = await workflow.execute_activity(
+                run_azure_blob_ingest_activity,
+                args=[params_payload],
+                start_to_close_timeout=timedelta(minutes=15),
+                retry_policy=RetryPolicy(
+                    initial_interval=timedelta(seconds=5),
+                    maximum_interval=timedelta(minutes=2),
+                    maximum_attempts=3,
+                    backoff_coefficient=2.0,
+                ),
+            )
+
+            execution_time = (datetime.utcnow() - workflow_start_time).total_seconds()
+
+            return WorkflowResult(
+                success=True,
+                records_processed=ingest_result.get("rows_ingested", 0),
+                records_validated=ingest_result.get("rows_ingested", 0),
+                records_failed=0,
+                execution_time_seconds=execution_time,
+                metadata=ingest_result,
+            )
+
+        except Exception as e:
+            execution_time = (datetime.utcnow() - workflow_start_time).total_seconds()
+            logger.error(f"Azure Blob ingest workflow failed: {e}")
+
+            return WorkflowResult(
+                success=False,
+                execution_time_seconds=execution_time,
+                error_message=str(e),
             )

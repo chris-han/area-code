@@ -9,6 +9,7 @@ toml>=0.10.0
 faker
 anthropic>=0.57.1
 python-dotenv>=1.0.0
+pyarrow>=16.1.0
 
 # ABI-specific dependencies
 fastapi>=0.104.0

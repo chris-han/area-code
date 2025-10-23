@@ -45,6 +45,7 @@ import app.apis.extract_blob
 import app.apis.extract_logs
 import app.apis.extract_events
 import app.apis.extract_unstructured_data
+import app.azure_billing.workflows.azure_blob_ingest_workflow  # noqa: F401
 
 # Bare FastAPI application for Moose-managed endpoints. Moose CLI mounts
 # ingestion and consumption routes automatically; no bespoke routers are added here.

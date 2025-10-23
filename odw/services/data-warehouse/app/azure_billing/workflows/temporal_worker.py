@@ -17,10 +17,12 @@ from .temporal_workflows import (
     AzureBillingWorkflow,
     FOCUSTransformationWorkflow,
     DataValidationWorkflow,
+    AzureBlobIngestWorkflow,
     extract_azure_billing_data_activity,
     transform_to_focus_activity,
     validate_focus_compliance_activity,
-    store_focus_data_activity
+    store_focus_data_activity,
+    run_azure_blob_ingest_activity,
 )
 
 logger = logging.getLogger(__name__)
@@ -50,13 +52,15 @@ class TemporalWorkerManager:
                 workflows=[
                     AzureBillingWorkflow,
                     FOCUSTransformationWorkflow,
-                    DataValidationWorkflow
+                    DataValidationWorkflow,
+                    AzureBlobIngestWorkflow,
                 ],
                 activities=[
                     extract_azure_billing_data_activity,
                     transform_to_focus_activity,
                     validate_focus_compliance_activity,
-                    store_focus_data_activity
+                    store_focus_data_activity,
+                    run_azure_blob_ingest_activity,
                 ]
             )
             

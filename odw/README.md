@@ -146,6 +146,7 @@ The operational data warehouse uses a layered configuration model so that secret
 - `services/data-warehouse/env.example`: Safe template that documents required variables. Update placeholders when the default setup changes.
 - `services/data-warehouse/moose.config.toml`: Moose service configuration checked into git. It references `${CLICKHOUSE_*}` placeholders so no credentials are committed.
 - `services/data-warehouse/app/scripts/dev.sh`: Loads `.env`, regenerates `.moose/docker-compose.override.yml`, and starts the Moose service. The generated override injects credentials into Docker and rewrites the ClickHouse `default-user.xml` on each run.
+- `services/data-warehouse/app/azure_billing/workflows/azure_blob_ingest_workflow.py`: Moose workflow that reads Azure Blob parquet files via the new connector and stages them in ClickHouse.
 
 ```mermaid
 flowchart LR

@@ -36,3 +36,4 @@ services/*/dev-*.log
 services/*/.moose/
 odw/scripts/memo*
 odw/apps/abi-frontend/.next/
+*.parquet
