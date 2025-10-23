@@ -6,21 +6,64 @@ workflow orchestration and monitoring capabilities.
 """
 
 import logging
-from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, HTTPException, status
 
-from bia_backend.app import get_temporal_client, get_clickhouse_client
 from bia_backend.services.temporal_client import TemporalClient
 from bia_backend.services.workflow_management import (
     WorkflowListQuery, WorkflowListResponse, get_workflows,
     WorkflowTriggerRequest, WorkflowTriggerResponse, trigger_workflow,
     WorkflowControlRequest, WorkflowControlResponse, control_workflow,
     WorkflowStatusQuery, WorkflowStatusResponse, get_workflow_status,
-    WorkflowMetricsQuery, WorkflowMetricsResponse, get_workflow_metrics
+    WorkflowMetricsQuery, WorkflowMetricsResponse, get_workflow_metrics,
 )
 
 logger = logging.getLogger(__name__)
+
+
+def get_temporal_host():
+    """Get Temporal host from moose.config.toml"""
+    import os
+    from pathlib import Path
+
+    try:
+        import tomli
+    except ImportError:
+        import tomllib as tomli
+
+    # First check environment variable
+    temporal_host = os.environ.get('TEMPORAL_HOST')
+    if temporal_host:
+        return temporal_host
+
+    # Try to read from moose.config.toml
+    try:
+        config_path = Path(__file__).parent.parent.parent / "moose.config.toml"
+        with open(config_path, "rb") as f:
+            config = tomli.load(f)
+
+        temporal_config = config.get("temporal_config", {})
+        host = temporal_config.get("temporal_host", "localhost")
+        port = temporal_config.get("temporal_port", 7233)
+
+        return f"{host}:{port}"
+    except Exception as e:
+        # Re-raise exception if config file cannot be read
+        raise RuntimeError(f"Failed to read Temporal host configuration from moose.config.toml: {str(e)}") from e
+
+
+def create_temporal_client() -> TemporalClient:
+    """Construct a Temporal client from configuration."""
+
+    temporal_host = get_temporal_host()
+    return TemporalClient(
+        {
+            "host": temporal_host,
+            "namespace": "default",
+            "task_queue": "abi-workflows",
+        }
+    )
+
 
 workflow_management_router = APIRouter(
     prefix="/api/v1/workflows",
@@ -32,8 +75,6 @@ workflow_management_router = APIRouter(
 @workflow_management_router.post("/list", response_model=WorkflowListResponse)
 async def list_workflows_endpoint(
     query: WorkflowListQuery,
-    temporal_client: Any = Depends(get_temporal_client),
-    clickhouse_client: Any = Depends(get_clickhouse_client)
 ):
     """
     Get list of workflow executions with filtering and pagination.
@@ -47,9 +88,13 @@ async def list_workflows_endpoint(
     - **offset**: Pagination offset
     """
     try:
-        result = get_workflows(clickhouse_client, query)
-        return result
-        
+        temporal_client_instance = create_temporal_client()
+        try:
+            result = await get_workflows(temporal_client_instance, query)
+            return result
+        finally:
+            await temporal_client_instance.disconnect()
+
     except Exception as e:
         logger.error(f"Error listing workflows: {e}")
         raise HTTPException(
@@ -61,8 +106,6 @@ async def list_workflows_endpoint(
 @workflow_management_router.post("/trigger", response_model=WorkflowTriggerResponse)
 async def trigger_workflow_endpoint(
     request: WorkflowTriggerRequest,
-    temporal_client: Any = Depends(get_temporal_client),
-    clickhouse_client: Any = Depends(get_clickhouse_client)
 ):
     """
     Trigger a new workflow execution.
@@ -73,17 +116,14 @@ async def trigger_workflow_endpoint(
     - **priority**: Workflow priority (0-10)
     """
     try:
-        # Create Temporal client instance
-        temporal_client_instance = TemporalClient({
-            'host': 'localhost:7233',
-            'namespace': 'default',
-            'task_queue': 'abi-workflows'
-        })
-        
-        result = await trigger_workflow(temporal_client_instance, request)
-        
-        return result
-        
+        temporal_client_instance = create_temporal_client()
+        try:
+            result = await trigger_workflow(temporal_client_instance, request)
+
+            return result
+        finally:
+            await temporal_client_instance.disconnect()
+
     except Exception as e:
         logger.error(f"Error triggering workflow: {e}")
         raise HTTPException(
@@ -95,8 +135,6 @@ async def trigger_workflow_endpoint(
 @workflow_management_router.post("/control", response_model=WorkflowControlResponse)
 async def control_workflow_endpoint(
     request: WorkflowControlRequest,
-    temporal_client: Any = Depends(get_temporal_client),
-    clickhouse_client: Any = Depends(get_clickhouse_client)
 ):
     """
     Control workflow execution (cancel, retry, terminate).
@@ -106,15 +144,19 @@ async def control_workflow_endpoint(
     - **reason**: Optional reason for the action
     """
     try:
-        result = control_workflow(clickhouse_client, request)
-        
-        # In a real implementation, this would also:
-        # 1. Execute control action via temporal_client
-        # 2. Update workflow status in database
-        # 3. Send notifications if configured
-        
-        return result
-        
+        temporal_client_instance = create_temporal_client()
+        try:
+            result = await control_workflow(temporal_client_instance, request)
+
+            # In a real implementation, this would also:
+            # 1. Execute control action via temporal_client
+            # 2. Update workflow status in database
+            # 3. Send notifications if configured
+
+            return result
+        finally:
+            await temporal_client_instance.disconnect()
+
     except Exception as e:
         logger.error(f"Error controlling workflow {request.workflow_id}: {e}")
         raise HTTPException(
@@ -126,8 +168,6 @@ async def control_workflow_endpoint(
 @workflow_management_router.post("/status", response_model=WorkflowStatusResponse)
 async def get_workflow_status_endpoint(
     query: WorkflowStatusQuery,
-    temporal_client: Any = Depends(get_temporal_client),
-    clickhouse_client: Any = Depends(get_clickhouse_client)
 ):
     """
     Get detailed workflow status and execution information.
@@ -136,15 +176,19 @@ async def get_workflow_status_endpoint(
     - **include_details**: Whether to include task details and logs
     """
     try:
-        result = get_workflow_status(clickhouse_client, query)
-        
-        # In a real implementation, this would also:
-        # 1. Query Temporal for real-time workflow status
-        # 2. Merge with stored metadata from database
-        # 3. Include execution history and task details
-        
-        return result
-        
+        temporal_client_instance = create_temporal_client()
+        try:
+            result = await get_workflow_status(temporal_client_instance, query)
+
+            # In a real implementation, this would also:
+            # 1. Query Temporal for real-time workflow status
+            # 2. Merge with stored metadata from database
+            # 3. Include execution history and task details
+
+            return result
+        finally:
+            await temporal_client_instance.disconnect()
+
     except Exception as e:
         logger.error(f"Error getting workflow status for {query.workflow_id}: {e}")
         raise HTTPException(
@@ -156,8 +200,6 @@ async def get_workflow_status_endpoint(
 @workflow_management_router.post("/metrics", response_model=WorkflowMetricsResponse)
 async def get_workflow_metrics_endpoint(
     query: WorkflowMetricsQuery,
-    temporal_client: Any = Depends(get_temporal_client),
-    clickhouse_client: Any = Depends(get_clickhouse_client)
 ):
     """
     Get workflow execution metrics and analytics.
@@ -168,9 +210,13 @@ async def get_workflow_metrics_endpoint(
     - **granularity**: Time granularity for metrics
     """
     try:
-        result = get_workflow_metrics(clickhouse_client, query)
-        return result
-        
+        temporal_client_instance = create_temporal_client()
+        try:
+            result = await get_workflow_metrics(temporal_client_instance, query)
+            return result
+        finally:
+            await temporal_client_instance.disconnect()
+
     except Exception as e:
         logger.error(f"Error getting workflow metrics: {e}")
         raise HTTPException(

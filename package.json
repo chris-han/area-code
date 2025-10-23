@@ -24,8 +24,8 @@
     "odw:dev": "turbo run odw:dev --ui=tui",
     "odw:dev:clean": "turbo run odw:dev:clean",
     "odw:dev:seed": "./odw/scripts/dev-seed.sh",
-    "abi:dev": "turbo run abi:dev --ui=tui",
-    "abi:dev:clean": "turbo run abi:dev:clean"
+    "abi:dev": "ABI_SKIP_PATTERN_KILL=1 ./odw/services/data-warehouse/scripts/free-ports.sh && turbo run abi:dev --ui=tui",
+    "abi:dev:clean": "./odw/services/data-warehouse/scripts/free-ports.sh"
   },
   "devDependencies": {
     "@turbo/gen": "^1.13.4",

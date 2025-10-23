@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { useWorkflows } from '@/hooks/useWorkflows'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -8,7 +9,12 @@ import { formatDate } from '@/lib/utils'
 import { AlertCircle, Clock, CheckCircle, XCircle, Pause, Play } from 'lucide-react'
 
 export function WorkflowStatus() {
+  const [mounted, setMounted] = useState(false)
   const { data: workflows, isLoading, error } = useWorkflows()
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -44,7 +50,7 @@ export function WorkflowStatus() {
     }
   }
 
-  if (isLoading) {
+  if (!mounted || isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
         <div className="text-muted-foreground">Loading workflows...</div>

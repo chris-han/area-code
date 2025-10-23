@@ -103,7 +103,7 @@ async def run_worker(config: Dict[str, Any] = None):
     
     if config is None:
         config = {
-            'temporal_host': 'localhost:7233',
+            'temporal_host': 'localhost:7233',  # This will be overridden by env var
             'task_queue': 'abi-workflows'
         }
     

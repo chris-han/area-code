@@ -8,6 +8,9 @@ export function useWorkflows() {
     queryFn: workflowsApi.getWorkflows,
     refetchInterval: 10000, // Refetch every 10 seconds for live updates
     retry: 2,
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
+    staleTime: 0, // Always fetch fresh data
   })
 }
 

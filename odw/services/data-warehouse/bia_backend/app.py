@@ -11,6 +11,7 @@ This module serves as the complete ABI application factory, including:
 - Optional Moose framework integration
 """
 
+import asyncio
 import logging
 import os
 from contextlib import asynccontextmanager
@@ -102,7 +103,7 @@ class ABIApplication:
                 self.plugin_manager.registry = self.plugin_registry
 
             # Initialize other clients (ClickHouse, Temporal, Redis)
-            await self._initialize_clients()
+            await self._initialize_clients(config)
 
             logger.info("ABI dependencies initialized successfully")
 
@@ -110,13 +111,15 @@ class ABIApplication:
             logger.error(f"Failed to initialize ABI dependencies: {e}")
             raise
     
-    async def _initialize_clients(self):
+    async def _initialize_clients(self, config: Optional[Dict[str, Any]] = None):
         """
         Initialize database and service clients.
 
         Initializes ClickHouse, Temporal, and Redis clients.
         Failures are logged but do not prevent other clients from initializing.
         """
+        config = config or self._load_moose_config()
+        temporal_settings: Dict[str, Any] = config.get("temporal_config", {}) if config else {}
         # ClickHouse client initialization
         try:
             import clickhouse_connect
@@ -135,7 +138,41 @@ class ABIApplication:
         # Temporal client initialization
         try:
             from temporalio.client import Client
-            self._temporal_client = await Client.connect("localhost:7233")
+            import subprocess
+
+            # Resolve Temporal host configuration (env > moose.config > docker fallback)
+            env_host = os.environ.get("TEMPORAL_HOST")
+            env_port = os.environ.get("TEMPORAL_PORT")
+
+            config_host = temporal_settings.get("temporal_host")
+            config_port = temporal_settings.get("temporal_port")
+
+            host = env_host or config_host
+            port = env_port or config_port or 7233
+
+            temporal_host = None
+            if host:
+                host_str = str(host)
+                if ":" in host_str:
+                    temporal_host = host_str
+                else:
+                    temporal_host = f"{host_str}:{port}"
+
+            if not temporal_host:
+                try:
+                    # Check if we're in Docker environment by checking if Temporal container exists
+                    subprocess.run(
+                        ['docker', 'inspect', 'data-warehouse-temporal-1'],
+                        capture_output=True, text=True, check=True
+                    )
+                    # Use container name (more stable than IP as requested by user)
+                    temporal_host = f"data-warehouse-temporal-1:{port}"
+                except Exception:
+                    # Fallback to localhost if not in Docker environment
+                    temporal_host = f"localhost:{port}"
+
+            logger.info(f"Connecting to Temporal at: {temporal_host}")
+            self._temporal_client = await Client.connect(temporal_host)
             logger.info("Temporal client initialized")
         except Exception as e:
             logger.error(f"Failed to initialize Temporal client: {e}")
@@ -157,7 +194,19 @@ class ABIApplication:
         """
         try:
             if self._temporal_client:
-                await self._temporal_client.close()
+                close_method = getattr(self._temporal_client, "close", None)
+                disconnect_method = getattr(self._temporal_client, "disconnect", None)
+
+                if close_method:
+                    result = close_method()
+                    if asyncio.iscoroutine(result):
+                        await result
+                elif disconnect_method:
+                    result = disconnect_method()
+                    if asyncio.iscoroutine(result):
+                        await result
+
+                self._temporal_client = None
 
             if self._redis_client:
                 await self._redis_client.close()

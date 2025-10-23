@@ -1,4 +1,7 @@
+"use client"
+
 import Link from 'next/link'
+import { useMemo } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -13,8 +16,47 @@ import {
   Plus,
   FileText
 } from 'lucide-react'
+import { useWorkflows } from '@/hooks/useWorkflows'
 
 export default function HomePage() {
+  const { data: workflows, isLoading, isError } = useWorkflows()
+
+  const { activeCount, runningCount, scheduledCount } = useMemo(() => {
+    const workflowList = workflows ?? []
+    const active = workflowList.filter((wf) => wf.status === 'running' || wf.status === 'scheduled')
+    const running = active.filter((wf) => wf.status === 'running').length
+    const scheduled = active.filter((wf) => wf.status === 'scheduled').length
+
+    return {
+      activeCount: active.length,
+      runningCount: running,
+      scheduledCount: scheduled,
+    }
+  }, [workflows])
+
+  const workflowSubtitle = useMemo(() => {
+    if (isLoading) {
+      return 'Loading workflow status...'
+    }
+    if (isError) {
+      return 'Unable to load workflow status'
+    }
+    if (activeCount === 0) {
+      return 'No active workflows'
+    }
+    const parts: string[] = []
+    if (runningCount > 0) {
+      parts.push(`${runningCount} running`)
+    }
+    if (scheduledCount > 0) {
+      parts.push(`${scheduledCount} scheduled`)
+    }
+    if (parts.length === 0) {
+      return 'No running or scheduled workflows'
+    }
+    return parts.join(', ')
+  }, [activeCount, isError, isLoading, runningCount, scheduledCount])
+
   return (
     <div className="space-y-8">
       <div className="space-y-2">
@@ -34,9 +76,11 @@ export default function HomePage() {
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">3</div>
+            <div className="text-2xl font-bold">
+              {isLoading ? '—' : activeCount}
+            </div>
             <p className="text-xs text-muted-foreground">
-              2 running, 1 scheduled
+              {workflowSubtitle}
             </p>
           </CardContent>
         </Card>

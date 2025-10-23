@@ -29,7 +29,24 @@ class WorkflowStatus(str, Enum):
 
 class TemporalClient:
     """Enhanced Temporal client for ABI workflow management"""
-    
+
+    WORKFLOW_CLASS_MAP = {
+        "azure_billing_extraction": "AzureBillingWorkflow",
+        "focus_transformation": "FOCUSTransformationWorkflow",
+        "data_validation": "DataValidationWorkflow",
+        "scheduled_report": "ScheduledReportWorkflow",
+        "azure_blob_ingest": "AzureBlobIngestWorkflow",
+    }
+
+    STATUS_MAP = {
+        WorkflowStatus.RUNNING: "WORKFLOW_EXECUTION_STATUS_RUNNING",
+        WorkflowStatus.COMPLETED: "WORKFLOW_EXECUTION_STATUS_COMPLETED",
+        WorkflowStatus.FAILED: "WORKFLOW_EXECUTION_STATUS_FAILED",
+        WorkflowStatus.CANCELLED: "WORKFLOW_EXECUTION_STATUS_CANCELED",
+        WorkflowStatus.TERMINATED: "WORKFLOW_EXECUTION_STATUS_TERMINATED",
+        WorkflowStatus.TIMED_OUT: "WORKFLOW_EXECUTION_STATUS_TIMED_OUT",
+    }
+
     def __init__(self, config: Dict[str, Any]):
         self.config = config
         self._client: Optional[Client] = None
@@ -50,7 +67,14 @@ class TemporalClient:
     async def disconnect(self):
         """Disconnect from Temporal server"""
         if self._client:
-            await self._client.close()
+            close_method = getattr(self._client, "close", None)
+            if close_method:
+                try:
+                    result = close_method()
+                    if asyncio.iscoroutine(result):
+                        await result
+                except Exception as exc:  # pragma: no cover - defensive cleanup
+                    logger.warning(f"Temporal client close failed: {exc}")
             self._client = None
             logger.info("Disconnected from Temporal server")
     
@@ -88,7 +112,7 @@ class TemporalClient:
                 "azure_blob_ingest": "AzureBlobIngestWorkflow",
             }
             
-            workflow_class = workflow_classes.get(workflow_type)
+            workflow_class = self.WORKFLOW_CLASS_MAP.get(workflow_type)
             if not workflow_class:
                 raise ValueError(f"Unknown workflow type: {workflow_type}")
             
@@ -178,6 +202,52 @@ class TemporalClient:
         except Exception as e:
             logger.error(f"Failed to get workflow status for {workflow_id}: {e}")
             raise
+
+    async def list_workflows(
+        self,
+        *,
+        query: str = "",
+        max_results: int = 100
+    ) -> List[Any]:
+        """List workflow executions from Temporal."""
+
+        if not self._client:
+            await self.connect()
+
+        results: List[Any] = []
+        effective_query = query or ""
+
+        try:
+            async for description in self._client.list_workflows(query=effective_query):
+                results.append(description)
+                if len(results) >= max_results:
+                    break
+        except Exception as exc:  # pragma: no cover - network failure path
+            logger.error(f"Failed to list workflows from Temporal: {exc}")
+
+        return results
+
+    @classmethod
+    def resolve_workflow_class(cls, workflow_type: str) -> Optional[str]:
+        return cls.WORKFLOW_CLASS_MAP.get(workflow_type)
+
+    @classmethod
+    def resolve_workflow_type(cls, workflow_class: Optional[str]) -> Optional[str]:
+        if not workflow_class:
+            return None
+
+        for workflow_type, class_name in cls.WORKFLOW_CLASS_MAP.items():
+            if workflow_class == class_name:
+                return workflow_type
+            if workflow_class.endswith(f".{class_name}"):
+                return workflow_type
+
+        short_name = workflow_class.split('.')[-1]
+        for workflow_type, class_name in cls.WORKFLOW_CLASS_MAP.items():
+            if short_name == class_name:
+                return workflow_type
+
+        return None
     
     async def cancel_workflow(self, workflow_id: str, reason: Optional[str] = None) -> bool:
         """
@@ -262,59 +332,6 @@ class TemporalClient:
             logger.error(f"Failed to get workflow history for {workflow_id}: {e}")
             return []
     
-    async def list_workflows(
-        self,
-        status_filter: Optional[str] = None,
-        workflow_type_filter: Optional[str] = None,
-        limit: int = 100
-    ) -> List[Dict[str, Any]]:
-        """
-        List workflow executions with filtering.
-        
-        Args:
-            status_filter: Optional status filter
-            workflow_type_filter: Optional workflow type filter
-            limit: Maximum number of results
-            
-        Returns:
-            List of workflow information
-        """
-        if not self._client:
-            await self.connect()
-        
-        try:
-            # Build query filter
-            query_parts = []
-            
-            if status_filter:
-                query_parts.append(f"ExecutionStatus = '{status_filter}'")
-            
-            if workflow_type_filter:
-                query_parts.append(f"WorkflowType = '{workflow_type_filter}'")
-            
-            query = " AND ".join(query_parts) if query_parts else None
-            
-            # List workflows
-            workflows = []
-            async for workflow in self._client.list_workflows(query=query):
-                workflows.append({
-                    "workflow_id": workflow.execution.workflow_id,
-                    "run_id": workflow.execution.run_id,
-                    "workflow_type": workflow.workflow_type.name if workflow.workflow_type else None,
-                    "status": workflow.status.name if workflow.status else None,
-                    "start_time": workflow.start_time.replace(tzinfo=None) if workflow.start_time else None,
-                    "close_time": workflow.close_time.replace(tzinfo=None) if workflow.close_time else None,
-                    "task_queue": workflow.task_queue
-                })
-                
-                if len(workflows) >= limit:
-                    break
-            
-            return workflows
-            
-        except Exception as e:
-            logger.error(f"Failed to list workflows: {e}")
-            return []
     
     async def get_workflow_metrics(
         self,

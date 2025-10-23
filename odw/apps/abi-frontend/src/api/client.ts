@@ -8,7 +8,10 @@ export class ApiClient {
   }
 
   async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    const url = `${this.baseURL}${endpoint}`
+    const isBrowser = typeof window !== 'undefined'
+    const url = isBrowser
+      ? `/api/bia${endpoint}`
+      : `${this.baseURL}${endpoint}`
     
     const config: RequestInit = {
       headers: {
