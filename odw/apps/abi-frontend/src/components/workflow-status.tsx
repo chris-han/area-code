@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { formatDate } from '@/lib/utils'
-import { AlertCircle, Clock, CheckCircle, XCircle, Pause, Play } from 'lucide-react'
+import { AlertCircle, Clock, CheckCircle, XCircle, Pause, Play, ExternalLink } from 'lucide-react'
 
 export function WorkflowStatus() {
   const [mounted, setMounted] = useState(false)
@@ -15,6 +15,11 @@ export function WorkflowStatus() {
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  const getTemporalUIUrl = (workflowId: string, runId?: string) => {
+    if (!runId) return null
+    return `http://localhost:8080/namespaces/default/workflows/${workflowId}/${runId}/history`
+  }
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -177,13 +182,32 @@ export function WorkflowStatus() {
                           )}
                         </div>
                         <div className="flex items-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => alert(`Viewing details for workflow: ${workflow.name} (${workflow.id})`)}
-                          >
-                            Details
-                          </Button>
+                          {workflow.runId ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              asChild
+                            >
+                              <a
+                                href={getTemporalUIUrl(workflow.id, workflow.runId)!}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-1"
+                              >
+                                <ExternalLink className="h-3 w-3" />
+                                Temporal UI
+                              </a>
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled
+                              title="Run ID not available"
+                            >
+                              Details
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </CardContent>

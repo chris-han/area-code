@@ -10,6 +10,7 @@ export interface WorkflowStatus {
   progress?: number
   logs?: string[]
   error?: string
+  runId?: string
 }
 
 export interface WorkflowTriggerRequest {

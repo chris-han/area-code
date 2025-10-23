@@ -50,6 +50,7 @@ const mapWorkflow = (workflow: any): WorkflowStatus => {
     progress: typeof workflow.progress === 'number' ? workflow.progress : undefined,
     logs: Array.isArray(workflow.result?.logs) ? workflow.result.logs : undefined,
     error: workflow.error_message ?? undefined,
+    runId: workflow.run_id ?? undefined,
   }
 }
 

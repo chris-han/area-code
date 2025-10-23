@@ -58,6 +58,7 @@ class WorkflowExecution(BaseModel):
     records_processed: Optional[int] = None
     progress: Optional[float] = Field(default=None, ge=0.0, le=1.0)
     created_by: Optional[str] = None
+    run_id: Optional[str] = None
 
 
 class WorkflowListQuery(BaseModel):
@@ -219,8 +220,9 @@ async def get_workflows(temporal_client: TemporalClient, params: WorkflowListQue
                 datetime.utcnow() - description.execution_time.replace(tzinfo=None)
             ).total_seconds()
 
-        # Get workflow ID directly from description
+        # Get workflow ID and run ID directly from description
         workflow_id = getattr(description, "id", None)
+        run_id = getattr(description, "run_id", None)
         if not workflow_id:
             continue
 
@@ -236,6 +238,7 @@ async def get_workflows(temporal_client: TemporalClient, params: WorkflowListQue
                 result=None,
                 records_processed=0,
                 created_by="temporal",
+                run_id=run_id,
             )
         )
 
