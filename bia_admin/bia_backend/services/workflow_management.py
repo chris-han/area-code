@@ -41,6 +41,7 @@ class WorkflowType(str, Enum):
     AZURE_BLOB_INGEST = "azure_blob_ingest"
     MINIMAL_DEMO = "minimal_demo"
     TEST_WORKFLOW = "test_workflow"
+    FOCUS_BILLING_INGEST = "focus_billing_ingest"
 
 
 class WorkflowExecution(BaseModel):
@@ -323,6 +324,7 @@ async def trigger_workflow(temporal_client: TemporalClient, params: WorkflowTrig
             WorkflowType.AZURE_BLOB_INGEST: "5-15 minutes",
             WorkflowType.MINIMAL_DEMO: "< 1 minute",
             WorkflowType.TEST_WORKFLOW: "< 5 minutes",
+            WorkflowType.FOCUS_BILLING_INGEST: "10-20 minutes",
         }
 
         execution_id = await temporal_client.start_workflow(

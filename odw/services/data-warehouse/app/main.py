@@ -40,6 +40,12 @@ import app.apis.get_daily_pageviews
 import app.apis.get_unstructured_data
 import app.apis.get_medical
 
+# FOCUS billing consumption APIs
+import app.apis.focus_billing
+
+# FOCUS billing ingestion workflow
+from app.focus_billing.workflow import focus_billing_ingest_workflow, focus_billing_ingest_task
+
 # Moose ingestion APIs (data extraction/processing)
 import app.apis.extract_blob
 import app.apis.extract_logs
@@ -67,5 +73,7 @@ __all__ = [
     'events_task',
     'unstructured_data_workflow',
     'unstructured_data_task',
+    'focus_billing_ingest_workflow',
+    'focus_billing_ingest_task',
     'daily_pageviews_mv',
 ]

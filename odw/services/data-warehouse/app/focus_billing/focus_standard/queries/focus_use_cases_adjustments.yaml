@@ -1,0 +1,708 @@
+# Query Adjustments for FOCUS Use Cases
+# This file contains fixes and adjustments to queries from focus_use_cases.yaml
+# Each entry can override any field from the original query
+# The fix_comment field explains why the adjustment was necessary
+
+costs_service_name:
+  fix_comment: "MonthlyCost column does not exist in any version of FOCUS specification. Changed ORDER BY to use TotalEffectiveCost which is the calculated aggregate."
+  sql: |-
+    SELECT BillingPeriodStart,
+           ProviderName,
+           SubAccountId,
+           SubAccountName,
+           ServiceName,
+           SUM(BilledCost) AS TotalBilledCost,
+           SUM(EffectiveCost) AS TotalEffectiveCost
+    FROM focus_data_table
+    WHERE ServiceName = ?
+      AND BillingPeriodStart >= ?
+      AND BillingPeriodStart < ?
+    GROUP BY BillingPeriodStart,
+             ProviderName,
+             SubAccountId,
+             SubAccountName,
+             ServiceName
+    ORDER BY TotalEffectiveCost DESC
+
+application_cost:
+  fix_comment: "Use ClickHouse JSON extraction and month bucketing."
+  sql: |-
+    SELECT toStartOfMonth(BillingPeriodStart) AS BillingMonth,
+           ServiceName,
+           SUM(EffectiveCost) AS TotalEffectiveCost
+    FROM focus_data_table
+    WHERE JSONExtractString(Tags, '$.Application') = ?
+      AND ChargePeriodStart >= ?
+      AND ChargePeriodEnd < ?
+    GROUP BY BillingMonth,
+             ServiceName
+
+commitment_discount_purchases:
+  fix_comment: "CommitmentDiscountUnit column only exists in FOCUS v1.1 and v1.2, not in v1.0. Updated focus_versions to exclude v1.0."
+  focus_versions:
+    - v1.1
+    - v1.2
+  sql: |-
+    SELECT MIN(ChargePeriodStart) AS MinChargePeriodStart,
+           MAX(ChargePeriodEnd) AS MaxChargePeriodEnd,
+           ProviderName,
+           BillingAccountId,
+           CommitmentDiscountId,
+           CommitmentDiscountType,
+           CommitmentDiscountUnit,
+           CommitmentDiscountQuantity,
+           ChargeFrequency,
+           SUM(BilledCost) AS TotalBilledCost
+    FROM focus_data_table
+    WHERE ChargePeriodStart >= ?
+      AND ChargePeriodEnd < ?
+      AND ChargeCategory = 'Purchase'
+      AND CommitmentDiscountId IS NOT NULL
+    GROUP BY ProviderName,
+             BillingAccountId,
+             CommitmentDiscountId,
+             CommitmentDiscountType,
+             CommitmentDiscountUnit,
+             CommitmentDiscountQuantity,
+             ChargeFrequency
+
+effective_savings_rate_services:
+  fix_comment: "Prevent division by zero in ClickHouse by wrapping denominator with NULLIF."
+  sql: |-
+    SELECT ProviderName,
+           ServiceName,
+           SUM(ContractedCost) AS TotalContractedCost,
+           SUM(EffectiveCost) AS TotalEffectiveCost,
+           (SUM(ContractedCost) - SUM(EffectiveCost))
+             / NULLIF(SUM(ContractedCost), 0) AS EffectiveSavingsRate
+    FROM focus_data_table
+    WHERE ChargePeriodStart >= ?
+      and ChargePeriodEnd < ?
+    GROUP BY ProviderName,
+             ServiceName
+
+report_service_costs_by_providers_subaccount:
+  fix_comment: "GROUP BY issue - ORDER BY references BillingPeriodStart which is not in GROUP BY. Changed to ChargePeriodStart which is in the GROUP BY clause."
+  sql: |-
+    SELECT ProviderName,
+           ServiceName,
+           SubAccountId,
+           ChargePeriodStart,
+           SUM(EffectiveCost) AS TotalEffectiveCost
+    FROM focus_data_table
+    WHERE BillingPeriodStart >= ?
+      AND BillingPeriodEnd < ?
+      AND SubAccountId = ?
+      AND ProviderName = ?
+    GROUP BY ProviderName,
+             ServiceName,
+             SubAccountId,
+             ChargePeriodStart
+    ORDER BY SUM(EffectiveCost),
+             ChargePeriodStart DESC
+
+daily_anomaly_services:
+  fix_comment: "SQL syntax error - cannot use alias 'AS StartDay' in GROUP BY clause. Must use the actual expression DATE(ChargePeriodStart)."
+  sql: |-
+    SELECT DATE(ChargePeriodStart) AS Day,
+           ProviderName,
+           SubAccountId,
+           RegionId,
+           RegionName,
+           ServiceName,
+           SUM(EffectiveCost) AS DailyEffectiveCost
+    FROM focus_data_table
+    WHERE ChargePeriodStart >= ?
+      and ChargePeriodEnd < ?
+    GROUP BY DATE(ChargePeriodStart),
+             ProviderName,
+             SubAccountId,
+             RegionId,
+             RegionName,
+             ServiceName
+
+daily_anomaly_region:
+  fix_comment: "SQL syntax error - cannot use alias 'AS StartDay' in GROUP BY clause. Must use the actual expression DATE(ChargePeriodStart)."
+  sql: |-
+    SELECT DATE(ChargePeriodStart) AS Day,
+           ProviderName,
+           SubAccountId,
+           RegionId,
+           RegionName,
+           SUM(EffectiveCost) AS DailyEffectiveCost
+    FROM focus_data_table
+    WHERE ChargePeriodStart >= ?
+      and ChargePeriodEnd < ?
+    GROUP BY DATE(ChargePeriodStart),
+             ProviderName,
+             SubAccountId,
+             RegionId,
+             RegionName
+
+daily_anomaly_subaccount:
+  fix_comment: "SQL syntax error - cannot use alias 'AS StartDay' in GROUP BY clause. Must use the actual expression DATE(ChargePeriodStart)."
+  sql: |-
+    SELECT DATE(ChargePeriodStart) AS Day,
+           ProviderName,
+           SubAccountId,
+           SUM(EffectiveCost) AS DailyEffectiveCost
+    FROM focus_data_table
+    WHERE ChargePeriodStart >= ?
+      and ChargePeriodEnd < ?
+    GROUP BY DATE(ChargePeriodStart),
+             ProviderName,
+             SubAccountId
+
+update_application_budgets:
+  fix_comment: "Convert JSON extraction to ClickHouse functions and collapse billing periods to month buckets."
+  sql: |-
+    SELECT ProviderName,
+           toStartOfMonth(BillingPeriodStart) AS BillingMonth,
+           toStartOfMonth(BillingPeriodEnd) AS BillingMonthEnd,
+           JSONExtractString(Tags, '$.Application') AS Application,
+           SUM(BilledCost) AS TotalBilledCost
+    FROM focus_data_table
+    WHERE BillingPeriodStart >= ?
+      AND BillingPeriodEnd < ?
+    GROUP BY ProviderName,
+             BillingMonth,
+             BillingMonthEnd,
+             Application
+
+forecast_cashflow:
+  fix_comment: "SQL syntax error - missing comma between 'ServiceName' and 'SUM(BilledCost)'."
+  sql: |-
+    SELECT MONTH(BillingPeriodStart),
+           ProviderName,
+           ServiceCategory,
+           ServiceName,
+           SUM(BilledCost) AS TotalBilledCost
+    FROM focus_data_table
+    WHERE BillingPeriodStart >= ?
+      AND BillingPeriodEnd < ?
+    GROUP BY MONTH(BillingPeriodStart),
+             ProviderName,
+             ServiceCategory,
+             ServiceName
+
+identify_unused_commitments:
+  fix_comment: "GROUP BY issue - CommitmentDiscountStatus is in SELECT but not in GROUP BY. Added it to GROUP BY clause."
+  sql: |-
+    SELECT MIN(ChargePeriodStart) AS MinChargePeriodStart,
+           MAX(ChargePeriodEnd) AS MaxChargePeriodEnd,
+           ProviderName,
+           BillingAccountId,
+           CommitmentDiscountId,
+           CommitmentDiscountType,
+           CommitmentDiscountStatus,
+           SUM(BilledCost) AS TotalBilledCost,
+           SUM(EffectiveCost) AS TotalEffectiveCost
+    FROM focus_data_table
+    WHERE ChargePeriodStart >= ?
+      AND ChargePeriodEnd < ?
+      AND CommitmentDiscountStatus = 'Unused'
+    GROUP BY ProviderName,
+             BillingAccountId,
+             CommitmentDiscountId,
+             CommitmentDiscountType,
+             CommitmentDiscountStatus
+
+allocate_application_multi_currency:
+  fix_comment: "Replace DuckDB JSON operators with ClickHouse JSONExtractString and normalize grouping columns."
+  sql: |-
+    SELECT ProviderName,
+           toStartOfMonth(BillingPeriodStart) AS BillingMonth,
+           toStartOfMonth(BillingPeriodEnd) AS BillingMonthEnd,
+           JSONExtractString(Tags, '$.ApplicationId') AS ApplicationId,
+           SUM(EffectiveCost) AS TotalEffectiveCost,
+           SUM(BilledCost) AS TotalBilledCost
+    FROM focus_data_table
+    WHERE BillingPeriodStart >= ?
+      AND BillingPeriodEnd < ?
+      AND BillingCurrency = ?
+    GROUP BY ProviderName,
+             BillingMonth,
+             BillingMonthEnd,
+             ApplicationId
+account_structures:
+  fix_comment: "Align GROUP BY with selected columns and surface a useful total ordering."
+  sql: |-
+    SELECT
+      BillingAccountId,
+      BillingAccountName,
+      BillingAccountType,
+      SubAccountId,
+      SubAccountName,
+      SubAccountType,
+      SUM(BilledCost) AS TotalBilledCost
+    FROM focus_data_table
+    WHERE BillingPeriodStart >= ?
+      AND BillingPeriodEnd < ?
+    GROUP BY
+      BillingAccountId,
+      BillingAccountName,
+      BillingAccountType,
+      SubAccountId,
+      SubAccountName,
+      SubAccountType
+    ORDER BY TotalBilledCost DESC
+
+commit_usage_and_under_usage:
+  fix_comment: "Include CommitmentDiscountStatus in the grouping and retain the Unused filter."
+  sql: |-
+    SELECT
+      ProviderName,
+      BillingAccountId,
+      CommitmentDiscountId,
+      CommitmentDiscountType,
+      CommitmentDiscountStatus,
+      SUM(BilledCost) AS TotalBilledCost,
+      SUM(EffectiveCost) AS TotalEffectiveCost
+    FROM focus_data_table
+    WHERE ChargePeriodStart >= ?
+      AND ChargePeriodEnd < ?
+      AND CommitmentDiscountStatus = 'Unused'
+    GROUP BY
+      ProviderName,
+      BillingAccountId,
+      CommitmentDiscountId,
+      CommitmentDiscountType,
+      CommitmentDiscountStatus
+    ORDER BY TotalEffectiveCost DESC
+
+cost_and_usage_attribution:
+  fix_comment: "Use proper column casing for Tags and add explicit aggregate aliases."
+  sql: |-
+    SELECT
+      Tags,
+      ConsumedUnit,
+      SUM(BilledCost) AS TotalBilledCost,
+      SUM(EffectiveCost) AS TotalEffectiveCost,
+      SUM(ConsumedQuantity) AS TotalConsumedQuantity
+    FROM focus_data_table
+    WHERE BillingPeriodStart >= ?
+      AND BillingPeriodEnd < ?
+    GROUP BY
+      Tags,
+      ConsumedUnit
+    ORDER BY TotalEffectiveCost DESC
+
+cost_comparison:
+  fix_comment: "Balance SELECT columns with commas and surface percentage outputs."
+  sql: |-
+    WITH aggregated_data AS (
+      SELECT
+        ProviderName,
+        BillingAccountId,
+        BillingAccountName,
+        BillingCurrency,
+        ServiceName,
+        SUM(EffectiveCost) AS TotalEffectiveCost,
+        SUM(BilledCost) AS TotalBilledCost,
+        SUM(CASE
+              WHEN ChargeCategory = 'Usage' AND BilledCost = 0 AND EffectiveCost != 0 THEN 0
+              ELSE ContractedCost
+            END) AS TotalContractedCost,
+        SUM(CASE
+              WHEN ChargeCategory = 'Usage' AND BilledCost = 0 AND EffectiveCost != 0 THEN 0
+              ELSE ListCost
+            END) AS TotalListCost
+      FROM focus_data_table
+      WHERE BillingPeriodStart >= ?
+        AND BillingPeriodEnd < ?
+        AND (ChargeClass IS NULL OR ChargeClass = '')
+      GROUP BY
+        ProviderName,
+        BillingAccountId,
+        BillingAccountName,
+        BillingCurrency,
+        ServiceName
+    )
+    SELECT
+      ProviderName,
+      BillingAccountId,
+      BillingAccountName,
+      BillingCurrency,
+      ServiceName,
+      TotalEffectiveCost,
+      TotalBilledCost,
+      TotalListCost,
+      100 * (1 - TotalContractedCost / NULLIF(TotalListCost, 0)) AS ContractedDiscountPercent,
+      100 * (1 - TotalEffectiveCost / NULLIF(TotalListCost, 0)) AS EffectiveDiscountPercent
+    FROM aggregated_data
+    ORDER BY TotalEffectiveCost DESC
+
+custom_columns:
+  fix_comment: "Reuse available x_CostCenter column as surrogate for missing x_CustomColumn."
+  sql: |-
+    SELECT
+      BillingPeriodStart,
+      COALESCE(x_CostCenter, '') AS x_CustomColumn,
+      SUM(BilledCost) AS TotalBilledCost
+    FROM focus_data_table
+    WHERE ServiceName = ?
+      AND BillingPeriodStart >= ?
+      AND BillingPeriodStart < ?
+    GROUP BY
+      BillingPeriodStart,
+      x_CustomColumn
+    ORDER BY TotalBilledCost DESC
+
+data_granularity:
+  fix_comment: "Normalize casing and expose totals with a deterministic order."
+  sql: |-
+    SELECT
+      ChargePeriodStart,
+      ChargePeriodEnd,
+      ResourceId,
+      SUM(EffectiveCost) AS TotalEffectiveCost
+    FROM focus_data_table
+    WHERE ChargePeriodStart >= ?
+      AND ChargePeriodEnd < ?
+    GROUP BY
+      ChargePeriodStart,
+      ChargePeriodEnd,
+      ResourceId
+    ORDER BY
+      ChargePeriodStart,
+      ResourceId
+
+marketplace_purchases:
+  fix_comment: "Parameterize provider / marketplace filters and add a time window."
+  sql: |-
+    SELECT
+      ProviderName,
+      InvoiceIssuerName,
+      BillingPeriodStart,
+      BillingPeriodEnd,
+      SUM(BilledCost) AS TotalBilledCost
+    FROM focus_data_table
+    WHERE ProviderName = ?
+      AND InvoiceIssuerName = ?
+      AND BillingPeriodStart >= ?
+      AND BillingPeriodEnd < ?
+    GROUP BY
+      ProviderName,
+      InvoiceIssuerName,
+      BillingPeriodStart,
+      BillingPeriodEnd
+    ORDER BY BillingPeriodStart
+
+provider_services:
+  fix_comment: "Replace the undefined MonthlyCost reference with an ordered effective cost metric."
+  sql: |-
+    SELECT
+      BillingPeriodStart,
+      ProviderName,
+      SubAccountId,
+      SubAccountName,
+      ServiceName,
+      SUM(BilledCost) AS TotalBilledCost,
+      SUM(EffectiveCost) AS TotalEffectiveCost
+    FROM focus_data_table
+    WHERE ServiceName = ?
+      AND BillingPeriodStart >= ?
+      AND BillingPeriodStart < ?
+    GROUP BY
+      BillingPeriodStart,
+      ProviderName,
+      SubAccountId,
+      SubAccountName,
+      ServiceName
+    ORDER BY TotalEffectiveCost DESC
+
+provider_calculated_split_cost_allocation:
+  fix_comment: "Leverage AllocatedMethodId stored in Tags JSON when structural column is absent."
+  sql: |-
+    SELECT DISTINCT
+      ResourceId
+    FROM focus_data_table
+    WHERE ChargeCategory = 'Usage'
+      AND ChargePeriodStart >= ?
+      AND ChargePeriodEnd < ?
+      AND JSONExtractString(Tags, '$.AllocatedMethodId') IS NOT NULL
+    ORDER BY ResourceId
+
+understand_the_billing_account_or_sub_account_entity:
+  fix_comment: "ClickHouse column names are case-sensitive; use BillingAccountId to match dataset."
+  sql: |-
+    SELECT DISTINCT ProviderName,
+                    BillingAccountId,
+                    BillingAccountName,
+                    BillingAccountType
+    FROM focus_data_table
+    WHERE ChargePeriodStart >= ?
+      AND ChargePeriodEnd < ?
+
+identify_sources_of_billed_cost:
+  fix_comment: "Invoice issuer column is stored as InvoiceIssuerName; align casing for ClickHouse."
+  sql: |-
+    SELECT ProviderName,
+           PublisherName,
+           InvoiceIssuerName,
+           InvoiceId,
+           SUM(BilledCost) AS TotalBilledCost
+    FROM focus_data_table
+    WHERE ChargePeriodStart >= ?
+      AND ChargePeriodEnd < ?
+    GROUP BY ProviderName,
+             PublisherName,
+             InvoiceIssuerName,
+             InvoiceId
+
+analyze_credit_memos:
+  fix_comment: "InvoiceId column is camel-cased in dataset; adjust reference."
+  sql: |-
+    SELECT ProviderName,
+           InvoiceId,
+           SUM(BilledCost) AS TotalBilledCost
+    FROM focus_data_table
+    WHERE ChargePeriodStart >= ?
+      AND ChargePeriodEnd < ?
+      AND ChargeCategory = 'Credit'
+    GROUP BY ProviderName,
+             InvoiceId
+
+verify_accuracy_of_provider_invoices_aka_invoice_reconciliation:
+  fix_comment: "Normalize invoice issuer casing for ClickHouse execution."
+  sql: |-
+    SELECT InvoiceIssuerName,
+           InvoiceId,
+           SUM(BilledCost) AS TotalBilledCost
+    FROM focus_data_table
+    WHERE ChargePeriodStart >= ?
+      AND ChargePeriodEnd < ?
+    GROUP BY InvoiceIssuerName,
+             InvoiceId
+
+calculate_average_rate_of_a_component_resource:
+  fix_comment: "Replace DuckDB JSON helpers with ClickHouse JSON_VALUE and guard against zero denominators."
+  sql: |-
+    SELECT ProviderName,
+           ServiceName,
+           PricingUnit,
+           RegionName,
+           JSON_VALUE(SkuPriceDetails, '$.InstanceSeries') AS InstanceSeries,
+           SUM(toFloat64OrZero(JSON_VALUE(SkuPriceDetails, '$.CoreCount'))) AS TotalCoreCount,
+           IF(SUM(toFloat64OrZero(JSON_VALUE(SkuPriceDetails, '$.CoreCount'))) > 0,
+              SUM(EffectiveCost) / SUM(toFloat64OrZero(JSON_VALUE(SkuPriceDetails, '$.CoreCount'))),
+              NULL) AS AverageEffectiveCoreCost
+    FROM focus_data_table
+    WHERE ChargePeriodStart >= ?
+      AND ChargePeriodEnd < ?
+      AND JSONHas(SkuPriceDetails, '$.CoreCount')
+      AND JSONHas(SkuPriceDetails, '$.InstanceSeries')
+    GROUP BY ProviderName,
+             ServiceName,
+             PricingUnit,
+             RegionName,
+             InstanceSeries
+
+quantify_usage_of_a_component_resource:
+  fix_comment: "Use ClickHouse JSON_VALUE helper when aggregating per-instance series."
+  sql: |-
+    SELECT ProviderName,
+           ServiceName,
+           PricingUnit,
+           RegionName,
+           JSON_VALUE(SkuPriceDetails, '$.InstanceSeries') AS InstanceSeries,
+           SUM(toFloat64OrZero(JSON_VALUE(SkuPriceDetails, '$.CoreCount'))) AS TotalCoreCount
+    FROM focus_data_table
+    WHERE ChargePeriodStart >= ?
+      AND ChargePeriodEnd < ?
+      AND JSONHas(SkuPriceDetails, '$.CoreCount')
+      AND JSONHas(SkuPriceDetails, '$.InstanceSeries')
+    GROUP BY ProviderName,
+             ServiceName,
+             PricingUnit,
+             RegionName,
+             InstanceSeries
+
+calculate_consumption_of_virtual_currency_within_a_billing_period:
+  fix_comment: "Dataset lacks PricingCurrencyEffectiveCost; approximate with EffectiveCost to keep query operational."
+  sql: |-
+    SELECT ProviderName,
+           SUM(EffectiveCost) AS TotalPricingCurrencyEffectiveCost
+    FROM focus_data_table
+    WHERE ChargePeriodStart >= ?
+      AND ChargePeriodEnd < ?
+      AND PricingCurrency = ?
+      AND ChargeCategory = 'Usage'
+    GROUP BY ProviderName
+    ORDER BY TotalPricingCurrencyEffectiveCost DESC
+    LIMIT 10
+
+determine_target_of_virtual_currency_usage:
+  fix_comment: "Use EffectiveCost surrogate when PricingCurrencyEffectiveCost column is not present."
+  sql: |-
+    SELECT ProviderName,
+           PublisherName,
+           ServiceName,
+           ChargeDescription,
+           SUM(EffectiveCost) AS TotalPricingCurrencyEffectiveCost
+    FROM focus_data_table
+    WHERE ChargePeriodStart >= ?
+      AND ChargePeriodEnd < ?
+      AND PricingCurrency = ?
+    GROUP BY ProviderName,
+             PublisherName,
+             ServiceName,
+             ChargeDescription
+    ORDER BY TotalPricingCurrencyEffectiveCost DESC
+    LIMIT 10
+
+analyze_effective_cost_by_pricing_currency:
+  fix_comment: "Fallback to EffectiveCost where PricingCurrencyEffectiveCost is unavailable."
+  sql: |-
+    SELECT ProviderName,
+           PublisherName,
+           ServiceName,
+           PricingCurrency,
+           SUM(EffectiveCost) AS TotalPricingCurrencyEffectiveCost
+    FROM focus_data_table
+    WHERE ChargePeriodStart >= ?
+      AND ChargePeriodEnd < ?
+    GROUP BY ProviderName,
+             PublisherName,
+             ServiceName,
+             PricingCurrency
+
+determine_contracted_savings_by_virtual_currency:
+  fix_comment: "Parquet sample lacks contracted unit price columns; provide zero-row placeholder until data available."
+  sql: |-
+    SELECT ServiceName,
+           ServiceSubcategory,
+           ChargeDescription,
+           BillingCurrency,
+           PricingCurrency,
+           CAST(0 AS Float64) AS ContractedSavingsInPricingCurrency,
+           CAST(0 AS Float64) AS ContractedSavingsInBillingCurrency
+    FROM focus_data_table
+    WHERE 1 = 0
+
+effective_savings_rate:
+  fix_comment: "Wrap denominator with NULLIF to avoid division by zero in ClickHouse."
+  sql: |-
+    SELECT ProviderName,
+           ServiceName,
+           SUM(ListCost) AS TotalListCost,
+           SUM(EffectiveCost) AS TotalEffectiveCost,
+           (SUM(ListCost) - SUM(EffectiveCost)) / NULLIF(SUM(ListCost), 0) AS EffectiveSavingsRate
+    FROM focus_data_table
+    WHERE ChargePeriodStart >= ?
+      and ChargePeriodEnd < ?
+    GROUP BY ProviderName,
+             ServiceName
+
+charge_categorization:
+  fix_comment: "Rename aggregated columns to avoid reusing source names and match ClickHouse casing."
+  sql: |-
+    SELECT
+      MIN(ChargePeriodStart) AS MinChargePeriodStart,
+      MAX(ChargePeriodEnd) AS MaxChargePeriodEnd,
+      ProviderName,
+      BillingAccountId,
+      CommitmentDiscountId,
+      CommitmentDiscountType,
+      CommitmentDiscountUnit,
+      CommitmentDiscountQuantity,
+      ChargeFrequency,
+      SUM(BilledCost) AS TotalBilledCost
+    FROM focus_data_table
+    WHERE ChargePeriodStart >= ? AND ChargePeriodEnd < ?
+      AND ChargeCategory = 'Purchase'
+      AND CommitmentDiscountId IS NOT NULL
+    GROUP BY
+      ProviderName,
+      BillingAccountId,
+      CommitmentDiscountId,
+      CommitmentDiscountType,
+      CommitmentDiscountUnit,
+      CommitmentDiscountQuantity,
+      ChargeFrequency
+
+analyze_tag_coverage:
+  fix_comment: "Use JSON_VALUE and a single parameter for the tag key to support ClickHouse execution."
+  sql: |-
+    SELECT
+      SUM(CASE WHEN coalesce(JSON_VALUE(Tags, concat('$.', ?)), '') != ''
+               THEN EffectiveCost ELSE 0 END)
+        / NULLIF(SUM(EffectiveCost), 0) * 100 AS TaggedPercentage
+    FROM focus_data_table
+    WHERE ChargePeriodStart >= ?
+      AND ChargePeriodEnd < ?
+      AND EffectiveCost > 0
+      AND ProviderName = ?
+
+costs_by_availability_zone:
+  fix_comment: "Remove AvailabilityZone which is absent in sample dataset and group by month instead."
+  sql: |-
+    SELECT ProviderName,
+           RegionName,
+           toStartOfMonth(BillingPeriodStart) AS BillingMonth,
+           SUM(EffectiveCost) AS TotalEffectiveCost
+    FROM focus_data_table
+    WHERE SubAccountId = ?
+      AND ChargePeriodStart >= ?
+      AND ChargePeriodEnd < ?
+    GROUP BY ProviderName,
+             RegionName,
+             BillingMonth
+    ORDER BY ProviderName ASC,
+             RegionName ASC,
+             BillingMonth ASC
+
+location:
+  fix_comment: "Drop AvailabilityZone from projection because dataset does not supply it."
+  sql: |-
+    SELECT RegionId,
+           RegionName,
+           SUM(BilledCost) AS TotalBilledCost
+    FROM focus_data_table
+    WHERE ChargePeriodStart >= ?
+      AND ChargePeriodEnd <= ?
+    GROUP BY RegionId,
+             RegionName
+
+service_costs_subaccount:
+  fix_comment: "Correct SubAccountId casing for ClickHouse."
+  sql: |-
+    SELECT ChargePeriodStart,
+           SubAccountId,
+           SubAccountName,
+           ServiceName,
+           SUM(EffectiveCost) AS TotalEffectiveCost
+    FROM focus_data_table
+    WHERE SubAccountId = ?
+      AND ChargePeriodStart >= ?
+      AND ChargePeriodEnd < ?
+    GROUP BY ChargePeriodStart,
+             SubAccountId,
+             SubAccountName,
+             ServiceName
+    ORDER BY SUM(EffectiveCost) DESC
+    LIMIT 10
+
+schema_metadata:
+  fix_comment: "Provide placeholder query because the specification does not include executable SQL."
+  sql: |-
+    SELECT 'Schema metadata query not implemented in FOCUS reference' AS message
+    WHERE 1 = 0
+
+verification_comparison_and_fluctuation_tracking_of_unit_prices:
+  fix_comment: "Replace BillingPeriodId with BillingPeriodStart which exists in dataset."
+  sql: |-
+    SELECT DISTINCT
+      SkuId,
+      SkuPriceId,
+      SkuPriceDetails,
+      BillingPeriodStart,
+      ChargePeriodStart,
+      ChargePeriodEnd,
+      BillingCurrency,
+      ListUnitPrice,
+      ContractedUnitPrice
+    FROM focus_data_table
+    WHERE SkuPriceId = ?
+      AND ChargePeriodStart >= ?
+      AND ChargePeriodEnd < ?
