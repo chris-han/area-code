@@ -331,7 +331,7 @@ class PluginConfigValidator:
                 field_path="host",
                 message="Host must be a non-empty string"
             ))
-        elif host in ["localhost", "127.0.0.1"]:
+        elif host in ["localhost", "localhost"]:
             issues.append(ValidationIssue(
                 severity=ValidationSeverity.WARNING,
                 field_path="host",

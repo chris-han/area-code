@@ -24,7 +24,7 @@ on_reload_complete_script="bun run generate-sdk"
 
 [redis_config]
 key_prefix = "MSLITE"
-hostname = "127.0.0.1"
+hostname = "localhost"
 # The Redis port has been intentionally changed from the default 6379 to 6740.
 port = 6740
 tls = false

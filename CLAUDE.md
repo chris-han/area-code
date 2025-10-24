@@ -92,8 +92,21 @@ curl -X POST "http://localhost:4300/api/v1/workflows/worker/restart" # Restart w
 ✅ **Datetime handling**: Activities must handle both datetime objects and ISO strings
 ✅ **Connection**: `run_worker_with_correct_host.py` is used automatically for proper Docker network connection
 
-### 5. Common Issues & Solutions
+### 5. Worker Management API Endpoints (NEW)
+```bash
+# Check worker status
+curl -X GET "http://localhost:4300/api/v1/workflows/worker/status"
+
+# Manually start worker
+curl -X POST "http://localhost:4300/api/v1/workflows/worker/start"
+
+# Restart worker
+curl -X POST "http://localhost:4300/api/v1/workflows/worker/restart"
+```
+
+### 6. Common Issues & Solutions
 - **Worker connection**: Use container IP (`172.18.0.3:7233`) not localhost
 - **Datetime errors**: Ensure activities handle string/datetime conversion properly
 - **Import errors**: Avoid FastAPI imports in workflow sandbox (keep in activities only)
 - **Worker registration**: All workflows/activities must be registered in `temporal_worker.py`
+- **Worker not starting**: Check `/api/v1/workflows/worker/status` and restart if needed

@@ -427,7 +427,7 @@ kafka_brokerconnect = "redpanda:9092"
 server_servlet_contextpath = "/"
 
 [redis_config]
-url = "redis://127.0.0.1:6379"
+url = "redis://localhost:6379"
 key_prefix = "bia"
 
 [http_server_config]
