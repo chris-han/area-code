@@ -1,0 +1,1176 @@
+{
+  "data_pattern": "focus-mcp-main/data/focus/**/*.parquet",
+  "start_date": "2025-07-01 08:00:00.000000000",
+  "end_date": "2025-10-01 08:00:00.000000000",
+  "billing_start": "2025-07-01 08:00:00.000000000",
+  "billing_end": "2025-10-01 08:00:00.000000000",
+  "results": [
+    {
+      "key": "understand_the_billing_account_or_sub_account_entity",
+      "slug": "understand-the-billing-account-or-sub-account-entity",
+      "title": "Understand the billing account or sub account entity",
+      "status": "ok",
+      "row_count": 1,
+      "sample_row": {
+        "ProviderName": "Microsoft",
+        "BillingAccountId": "/providers/Microsoft.Billing/billingAccounts/91662f72-b87e-5020-88d3-7c2653b44aed:ba17918c-eda3-45f0-98a2-9b2d2e2dfea1_2019-05-31/billingProfiles/Z3PF-DDG5-BG7-PGB",
+        "BillingAccountName": null,
+        "BillingAccountType": "Billing Profile"
+      },
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "identify_sources_of_billed_cost",
+      "slug": "identify-sources-of-billed-cost",
+      "title": "Identify sources of billed cost",
+      "status": "ok",
+      "row_count": 1,
+      "sample_row": {
+        "ProviderName": "Microsoft",
+        "PublisherName": "Microsoft",
+        "InvoiceIssuerName": "Microsoft",
+        "InvoiceId": "",
+        "TotalBilledCost": 246113.1557101161
+      },
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "analyze_credit_memos",
+      "slug": "analyze-credit-memos",
+      "title": "Analyze credit memos",
+      "status": "ok",
+      "row_count": 0,
+      "sample_row": null,
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "verify_accuracy_of_provider_invoices_aka_invoice_reconciliation",
+      "slug": "verify-accuracy-of-provider-invoices-aka-invoice-reconciliation",
+      "title": "Verify accuracy of provider invoices aka invoice reconciliation",
+      "status": "ok",
+      "row_count": 1,
+      "sample_row": {
+        "InvoiceIssuerName": "Microsoft",
+        "InvoiceId": "",
+        "TotalBilledCost": 246113.1557101161
+      },
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "calculate_average_rate_of_a_component_resource",
+      "slug": "calculate-average-rate-of-a-component-resource",
+      "title": "Calculate average rate of a component resource",
+      "status": "ok",
+      "row_count": 0,
+      "sample_row": null,
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "quantify_usage_of_a_component_resource",
+      "slug": "quantify-usage-of-a-component-resource",
+      "title": "Quantify usage of a component resource",
+      "status": "ok",
+      "row_count": 0,
+      "sample_row": null,
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "calculate_unit_economics",
+      "slug": "calculate-unit-economics",
+      "title": "Calculate unit economics",
+      "status": "ok",
+      "row_count": 0,
+      "sample_row": null,
+      "literals": []
+    },
+    {
+      "key": "calculate_consumption_of_virtual_currency_within_a_billing_period",
+      "slug": "calculate-consumption-of-virtual-currency-within-a-billing-period",
+      "title": "Calculate consumption of virtual currency within a billing period",
+      "status": "ok",
+      "row_count": 1,
+      "sample_row": {
+        "ProviderName": "Microsoft",
+        "TotalPricingCurrencyEffectiveCost": 246113.1557101161
+      },
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'",
+        "'CNY'"
+      ]
+    },
+    {
+      "key": "determine_target_of_virtual_currency_usage",
+      "slug": "determine-target-of-virtual-currency-usage",
+      "title": "Determine target of virtual currency usage",
+      "status": "ok",
+      "row_count": 10,
+      "sample_row": {
+        "ProviderName": "Microsoft",
+        "PublisherName": "Microsoft",
+        "ServiceName": "Azure DB for PostgreSQL",
+        "ChargeDescription": "Az DB for PG Flex Stg",
+        "TotalPricingCurrencyEffectiveCost": 60380.49032258064
+      },
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'",
+        "'CNY'"
+      ]
+    },
+    {
+      "key": "analyze_effective_cost_by_pricing_currency",
+      "slug": "analyze-effective-cost-by-pricing-currency",
+      "title": "Analyze effective cost by pricing currency",
+      "status": "ok",
+      "row_count": 19,
+      "sample_row": {
+        "ProviderName": "Microsoft",
+        "PublisherName": "Microsoft",
+        "ServiceName": "Azure DB for PostgreSQL",
+        "PricingCurrency": "CNY",
+        "TotalPricingCurrencyEffectiveCost": 115628.33877058064
+      },
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "analyze_purchase_of_virtual_currency",
+      "slug": "analyze-purchase-of-virtual-currency",
+      "title": "Analyze purchase of virtual currency",
+      "status": "ok",
+      "row_count": 0,
+      "sample_row": null,
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'",
+        "'Units'"
+      ]
+    },
+    {
+      "key": "determine_contracted_savings_by_virtual_currency",
+      "slug": "determine-contracted-savings-by-virtual-currency",
+      "title": "Determine contracted savings by virtual currency",
+      "status": "ok",
+      "row_count": 0,
+      "sample_row": null,
+      "literals": []
+    },
+    {
+      "key": "analyze_tag_coverage",
+      "slug": "analyze-tag-coverage",
+      "title": "Analyze tag coverage",
+      "status": "ok",
+      "row_count": 1,
+      "sample_row": {
+        "TaggedPercentage": -0.0187925288257261
+      },
+      "literals": [
+        "'app'",
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'",
+        "'Microsoft'"
+      ]
+    },
+    {
+      "key": "analyze_the_different_metered_costs_for_a_particular_sku",
+      "slug": "analyze-the-different-metered-costs-for-a-particular-sku",
+      "title": "Analyze the different metered costs for a particular SKU",
+      "status": "ok",
+      "row_count": 20,
+      "sample_row": {
+        "ProviderName": "Microsoft",
+        "ChargePeriodStart": "2025-07-01 08:00:00.000000000",
+        "ChargePeriodEnd": "2025-07-02 08:00:00.000000000",
+        "SkuId": "DZH318Z0BNVX",
+        "SkuPriceId": "DZH318Z0BNVX_004D_Data Transfer In (GB)",
+        "PricingUnit": "GB",
+        "ListUnitPrice": 0,
+        "TotalPricingQuantity": 772.929423,
+        "TotalListCost": 0,
+        "TotalEffectiveCost": 0
+      },
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "report_costs_by_service_category_and_subcategory",
+      "slug": "report-costs-by-service-category-and-subcategory",
+      "title": "Report costs by service category and subcategory",
+      "status": "ok",
+      "row_count": 20,
+      "sample_row": {
+        "ProviderName": "Microsoft",
+        "BillingCurrency": "CNY",
+        "BillingPeriodStart": "2025-08-01 08:00:00.000000000",
+        "ServiceCategory": "Databases",
+        "ServiceSubcategory": "Relational Databases",
+        "TotalBilledCost": 18730.623587096776
+      },
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "analyze_capacity_reservations_on_compute_costs",
+      "slug": "analyze-capacity-reservations-on-compute-costs",
+      "title": "Analyze capacity reservations on compute costs",
+      "status": "ok",
+      "row_count": 1,
+      "sample_row": {
+        "Status": "Compute without Capacity Reservation",
+        "ProviderName": "Microsoft",
+        "BillingAccountId": "/providers/Microsoft.Billing/billingAccounts/91662f72-b87e-5020-88d3-7c2653b44aed:ba17918c-eda3-45f0-98a2-9b2d2e2dfea1_2019-05-31/billingProfiles/Z3PF-DDG5-BG7-PGB",
+        "TotalBilledCost": 73338.28441325146,
+        "TotalEffectiveCost": 73338.28441325146
+      },
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "identify_unused_capacity_reservations",
+      "slug": "identify-unused-capacity-reservations",
+      "title": "Identify unused capacity reservations",
+      "status": "ok",
+      "row_count": 0,
+      "sample_row": null,
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "corrections_by_subaccount",
+      "slug": "corrections-by-subaccount",
+      "title": "Report corrections by subaccount for a previously invoiced billing period",
+      "status": "ok",
+      "row_count": 0,
+      "sample_row": null,
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "recurring_commitment_charges",
+      "slug": "recurring-commitment-charges",
+      "title": "Report recurring charges for commitment-based discounts over a period",
+      "status": "ok",
+      "row_count": 0,
+      "sample_row": null,
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-07-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "costs_service_name",
+      "slug": "costs-service-name",
+      "title": "Analyze costs by service name",
+      "status": "ok",
+      "row_count": 0,
+      "sample_row": null,
+      "literals": [
+        "'Storage Accounts'",
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-07-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "report_spending_across_billing_periods_by_service_category",
+      "slug": "report-spending-across-billing-periods-by-service-category",
+      "title": "Report spending across billing periods for a provider by service category",
+      "status": "ok",
+      "row_count": 20,
+      "sample_row": {
+        "ProviderName": "Microsoft",
+        "BillingAccountName": null,
+        "BillingAccountId": "/providers/Microsoft.Billing/billingAccounts/91662f72-b87e-5020-88d3-7c2653b44aed:ba17918c-eda3-45f0-98a2-9b2d2e2dfea1_2019-05-31/billingProfiles/Z3PF-DDG5-BG7-PGB",
+        "BillingCurrency": "CNY",
+        "BillingPeriodStart": "2025-09-01 08:00:00.000000000",
+        "ServiceCategory": "Databases",
+        "ServiceName": "Azure DB for PostgreSQL",
+        "TotalBilledCost": 83253.01159638709
+      },
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'",
+        "'Microsoft'"
+      ]
+    },
+    {
+      "key": "analyze_service_costs_by_region",
+      "slug": "analyze-service-costs-by-region",
+      "title": "Analyze service costs by region",
+      "status": "ok",
+      "row_count": 20,
+      "sample_row": {
+        "ChargePeriodStart": "2025-07-01 08:00:00.000000000",
+        "ProviderName": "Microsoft",
+        "RegionId": "chinanorth3",
+        "ServiceName": "Azure DB for PostgreSQL",
+        "TotalEffectiveCost": 547.4155354838709
+      },
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "report_service_costs_by_providers_subaccount",
+      "slug": "report-service-costs-by-providers-subaccount",
+      "title": "Report service costs by providers subaccount",
+      "status": "ok",
+      "row_count": 20,
+      "sample_row": {
+        "ProviderName": "Microsoft",
+        "ServiceName": "Azure Monitor",
+        "SubAccountId": "/subscriptions/6b14b494-56c5-44d2-a6fb-00ef27001c44",
+        "ChargePeriodStart": "2025-08-31 08:00:00.000000000",
+        "TotalEffectiveCost": 0
+      },
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'",
+        "'/subscriptions/6b14b494-56c5-44d2-a6fb-00ef27001c44'",
+        "'Microsoft'"
+      ]
+    },
+    {
+      "key": "service_costs_month_over_month",
+      "slug": "service-costs-month-over-month",
+      "title": "Analyze service costs month over month",
+      "status": "ok",
+      "row_count": 0,
+      "sample_row": null,
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-07-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "application_cost",
+      "slug": "application-cost",
+      "title": "Report application cost month over month",
+      "status": "ok",
+      "row_count": 0,
+      "sample_row": null,
+      "literals": [
+        "'{\"\u51b0\u9e92\u9e9f\u5de1\u68c0\":\"\u540e\u53f0\",\"app\":\"\"}'",
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "resource_component_costs",
+      "slug": "resource-component-costs",
+      "title": "Analyze costs of components of a resource",
+      "status": "ok",
+      "row_count": 4,
+      "sample_row": {
+        "ResourceId": "/subscriptions/6b14b494-56c5-44d2-a6fb-00ef27001c44/resourcegroups/mnxj/providers/microsoft.storage/storageaccounts/mnxj",
+        "ResourceName": "mnxj",
+        "ResourceType": "Storage account",
+        "ChargeDescription": "Tables",
+        "SkuId": "DZH318Z0BNZ5",
+        "TotalEffectiveCost": 0.4013638696
+      },
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'",
+        "'/subscriptions/6b14b494-56c5-44d2-a6fb-00ef27001c44/resourcegroups/mnxj/providers/microsoft.storage/storageaccounts/mnxj'"
+      ]
+    },
+    {
+      "key": "costs_service_category",
+      "slug": "costs-service-category",
+      "title": "Report costs by service category",
+      "status": "ok",
+      "row_count": 20,
+      "sample_row": {
+        "ProviderName": "Microsoft",
+        "BillingCurrency": "CNY",
+        "BillingPeriodStart": "2025-09-01 08:00:00.000000000",
+        "ServiceCategory": "Databases",
+        "TotalBilledCost": 83819.55411214606
+      },
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "report_corrections",
+      "slug": "report-corrections",
+      "title": "Report corrections for a previously invoiced billing period",
+      "status": "ok",
+      "row_count": 0,
+      "sample_row": null,
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "effective_cost_compute",
+      "slug": "effective-cost-compute",
+      "title": "Report effective cost of compute",
+      "status": "ok",
+      "row_count": 12,
+      "sample_row": {
+        "CommitmentDiscountType": null,
+        "ProviderName": "Microsoft",
+        "ServiceName": "Virtual Machine Scale Sets",
+        "SubAccountId": "/subscriptions/6b14b494-56c5-44d2-a6fb-00ef27001c44",
+        "SubAccountName": "Windows Azure \u4f01\u4e1a",
+        "BillingPeriodStart": "2025-08-01 08:00:00.000000000",
+        "TotalEffectiveCost": 5008.573133572685
+      },
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "commitment_discount_purchases",
+      "slug": "commitment-discount-purchases",
+      "title": "Report commitment discount purchases",
+      "status": "ok",
+      "row_count": 0,
+      "sample_row": null,
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "effective_savings_rate_services",
+      "slug": "effective-savings-rate-services",
+      "title": "Determine Effective Savings Rate by Service",
+      "status": "ok",
+      "row_count": 19,
+      "sample_row": {
+        "ProviderName": "Microsoft",
+        "ServiceName": "Azure DB for MySQL",
+        "TotalContractedCost": 422.6779476722222,
+        "TotalEffectiveCost": 422.6779476722222,
+        "EffectiveSavingsRate": 8e-18
+      },
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "effective_savings_rate",
+      "slug": "effective-savings-rate",
+      "title": "Determine Effective Savings Rate",
+      "status": "ok",
+      "row_count": 19,
+      "sample_row": {
+        "ProviderName": "Microsoft",
+        "ServiceName": "Azure DB for MySQL",
+        "TotalListCost": 422.6779476722222,
+        "TotalEffectiveCost": 422.6779476722222,
+        "EffectiveSavingsRate": 8e-18
+      },
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "resource_costs_sku",
+      "slug": "resource-costs-sku",
+      "title": "Analyze resource costs by SKU",
+      "status": "ok",
+      "row_count": 20,
+      "sample_row": {
+        "ProviderName": "Microsoft",
+        "ChargePeriodStart": "2025-07-01 08:00:00.000000000",
+        "ChargePeriodEnd": "2025-07-02 08:00:00.000000000",
+        "SkuId": "DZH318Z0BNVX",
+        "SkuPriceId": "DZH318Z0BNVX_004D_Data Transfer In (GB)",
+        "PricingUnit": "GB",
+        "ListUnitPrice": 0,
+        "TotalPricingQuantity": 772.929423,
+        "TotalListCost": 0,
+        "TotalEffectiveCost": 0
+      },
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "marketplace_vendors_costs",
+      "slug": "marketplace-vendors-costs",
+      "title": "Analyze marketplace vendors costs",
+      "status": "ok",
+      "row_count": 0,
+      "sample_row": null,
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "cost_compute_subaccount",
+      "slug": "cost-compute-subaccount",
+      "title": "Analyze cost per compute service for a subaccount",
+      "status": "ok",
+      "row_count": 20,
+      "sample_row": {
+        "Min(ChargePeriodStart)": "2025-08-08 08:00:00.000000000",
+        "Max(ChargePeriodEnd)": "2025-09-30 08:00:00.000000000",
+        "ServiceName": "Virtual Machine Scale Sets",
+        "ResourceId": "/subscriptions/6b14b494-56c5-44d2-a6fb-00ef27001c44/resourcegroups/mc_devfinops-test-rg1_aks-chris888_chinanorth3/providers/microsoft.compute/virtualmachinescalesets/aks-devtestpool-33843953-vmss",
+        "ResourceName": "aks-devtestpool-33843953-vmss",
+        "SUM(PricingQuantity)": 46459.68727701962,
+        "MonthlyEffectiveCost": 8902.095309892615
+      },
+      "literals": [
+        "'/subscriptions/6b14b494-56c5-44d2-a6fb-00ef27001c44'",
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "costs_by_availability_zone",
+      "slug": "costs-by-availability-zone",
+      "title": "Analyze costs by availability zone for a subaccount",
+      "status": "ok",
+      "row_count": 12,
+      "sample_row": {
+        "ProviderName": "Microsoft",
+        "RegionName": "China East 2",
+        "BillingMonth": "2025-07-01",
+        "TotalEffectiveCost": 387.995753003495
+      },
+      "literals": [
+        "'/subscriptions/6b14b494-56c5-44d2-a6fb-00ef27001c44'",
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "daily_anomaly_services",
+      "slug": "daily-anomaly-services",
+      "title": "Identify anomalous daily spending by subaccount, region, and service",
+      "status": "ok",
+      "row_count": 20,
+      "sample_row": {
+        "Day": "2025-07-31",
+        "ProviderName": "Microsoft",
+        "SubAccountId": "/subscriptions/6b14b494-56c5-44d2-a6fb-00ef27001c44",
+        "RegionId": "chinaeast2",
+        "RegionName": "China East 2",
+        "ServiceName": "Virtual Machines",
+        "DailyEffectiveCost": 2.293858240278
+      },
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "daily_anomaly_region",
+      "slug": "daily-anomaly-region",
+      "title": "Identify anomalous daily spending by subaccount and region",
+      "status": "ok",
+      "row_count": 20,
+      "sample_row": {
+        "Day": "2025-07-20",
+        "ProviderName": "Microsoft",
+        "SubAccountId": "/subscriptions/6b14b494-56c5-44d2-a6fb-00ef27001c44",
+        "RegionId": "chinanorth2",
+        "RegionName": "China North 2",
+        "DailyEffectiveCost": 391.39115051269044
+      },
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "daily_anomaly_subaccount",
+      "slug": "daily-anomaly-subaccount",
+      "title": "Identify anomalous daily spending by subaccount",
+      "status": "ok",
+      "row_count": 20,
+      "sample_row": {
+        "Day": "2025-07-17",
+        "ProviderName": "Microsoft",
+        "SubAccountId": "/subscriptions/6b14b494-56c5-44d2-a6fb-00ef27001c44",
+        "DailyEffectiveCost": 1532.7855143258744
+      },
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "update_application_budgets",
+      "slug": "update-application-budgets",
+      "title": "Update budgets for each application",
+      "status": "ok",
+      "row_count": 3,
+      "sample_row": {
+        "ProviderName": "Microsoft",
+        "BillingMonth": "2025-07-01",
+        "BillingMonthEnd": "2025-08-01",
+        "Application": "",
+        "TotalBilledCost": 38540.467473629265
+      },
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "update_budgets",
+      "slug": "update-budgets",
+      "title": "Update budgets with billed costs",
+      "status": "ok",
+      "row_count": 2,
+      "sample_row": {
+        "ProviderName": "Microsoft",
+        "BillingPeriodStart": "2025-08-01 08:00:00.000000000",
+        "BillingPeriodEnd": "2025-09-01 08:00:00.000000000",
+        "TotalBilledCost": 60647.77816998728
+      },
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "report_subaccount_regions",
+      "slug": "report-subaccount-regions",
+      "title": "Report subaccounts by region",
+      "status": "ok",
+      "row_count": 4,
+      "sample_row": {
+        "ProviderName": "Microsoft",
+        "SubAccountId": "/subscriptions/6b14b494-56c5-44d2-a6fb-00ef27001c44",
+        "RegionName": "chinanorth2",
+        "COUNT(1)": "27765"
+      },
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "forecast_costs",
+      "slug": "forecast-costs",
+      "title": "Get historical usage and rates to enable cost forecasting",
+      "status": "ok",
+      "row_count": 20,
+      "sample_row": {
+        "ProviderName": "Microsoft",
+        "BillingPeriodStart": "2025-09-01 08:00:00.000000000",
+        "BillingPeriodEnd": "2025-10-01 08:00:00.000000000",
+        "ServiceCategory": "Compute",
+        "ServiceName": "Virtual Machine Scale Sets",
+        "RegionId": "chinanorth3",
+        "RegionName": "China North 3",
+        "PricingUnit": "Hours",
+        "TotalEffectiveCost": 25233.095156295916,
+        "TotalPricingQuantity": 38104.838225
+      },
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "forecast_cashflow",
+      "slug": "forecast-cashflow",
+      "title": "Forecast cashflow month over month based on historical trends by service",
+      "status": "ok",
+      "row_count": 20,
+      "sample_row": {
+        "MONTH(BillingPeriodStart)": 7,
+        "ProviderName": "Microsoft",
+        "ServiceCategory": "Analytics",
+        "ServiceName": "Azure Stream Analytics",
+        "TotalBilledCost": 82.2624
+      },
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "forecast_amortized_costs",
+      "slug": "forecast-amortized-costs",
+      "title": "Forecast amortized costs month over month based on historical trends",
+      "status": "ok",
+      "row_count": 20,
+      "sample_row": {
+        "MONTH(BillingPeriodStart)": 8,
+        "ProviderName": "Microsoft",
+        "ServiceCategory": "Internet of Things",
+        "ServiceName": "Azure IoT Hub",
+        "ChargeCategory": "Usage",
+        "TotalEffectiveCost": 4784.516129032258
+      },
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "verify_discounts_applied",
+      "slug": "verify-discounts-applied",
+      "title": "Verify discount accuracy for previously invoiced billing period",
+      "status": "ok",
+      "row_count": 0,
+      "sample_row": null,
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "verify_service_charges",
+      "slug": "verify-service-charges",
+      "title": "Verify accuracy of services charges across providers",
+      "status": "ok",
+      "row_count": 17,
+      "sample_row": {
+        "ProviderName": "Microsoft",
+        "BillingAccountId": "/providers/Microsoft.Billing/billingAccounts/91662f72-b87e-5020-88d3-7c2653b44aed:ba17918c-eda3-45f0-98a2-9b2d2e2dfea1_2019-05-31/billingProfiles/Z3PF-DDG5-BG7-PGB",
+        "BillingAccountName": null,
+        "BillingCurrency": "CNY",
+        "ServiceName": "Service Bus",
+        "TotalBilledCost": 0.0024426
+      },
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "verify_invoices",
+      "slug": "verify-invoices",
+      "title": "Verify accuracy of provider invoices",
+      "status": "ok",
+      "row_count": 1,
+      "sample_row": {
+        "ProviderName": "Microsoft",
+        "BillingAccountId": "/providers/Microsoft.Billing/billingAccounts/91662f72-b87e-5020-88d3-7c2653b44aed:ba17918c-eda3-45f0-98a2-9b2d2e2dfea1_2019-05-31/billingProfiles/Z3PF-DDG5-BG7-PGB",
+        "BillingAccountName": null,
+        "BillingCurrency": "CNY",
+        "TotalBilledCost": 99593.08410320515
+      },
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "compare_usage_month_over_month",
+      "slug": "compare-usage-month-over-month",
+      "title": "Compare resource usage month over month",
+      "status": "ok",
+      "row_count": 20,
+      "sample_row": {
+        "MONTH(ChargePeriodStart)": 9,
+        "ProviderName": "Microsoft",
+        "ServiceName": "Azure DB for MySQL",
+        "ResourceId": "/subscriptions/6b14b494-56c5-44d2-a6fb-00ef27001c44/resourcegroups/finops_test/providers/microsoft.dbformysql/flexibleservers/mysql-test-finops",
+        "SkuId": "DZH318Z0DCS3",
+        "ConsumedUnit": "Hours",
+        "TotalConsumedQuantity": 1339
+      },
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "service_costs_subaccount",
+      "slug": "service-costs-subaccount",
+      "title": "Analyze service costs by subaccount",
+      "status": "ok",
+      "row_count": 10,
+      "sample_row": {
+        "ChargePeriodStart": "2025-09-10 08:00:00.000000000",
+        "SubAccountId": "/subscriptions/6b14b494-56c5-44d2-a6fb-00ef27001c44",
+        "SubAccountName": "Windows Azure \u4f01\u4e1a",
+        "ServiceName": "Virtual Machine Scale Sets",
+        "TotalEffectiveCost": 7800.504013427498
+      },
+      "literals": [
+        "'/subscriptions/6b14b494-56c5-44d2-a6fb-00ef27001c44'",
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "identify_unused_commitments",
+      "slug": "identify-unused-commitments",
+      "title": "Identify unused commitments",
+      "status": "ok",
+      "row_count": 0,
+      "sample_row": null,
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "allocate_application_multi_currency",
+      "slug": "allocate-application-multi-currency",
+      "title": "Allocate multi-currency charges per application",
+      "status": "ok",
+      "row_count": 3,
+      "sample_row": {
+        "ProviderName": "Microsoft",
+        "BillingMonth": "2025-07-01",
+        "BillingMonthEnd": "2025-08-01",
+        "ApplicationId": "",
+        "TotalEffectiveCost": 38540.467473629265,
+        "TotalBilledCost": 38540.467473629265
+      },
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'",
+        "'CNY'"
+      ]
+    },
+    {
+      "key": "compare_billed_budget",
+      "slug": "compare-billed-budget",
+      "title": "Compare billed cost per subaccount to budget",
+      "status": "ok",
+      "row_count": 1,
+      "sample_row": {
+        "ProviderName": "Microsoft",
+        "SubAccountId": "/subscriptions/6b14b494-56c5-44d2-a6fb-00ef27001c44",
+        "SubAccountName": "Windows Azure \u4f01\u4e1a",
+        "TotalBilledCost": 246663.35355983174
+      },
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'",
+        "'Microsoft'",
+        "'/subscriptions/6b14b494-56c5-44d2-a6fb-00ef27001c44'"
+      ]
+    },
+    {
+      "key": "account_structures",
+      "slug": "account-structures",
+      "title": "Account Structures",
+      "status": "ok",
+      "row_count": 1,
+      "sample_row": {
+        "BillingAccountId": "/providers/Microsoft.Billing/billingAccounts/91662f72-b87e-5020-88d3-7c2653b44aed:ba17918c-eda3-45f0-98a2-9b2d2e2dfea1_2019-05-31/billingProfiles/Z3PF-DDG5-BG7-PGB",
+        "BillingAccountName": null,
+        "BillingAccountType": "Billing Profile",
+        "SubAccountId": "/subscriptions/6b14b494-56c5-44d2-a6fb-00ef27001c44",
+        "SubAccountName": "Windows Azure \u4f01\u4e1a",
+        "SubAccountType": "Subscription",
+        "TotalBilledCost": 99593.08410320515
+      },
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "billed_cost_and_invoice_alignment",
+      "slug": "billed-cost-and-invoice-alignment",
+      "title": "Billed Cost and Invoice Alignment",
+      "status": "ok",
+      "row_count": 3,
+      "sample_row": {
+        "BillingPeriodStart": "2025-07-01 08:00:00.000000000",
+        "BillingPeriodEnd": "2025-08-01 08:00:00.000000000",
+        "InvoiceId": "",
+        "SUM(BilledCost)": 38945.305933217875
+      },
+      "literals": []
+    },
+    {
+      "key": "charge_categorization",
+      "slug": "charge-categorization",
+      "title": "Charge Categorization",
+      "status": "ok",
+      "row_count": 0,
+      "sample_row": null,
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "commit_usage_and_under_usage",
+      "slug": "commit-usage-and-under-usage",
+      "title": "Commit Usage and Under Usage",
+      "status": "ok",
+      "row_count": 0,
+      "sample_row": null,
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "cost_and_usage_attribution",
+      "slug": "cost-and-usage-attribution",
+      "title": "Cost and Usage Attribution",
+      "status": "ok",
+      "row_count": 20,
+      "sample_row": {
+        "Tags": "{\"owner\":\"chris\"}",
+        "ConsumedUnit": "GB/Month",
+        "TotalBilledCost": 20513.032258064515,
+        "TotalEffectiveCost": 20513.032258064515,
+        "TotalConsumedQuantity": 18580.64516129032
+      },
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "cost_comparison",
+      "slug": "cost-comparison",
+      "title": "Cost Comparison",
+      "status": "ok",
+      "row_count": 17,
+      "sample_row": {
+        "ProviderName": "Microsoft",
+        "BillingAccountId": "/providers/Microsoft.Billing/billingAccounts/91662f72-b87e-5020-88d3-7c2653b44aed:ba17918c-eda3-45f0-98a2-9b2d2e2dfea1_2019-05-31/billingProfiles/Z3PF-DDG5-BG7-PGB",
+        "BillingAccountName": null,
+        "BillingCurrency": "CNY",
+        "ServiceName": "Azure DB for PostgreSQL",
+        "TotalEffectiveCost": 32375.32717419355,
+        "TotalBilledCost": 32375.32717419355,
+        "TotalListCost": 32375.327174193542,
+        "ContractedDiscountPercent": 99.85018740832047,
+        "EffectiveDiscountPercent": 99.85018740832045
+      },
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "custom_columns",
+      "slug": "custom-columns",
+      "title": "Custom Columns",
+      "status": "ok",
+      "row_count": 0,
+      "sample_row": null,
+      "literals": [
+        "'Storage Accounts'",
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-07-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "data_granularity",
+      "slug": "data-granularity",
+      "title": "Data Granularity",
+      "status": "ok",
+      "row_count": 20,
+      "sample_row": {
+        "ChargePeriodStart": "2025-07-01 08:00:00.000000000",
+        "ChargePeriodEnd": "2025-07-02 08:00:00.000000000",
+        "ResourceId": "/subscriptions/6b14b494-56c5-44d2-a6fb-00ef27001c44/resourcegroups/azurebackuprg_chinanorth3_1/providers/microsoft.network/privatednszones/privatelink.postgres.database.chinacloudapi.cn",
+        "TotalEffectiveCost": 2.543517967741935
+      },
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "effective_cost_analysis",
+      "slug": "effective-cost-analysis",
+      "title": "Effective Cost Analysis",
+      "status": "ok",
+      "row_count": 20,
+      "sample_row": {
+        "ProviderName": "Microsoft",
+        "BillingPeriodStart": "2025-09-01 08:00:00.000000000",
+        "BillingPeriodEnd": "2025-10-01 08:00:00.000000000",
+        "ServiceCategory": "Compute",
+        "ServiceName": "Virtual Machine Scale Sets",
+        "RegionId": "chinanorth3",
+        "RegionName": "China North 3",
+        "PricingUnit": "Hours",
+        "TotalEffectiveCost": 25233.095156295916,
+        "TotalPricingQuantity": 38104.838225
+      },
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "location",
+      "slug": "location",
+      "title": "Location",
+      "status": "ok",
+      "row_count": 4,
+      "sample_row": {
+        "RegionId": "global",
+        "RegionName": "Global",
+        "TotalBilledCost": 420.20531759139783
+      },
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "marketplace_purchases",
+      "slug": "marketplace-purchases",
+      "title": "Marketplace Purchases",
+      "status": "ok",
+      "row_count": 2,
+      "sample_row": {
+        "ProviderName": "Microsoft",
+        "InvoiceIssuerName": "Microsoft",
+        "BillingPeriodStart": "2025-07-01 08:00:00.000000000",
+        "BillingPeriodEnd": "2025-08-01 08:00:00.000000000",
+        "TotalBilledCost": 38945.305933217875
+      },
+      "literals": [
+        "'Microsoft'",
+        "'Microsoft'",
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "provider_calculated_split_cost_allocation",
+      "slug": "provider-calculated-split-cost-allocation",
+      "title": "Provider-Calculated Split Cost Allocation",
+      "status": "ok",
+      "row_count": 20,
+      "sample_row": {
+        "ResourceId": "/subscriptions/6b14b494-56c5-44d2-a6fb-00ef27001c44/resourcegroups/azurebackuprg_chinanorth3_1/providers/microsoft.network/privatednszones/privatelink.postgres.database.chinacloudapi.cn"
+      },
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "provider_services",
+      "slug": "provider-services",
+      "title": "Provider Services",
+      "status": "ok",
+      "row_count": 0,
+      "sample_row": null,
+      "literals": [
+        "'Storage Accounts'",
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-07-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "resource_usage",
+      "slug": "resource-usage",
+      "title": "Resource Usage",
+      "status": "ok",
+      "row_count": 20,
+      "sample_row": {
+        "ProviderName": "Microsoft",
+        "ServiceName": "Storage Accounts",
+        "ResourceId": "/subscriptions/6b14b494-56c5-44d2-a6fb-00ef27001c44/resourcegroups/marsfinops/providers/microsoft.storage/storageaccounts/databrickstore",
+        "SkuId": "DZH318Z0BP0B",
+        "ConsumedUnit": "Units",
+        "TotalQuantity": 1226.0
+      },
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "schema_metadata",
+      "slug": "schema-metadata",
+      "title": "Schema Metadata",
+      "status": "ok",
+      "row_count": 0,
+      "sample_row": null,
+      "literals": []
+    },
+    {
+      "key": "service_categorization",
+      "slug": "service-categorization",
+      "title": "Service Categorization",
+      "status": "ok",
+      "row_count": 20,
+      "sample_row": {
+        "BillingPeriodStart": "2025-07-01 08:00:00.000000000",
+        "BillingPeriodEnd": "2025-08-01 08:00:00.000000000",
+        "ProviderName": "Microsoft",
+        "ServiceCategory": "Integration",
+        "ServiceSubcategory": "Workflow Orchestration",
+        "ServiceName": "Azure Automation",
+        "BillingCurrency": "CNY",
+        "TotalBilledCost": 14.337463016666666
+      },
+      "literals": [
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    },
+    {
+      "key": "verification_comparison_and_fluctuation_tracking_of_unit_prices",
+      "slug": "verification-comparison-and-fluctuation-tracking-of-unit-prices",
+      "title": "Verification, Comparison, and Fluctuation Tracking of Unit Prices",
+      "status": "ok",
+      "row_count": 20,
+      "sample_row": {
+        "SkuId": "DZH318Z0BNZJ",
+        "SkuPriceId": "DZH318Z0BNZJ_00PQ_10K Read Operations",
+        "SkuPriceDetails": null,
+        "BillingPeriodStart": "2025-08-01 08:00:00.000000000",
+        "ChargePeriodStart": "2025-08-25 08:00:00.000000000",
+        "ChargePeriodEnd": "2025-08-26 08:00:00.000000000",
+        "BillingCurrency": "CNY",
+        "ListUnitPrice": 0.0135,
+        "ContractedUnitPrice": 0.0135
+      },
+      "literals": [
+        "'DZH318Z0BNZJ_00PQ_10K Read Operations'",
+        "'2025-07-01 08:00:00.000000000'",
+        "'2025-10-01 08:00:00.000000000'"
+      ]
+    }
+  ]
+}

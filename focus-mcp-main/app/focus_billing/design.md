@@ -20,6 +20,9 @@
   - Monetary metrics: `Decimal(38, 18)` mapped to ClickHouse `Decimal(38, 18)` (converted to `Decimal(18, 6)` if precision exceeds ClickHouse limits).
   - Dates: convert Parquet `INT96` to `Date`/`DateTime64`.
   - Nullable strings remain `Nullable(String)`.
+  - Extended provider columns (`x_*`) inherit their native types (string vs decimal) so downstream rules stay intact.
+  - Boolean flags (e.g., `x_sku_is_credit_eligible`) store as `Nullable(UInt8)` for ClickHouse compatibility.
+  - JSON payloads (`tags`, `sku_price_details`, etc.) stay in `Nullable(String)` for local development, but production ingestion can cast them into ClickHouse's native `JSON` type so downstream SQL can rely on dot-notation (`tags.ApplicationId`). Document both modes and keep compatibility helpers (e.g., `JSON_VALUE`) until the production schema is finalized.
 - Partitions: `PARTITION BY toYYYYMM(usage_date)` (matches common query filters).
 - Order by: `(usage_date, billing_account_id, service_category, service_name)` for efficient scans.
 - Indexes: min/max on `(billing_account_id, usage_date)`, set indexes on `service_category`, `provider`, `region`.
@@ -84,6 +87,7 @@
   2. Read `manifest.json` for metadata (row counts, period).
   3. Load Parquet into pandas/pyarrow to transform:
      - Standardize column case to snake_case.
+     - Apply type casts: `INT96` → `DateTime64(3)`, Parquet decimals → ClickHouse `Decimal(38, 18)`, booleans → `UInt8`.
      - Normalize decimals (cast to Python `Decimal`).
      - Convert timestamps.
      - Add `id`, `source_system`, `created_at`, `updated_at`.
