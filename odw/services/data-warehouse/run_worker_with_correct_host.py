@@ -51,7 +51,7 @@ async def main():
 
     config = {
         'temporal_host': temporal_host,
-        'task_queue': 'abi-workflows'
+        'task_queue': 'bia-workflows'
     }
 
     await run_worker(config)

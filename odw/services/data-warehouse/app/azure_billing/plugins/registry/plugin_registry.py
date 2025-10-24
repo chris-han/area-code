@@ -2,7 +2,7 @@
 Plugin Registry
 
 PostgreSQL-based plugin registry with metadata storage, installation tracking,
-and configuration management for the ABI plugin marketplace.
+and configuration management for the bia plugin marketplace.
 """
 
 from typing import Dict, Any, List, Optional, Tuple

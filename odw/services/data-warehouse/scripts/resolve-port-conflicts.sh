@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ABI Port Conflict Resolution Script
+# bia Port Conflict Resolution Script
 
 set -e
 
@@ -27,7 +27,7 @@ print_error() {
     echo -e "${RED}[PORT-CHECK]${NC} $1"
 }
 
-# ABI required ports
+# bia required ports
 declare -A ABI_PORTS=(
     [4200]="Moose API"
     [18123]="ClickHouse HTTP"
@@ -126,7 +126,7 @@ resolve_temporal_ui_conflict() {
 }
 
 check_all_ports() {
-    print_status "Checking ABI required ports..."
+    print_status "Checking bia required ports..."
     echo ""
     
     local conflicts=0
@@ -160,7 +160,7 @@ check_all_ports() {
 }
 
 kill_all_conflicts() {
-    print_warning "This will attempt to stop all processes using ABI ports"
+    print_warning "This will attempt to stop all processes using bia ports"
     read -p "Are you sure? (y/N): " -n 1 -r
     echo
     
@@ -193,13 +193,13 @@ show_alternatives() {
 }
 
 show_help() {
-    echo "ABI Port Conflict Resolution"
+    echo "bia Port Conflict Resolution"
     echo ""
     echo "Usage: $0 [options]"
     echo ""
     echo "Options:"
     echo "  --check           Check all required ports (default)"
-    echo "  --kill-conflicts  Stop processes using ABI ports"
+    echo "  --kill-conflicts  Stop processes using bia ports"
     echo "  --alternatives    Find alternative ports for conflicts"
     echo "  --resolve-ui      Resolve Temporal UI / DataLens conflict"
     echo "  --help           Show this help message"

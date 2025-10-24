@@ -235,7 +235,7 @@ The Plugin Marketplace and Data Source Management system is now complete and rea
 
 1. **Moose Backend API**: REST API endpoints for plugin operations
 2. **Temporal Workflows**: Workflow integration for automated plugin operations
-3. **DataLens Frontend**: Integration with the main ABI dashboard
+3. **DataLens Frontend**: Integration with the main bia dashboard
 4. **Plugin Marketplace**: External plugin registry and distribution
 
 All components are production-ready with comprehensive error handling, validation, monitoring, and a modern user interface.

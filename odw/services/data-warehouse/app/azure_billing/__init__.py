@@ -1,5 +1,5 @@
 """
-Azure Billing Intelligence (ABI) Module
+Azure Billing Intelligence (bia) Module
 
 This module provides Azure Enterprise Agreement billing data integration,
 FOCUS-compliant data transformation, and analytics capabilities.
@@ -9,7 +9,7 @@ for processing FOCUS-compliant parquet files from Azure Blob Storage.
 """
 
 __version__ = "0.2.0"
-__author__ = "ABI Team"
+__author__ = "bia Team"
 
 # Export NCEI workflow components - temporarily commented to fix FastAPI conflict
 # from .workflows.azure_ncei_workflow import AzureNCEIToFOCUSWorkflow

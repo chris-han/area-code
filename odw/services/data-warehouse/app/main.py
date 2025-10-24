@@ -8,7 +8,7 @@ This module is responsible for registering Moose-managed components only:
 1. Moose data models and transformations
 2. Moose ingestion pipelines and workflows
 3. Moose materialized views
-4. Moose Consumption APIs (including the ABI analytics endpoints implemented with `ConsumptionApi`)
+4. Moose Consumption APIs (including the bia analytics endpoints implemented with `ConsumptionApi`)
 
 General-purpose FastAPI routes now live in `bia_backend/` and are served separately
 on port 4300. This `app` object remains a bare FastAPI instance so tooling that

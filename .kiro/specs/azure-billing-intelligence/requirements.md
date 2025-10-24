@@ -1,8 +1,8 @@
-# Azure Billing Intelligence (ABI) Requirements Document
+# Azure Billing Intelligence (bia) Requirements Document
 
 ## Introduction
 
-The Azure Billing Intelligence (ABI) system is a comprehensive data platform designed to provide real-time analytics, workflow orchestration, and intelligent insights for Azure billing data. The system integrates Azure EA API data sources with ClickHouse analytics, Temporal workflow orchestration, and modern web interfaces to deliver a complete FinOps solution.
+The Azure Billing Intelligence (bia) system is a comprehensive data platform designed to provide real-time analytics, workflow orchestration, and intelligent insights for Azure billing data. The system integrates Azure EA API data sources with ClickHouse analytics, Temporal workflow orchestration, and modern web interfaces to deliver a complete FinOps solution.
 
 ## Glossary
 
@@ -91,7 +91,7 @@ The Azure Billing Intelligence (ABI) system is a comprehensive data platform des
 
 ### Requirement 6: Moose Project Initialization
 
-**User Story:** As a developer, I want to create a new Moose project from scratch using moose init command, so that I can bootstrap the ABI system with proper configuration and structure.
+**User Story:** As a developer, I want to create a new Moose project from scratch using moose init command, so that I can bootstrap the bia system with proper configuration and structure.
 
 #### Acceptance Criteria
 
@@ -175,11 +175,11 @@ The Azure Billing Intelligence (ABI) system is a comprehensive data platform des
 
 ### Requirement 13: DataLens Integration and Extension
 
-**User Story:** As a business analyst, I want DataLens-based frontend with ABI-specific extensions, so that I can create powerful dashboards and reports using a proven open-source BI platform.
+**User Story:** As a business analyst, I want DataLens-based frontend with bia-specific extensions, so that I can create powerful dashboards and reports using a proven open-source BI platform.
 
 #### Acceptance Criteria
 
-1. WHEN accessing the frontend, THE React_Frontend SHALL extend DataLens platform with ABI-specific widgets and dashboards
+1. WHEN accessing the frontend, THE React_Frontend SHALL extend DataLens platform with bia-specific widgets and dashboards
 2. WHEN creating visualizations, THE DataLens_Platform SHALL provide FOCUS-compliant chart types and data exploration capabilities
 3. WHEN building dashboards, THE ABI_System SHALL offer pre-built templates for cost optimization, resource utilization, and budget tracking
 4. WHERE custom analytics are needed, THE DataLens_Platform SHALL support SQL-based dataset creation and custom widget development

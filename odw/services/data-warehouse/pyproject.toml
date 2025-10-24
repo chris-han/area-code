@@ -15,7 +15,7 @@ dependencies = [
     "faker",
     "anthropic>=0.57.1",
     "python-dotenv>=1.0.0",
-    # ABI-specific dependencies
+    # bia-specific dependencies
     "fastapi>=0.104.0",
     "pydantic>=2.5.0",
     "temporalio>=1.5.0",

@@ -72,7 +72,7 @@ data_model_v2 = true
 
 [plugin_system]
 plugin_directory = "./plugins"
-marketplace_url = "https://abi-plugins.registry.com"
+marketplace_url = "https://bia-plugins.registry.com"
 auto_update = false
 lazy_loading = true
 cache_plugins = true

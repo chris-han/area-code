@@ -3,7 +3,7 @@
   "display_name": "S3/MinIO CSV Data Source",
   "description": "S3/MinIO CSV data source plugin for billing data extraction with automatic schema detection and FOCUS transformation support",
   "version": "1.0.0",
-  "author": "ABI Team",
+  "author": "bia Team",
   "category": "data_source",
   "plugin_type": "data_source",
   "entry_point": "plugin.py",
@@ -16,7 +16,7 @@
   "license": "MIT",
   "icon_url": "https://aws.amazon.com/favicon.ico",
   "documentation_url": "https://boto3.amazonaws.com/v1/documentation/api/latest/index.html",
-  "repository_url": "https://github.com/abi-team/s3-minio-plugin",
+  "repository_url": "https://github.com/bia-team/s3-minio-plugin",
   "config_schema": {
     "type": "object",
     "properties": {

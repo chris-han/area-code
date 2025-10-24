@@ -1,6 +1,6 @@
 # Azure Billing Intelligence Test Suite
 
-Comprehensive test suite for the Azure Billing Intelligence (ABI) system, covering integration testing, FOCUS compliance validation, performance testing, and system monitoring.
+Comprehensive test suite for the Azure Billing Intelligence (bia) system, covering integration testing, FOCUS compliance validation, performance testing, and system monitoring.
 
 ## Test Structure
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Combined development script: runs Moose dev stack and ABI FastAPI API together.
+# Combined development script: runs Moose dev stack and bia FastAPI API together.
 
 set -euo pipefail
 
@@ -29,13 +29,13 @@ cleanup() {
 
 trap cleanup EXIT INT TERM
 
-echo "[ABI DEV] Starting Moose development stack..."
+echo "[bia DEV] Starting Moose development stack..."
 ./app/scripts/dev.sh &
 MOOSE_PID=$!
 
-echo "[ABI DEV] Starting ABI FastAPI server..."
+echo "[bia DEV] Starting bia FastAPI server..."
 ABI_HTTP_PORT="${ABI_HTTP_PORT:-4300}" \
-    ./scripts/abi-api.sh &
+    ../../../bia_admin/scripts/bia-api.sh &
 API_PID=$!
 
 # Wait until either process exits

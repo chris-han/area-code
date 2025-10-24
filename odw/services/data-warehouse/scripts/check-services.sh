@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ABI Docker Services Health Check Script
+# bia Docker Services Health Check Script
 
 set -e
 
@@ -17,19 +17,19 @@ NC='\033[0m' # No Color
 
 # Function to print colored output
 print_status() {
-    echo -e "${BLUE}[ABI-HEALTH]${NC} $1"
+    echo -e "${BLUE}[bia-HEALTH]${NC} $1"
 }
 
 print_success() {
-    echo -e "${GREEN}[ABI-HEALTH]${NC} $1"
+    echo -e "${GREEN}[bia-HEALTH]${NC} $1"
 }
 
 print_warning() {
-    echo -e "${YELLOW}[ABI-HEALTH]${NC} $1"
+    echo -e "${YELLOW}[bia-HEALTH]${NC} $1"
 }
 
 print_error() {
-    echo -e "${RED}[ABI-HEALTH]${NC} $1"
+    echo -e "${RED}[bia-HEALTH]${NC} $1"
 }
 
 # Service configuration
@@ -88,7 +88,7 @@ check_docker_compose() {
     
     if [ -z "$running_services" ]; then
         print_warning "No Docker Compose services are currently running"
-        print_status "To start services: bun run abi:dev"
+        print_status "To start services: bun run bia:dev"
         return 1
     fi
     

@@ -1,5 +1,5 @@
 """
-Azure Billing Intelligence (ABI) Test Suite
+Azure Billing Intelligence (bia) Test Suite
 
-Comprehensive integration and unit tests for the ABI system.
+Comprehensive integration and unit tests for the bia system.
 """

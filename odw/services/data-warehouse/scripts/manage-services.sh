@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ABI Docker Services Management Script
+# bia Docker Services Management Script
 
 set -e
 
@@ -16,19 +16,19 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 print_status() {
-    echo -e "${BLUE}[ABI-SERVICES]${NC} $1"
+    echo -e "${BLUE}[bia-SERVICES]${NC} $1"
 }
 
 print_success() {
-    echo -e "${GREEN}[ABI-SERVICES]${NC} $1"
+    echo -e "${GREEN}[bia-SERVICES]${NC} $1"
 }
 
 print_warning() {
-    echo -e "${YELLOW}[ABI-SERVICES]${NC} $1"
+    echo -e "${YELLOW}[bia-SERVICES]${NC} $1"
 }
 
 print_error() {
-    echo -e "${RED}[ABI-SERVICES]${NC} $1"
+    echo -e "${RED}[bia-SERVICES]${NC} $1"
 }
 
 load_env_file() {
@@ -44,7 +44,7 @@ load_env_file() {
 }
 
 start_services() {
-    print_status "Starting ABI Docker services..."
+    print_status "Starting bia Docker services..."
     
     load_env_file
     
@@ -70,7 +70,7 @@ start_services() {
 }
 
 stop_services() {
-    print_status "Stopping ABI Docker services..."
+    print_status "Stopping bia Docker services..."
     
     docker compose -f .moose/docker-compose.yml -f .moose/docker-compose.override.yml down
     
@@ -78,7 +78,7 @@ stop_services() {
 }
 
 restart_services() {
-    print_status "Restarting ABI Docker services..."
+    print_status "Restarting bia Docker services..."
     
     stop_services
     sleep 2
@@ -108,7 +108,7 @@ cleanup_services() {
     echo
     
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-        print_status "Cleaning up ABI Docker services..."
+        print_status "Cleaning up bia Docker services..."
         docker compose -f .moose/docker-compose.yml -f .moose/docker-compose.override.yml down -v --remove-orphans
         print_success "Cleanup completed"
     else
@@ -117,7 +117,7 @@ cleanup_services() {
 }
 
 show_help() {
-    echo "ABI Docker Services Management"
+    echo "bia Docker Services Management"
     echo ""
     echo "Usage: $0 <command> [options]"
     echo ""

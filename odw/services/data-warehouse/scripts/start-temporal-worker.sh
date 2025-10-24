@@ -1,8 +1,8 @@
 #!/bin/bash
 #
-# Start Temporal Worker for ABI Workflows
+# Start Temporal Worker for bia Workflows
 #
-# This script starts the Temporal worker that processes the abi-workflows task queue.
+# This script starts the Temporal worker that processes the bia-workflows task queue.
 # The worker handles Azure billing data extraction, transformation, and validation workflows.
 #
 
@@ -16,7 +16,7 @@ cd "$PROJECT_DIR"
 
 # Set default environment variables
 export TEMPORAL_HOST="${TEMPORAL_HOST:-localhost:7233}"
-export TASK_QUEUE="${TASK_QUEUE:-abi-workflows}"
+export TASK_QUEUE="${TASK_QUEUE:-bia-workflows}"
 
 echo "=========================================="
 echo "Starting Temporal Worker"

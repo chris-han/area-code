@@ -1,0 +1,9 @@
+{
+  "name": "@workspace/bia-admin",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "bia:dev": "./scripts/bia-api.sh",
+    "bia:dev:clean": "./scripts/free-ports.sh"
+  }
+}

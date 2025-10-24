@@ -47,7 +47,7 @@ class TemporalWorkerManager:
             self.client = await Client.connect(temporal_host)
             
             # Create worker
-            task_queue = self.config.get('task_queue', 'abi-workflows')
+            task_queue = self.config.get('task_queue', 'bia-workflows')
             
             self.worker = Worker(
                 self.client,
@@ -120,7 +120,7 @@ async def run_worker(config: Dict[str, Any] = None):
     if config is None:
         config = {
             'temporal_host': 'localhost:7233',  # This will be overridden by env var
-            'task_queue': 'abi-workflows'
+            'task_queue': 'bia-workflows'
         }
     
     worker_manager = TemporalWorkerManager(config)

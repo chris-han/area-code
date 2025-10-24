@@ -117,7 +117,7 @@ class AlertManager:
             msg = MimeMultipart()
             msg['From'] = self.smtp_config['from_email']
             msg['To'] = ', '.join(recipients)
-            msg['Subject'] = f"ABI Workflow Alert: {alert.severity.value.upper()} - {alert.workflow_type}"
+            msg['Subject'] = f"bia Workflow Alert: {alert.severity.value.upper()} - {alert.workflow_type}"
             
             # Create email body
             body = self._create_alert_email_body(alert, workflow_execution)
@@ -462,7 +462,7 @@ class ScheduledWorkflowAutomation:
                     AzureBillingWorkflow.run,
                     input_params,
                     id=execution_id,
-                    task_queue="abi-workflows",
+                    task_queue="bia-workflows",
                     execution_timeout=timedelta(minutes=workflow_config.timeout_minutes)
                 )
             elif workflow_config.workflow_class == "DataValidationWorkflow":
@@ -471,7 +471,7 @@ class ScheduledWorkflowAutomation:
                     resolved_params["data_location"],
                     resolved_params["validation_config"],
                     id=execution_id,
-                    task_queue="abi-workflows",
+                    task_queue="bia-workflows",
                     execution_timeout=timedelta(minutes=workflow_config.timeout_minutes)
                 )
             else:
@@ -714,7 +714,7 @@ async def run_automation_system(config: Dict[str, Any] = None):
                     'host': 'localhost',
                     'port': 587,
                     'use_tls': True,
-                    'from_email': 'abi-system@company.com'
+                    'from_email': 'bia-system@company.com'
                 }
             }
         }

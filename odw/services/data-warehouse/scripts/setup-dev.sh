@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ABI Development Environment Setup Script
+# bia Development Environment Setup Script
 
 set -e
 
@@ -17,19 +17,19 @@ NC='\033[0m' # No Color
 
 # Function to print colored output
 print_status() {
-    echo -e "${BLUE}[ABI-SETUP]${NC} $1"
+    echo -e "${BLUE}[bia-SETUP]${NC} $1"
 }
 
 print_success() {
-    echo -e "${GREEN}[ABI-SETUP]${NC} $1"
+    echo -e "${GREEN}[bia-SETUP]${NC} $1"
 }
 
 print_warning() {
-    echo -e "${YELLOW}[ABI-SETUP]${NC} $1"
+    echo -e "${YELLOW}[bia-SETUP]${NC} $1"
 }
 
 print_error() {
-    echo -e "${RED}[ABI-SETUP]${NC} $1"
+    echo -e "${RED}[bia-SETUP]${NC} $1"
 }
 
 check_prerequisites() {
@@ -178,7 +178,7 @@ setup_git_hooks() {
         
         cat > .git/hooks/pre-commit << 'EOF'
 #!/bin/bash
-# Pre-commit hook for ABI development
+# Pre-commit hook for bia development
 
 # Activate virtual environment
 if [ -f ".venv/bin/activate" ]; then
@@ -212,12 +212,12 @@ EOF
 }
 
 print_next_steps() {
-    print_success "ABI development environment setup complete!"
+    print_success "bia development environment setup complete!"
     echo ""
     print_status "Next steps:"
     echo "1. Edit .env file with your actual credentials"
     echo "2. Run configuration validation: python3 scripts/validate-config.py"
-    echo "3. Start development services: bun run abi:dev"
+    echo "3. Start development services: bun run bia:dev"
     echo "4. Access services:"
     echo "   - Moose API: http://localhost:4200"
     echo "   - Temporal UI: http://localhost:8080"

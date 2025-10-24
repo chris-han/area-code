@@ -2,7 +2,7 @@
 """
 Service Discovery and Integration Script
 
-This script provides service discovery capabilities for the ABI system,
+This script provides service discovery capabilities for the bia system,
 automatically detecting and configuring connections to all infrastructure services.
 """
 
@@ -38,7 +38,7 @@ class ServiceDiscovery:
                 host="localhost",
                 port=4200,
                 health_path="/health",
-                description="Main ABI API server"
+                description="Main bia API server"
             ),
             "clickhouse_http": ServiceEndpoint(
                 name="ClickHouse HTTP",
@@ -187,7 +187,7 @@ class ServiceDiscovery:
     
     async def discover_all_services(self) -> Dict[str, Dict]:
         """Discover all configured services"""
-        print("🔍 Discovering ABI services...")
+        print("🔍 Discovering bia services...")
         
         tasks = []
         for service_id, endpoint in self.services.items():
@@ -247,7 +247,7 @@ class ServiceDiscovery:
     def print_discovery_results(self, discovery_results: Dict[str, Dict]):
         """Print formatted discovery results"""
         print("\n" + "="*80)
-        print("🏗️  ABI SERVICE DISCOVERY RESULTS")
+        print("🏗️  bia SERVICE DISCOVERY RESULTS")
         print("="*80)
         
         # Group by status
@@ -289,11 +289,11 @@ class ServiceDiscovery:
         print(f"Health Rate: {(healthy_services/total_services)*100:.1f}%")
         
         if healthy_services == total_services:
-            print("\n🎉 All services are healthy! ABI system is ready.")
+            print("\n🎉 All services are healthy! bia system is ready.")
         elif healthy_services > 0:
             print(f"\n⚠️  {total_services - healthy_services} service(s) need attention.")
         else:
-            print("\n🚨 No services are running. Start services with: bun run abi:dev")
+            print("\n🚨 No services are running. Start services with: bun run bia:dev")
 
 
 async def main():

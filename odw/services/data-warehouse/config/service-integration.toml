@@ -1,4 +1,4 @@
-# ABI Service Integration Configuration
+# bia Service Integration Configuration
 # This file defines how services integrate with each other and resolves port conflicts
 
 [service_discovery]

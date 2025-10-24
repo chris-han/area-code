@@ -53,7 +53,7 @@ async def main():
         logger.info("✅ Connected to Temporal successfully!")
 
         # Create worker
-        task_queue = 'abi-workflows'
+        task_queue = 'bia-workflows'
 
         worker = Worker(
             client,

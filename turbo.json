@@ -47,11 +47,11 @@
       "cache": false,
       "persistent": true
     },
-    "abi:dev": {
+    "bia:dev": {
       "cache": false,
       "persistent": true
     },
-    "abi:dev:clean": {
+    "bia:dev:clean": {
       "cache": false,
       "persistent": true
     }

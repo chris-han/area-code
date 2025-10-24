@@ -3,7 +3,7 @@
   "display_name": "Azure Enterprise Agreement API",
   "description": "Azure Enterprise Agreement API connector for billing data extraction with FOCUS transformation support",
   "version": "1.0.0",
-  "author": "ABI Team",
+  "author": "bia Team",
   "category": "data_source",
   "plugin_type": "data_source",
   "entry_point": "plugin.py",
@@ -16,7 +16,7 @@
   "license": "MIT",
   "icon_url": "https://azure.microsoft.com/favicon.ico",
   "documentation_url": "https://docs.microsoft.com/en-us/rest/api/consumption/",
-  "repository_url": "https://github.com/abi-team/azure-ea-plugin",
+  "repository_url": "https://github.com/bia-team/azure-ea-plugin",
   "config_schema": {
     "type": "object",
     "properties": {

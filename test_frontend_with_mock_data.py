@@ -17,7 +17,7 @@ def create_mock_workflow_response():
                 "status": "running",
                 "start_time": "2024-01-15T10:30:00.000Z",
                 "end_time": None,
-                "task_queue": "abi-workflows",
+                "task_queue": "bia-workflows",
                 "run_id": "abc123"
             },
             {
@@ -26,7 +26,7 @@ def create_mock_workflow_response():
                 "status": "completed",
                 "start_time": "2024-01-15T09:00:00.000Z",
                 "end_time": "2024-01-15T09:15:00.000Z",
-                "task_queue": "abi-workflows",
+                "task_queue": "bia-workflows",
                 "run_id": "def456"
             },
             {
@@ -35,7 +35,7 @@ def create_mock_workflow_response():
                 "status": "failed",
                 "start_time": "2024-01-15T08:00:00.000Z",
                 "end_time": "2024-01-15T08:05:00.000Z",
-                "task_queue": "abi-workflows",
+                "task_queue": "bia-workflows",
                 "run_id": "ghi789"
             }
         ],
@@ -122,7 +122,7 @@ def main():
     print(f"- Frontend should display {len(mapped_workflows)} workflows ✅")
 
     print("\n💡 To see workflows in the frontend:")
-    print("1. Start Next.js frontend: cd odw/apps/abi-frontend && npm run dev")
+    print("1. Start Next.js frontend: cd bia_admin/bia-frontend && npm run dev")
     print("2. Visit: http://localhost:3000/workflows")
     print("3. The page will show 'No workflows found' because Temporal has no active workflows")
     print("4. Once workers are running and workflows are triggered, they'll display correctly")

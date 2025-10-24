@@ -6,11 +6,11 @@
 |----------|-------------|---------|--------------|
 | Moose CLI / ingestion & consumption APIs | `app/main.py` | `moose dev` | 4200 |
 | Billing Intelligence API (BIA) | `bia_backend/main.py` | `uvicorn bia_backend.main:app --reload --port 4300` | 4300 |
-| Combined dev stack | scripts | `./scripts/abi-dev.sh` | 4200 & 4300 |
+| Combined dev stack | scripts | `./scripts/bia-dev.sh` | 4200 & 4300 |
 
 ## 1. Moose Runtime (`app/main.py`)
 
-- **Purpose:** Registers Moose models, ingestion pipelines, workflows, materialized views, and Moose `ConsumptionApi` endpoints (including the ABI analytics APIs implemented inside Moose).
+- **Purpose:** Registers Moose models, ingestion pipelines, workflows, materialized views, and Moose `ConsumptionApi` endpoints (including the bia analytics APIs implemented inside Moose).
 - **Characteristics:** Bare FastAPI instance—Moose injects routes automatically. Required by the Moose CLI (file name cannot change).
 - **Typical commands:**
   ```bash
@@ -26,8 +26,8 @@
 - **Typical commands:**
   ```bash
   uvicorn bia_backend.main:app --reload --port 4300
-  ./scripts/abi-api.sh             # wrapper with virtualenv detection
-  ./scripts/abi-dev.sh             # runs Moose + BIA together
+  ../../../bia_admin/scripts/bia-api.sh  # wrapper with virtualenv detection
+  ./scripts/bia-dev.sh             # runs Moose + BIA together
   ```
 - **When to use:** Serving REST endpoints to frontends or external consumers, local feature development on BIA routes, readiness/health probes.
 
@@ -46,13 +46,13 @@ moose dev
 
 ### Local BIA Development
 ```bash
-./scripts/abi-api.sh
+../../../bia_admin/scripts/bia-api.sh
 # Visit http://localhost:4300/api/v1/health/ping
 ```
 
 ### Combined Stack
 ```bash
-./scripts/abi-dev.sh
+./scripts/bia-dev.sh
 # Moose → 4200, BIA → 4300
 ```
 

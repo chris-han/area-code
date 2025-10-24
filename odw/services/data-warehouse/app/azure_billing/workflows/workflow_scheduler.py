@@ -213,7 +213,7 @@ class WorkflowScheduler:
                 AzureBillingWorkflow.run,
                 input_params,
                 id=workflow_id,
-                task_queue="abi-workflows",
+                task_queue="bia-workflows",
                 execution_timeout=timedelta(minutes=workflow_config.timeout_minutes)
             )
         elif workflow_config.workflow_class == "DataValidationWorkflow":
@@ -222,7 +222,7 @@ class WorkflowScheduler:
                 resolved_params["data_location"],
                 resolved_params["validation_config"],
                 id=workflow_id,
-                task_queue="abi-workflows",
+                task_queue="bia-workflows",
                 execution_timeout=timedelta(minutes=workflow_config.timeout_minutes)
             )
         else:

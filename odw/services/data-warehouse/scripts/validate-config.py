@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Configuration validation script for ABI development environment.
+Configuration validation script for bia development environment.
 
 This script validates that all required environment variables and dependencies
 are properly configured for Azure Billing Intelligence development.
@@ -25,19 +25,19 @@ class Colors:
 
 
 def print_status(message: str):
-    print(f"{Colors.BLUE}[ABI-CONFIG]{Colors.NC} {message}")
+    print(f"{Colors.BLUE}[bia-CONFIG]{Colors.NC} {message}")
 
 
 def print_success(message: str):
-    print(f"{Colors.GREEN}[ABI-CONFIG]{Colors.NC} {message}")
+    print(f"{Colors.GREEN}[bia-CONFIG]{Colors.NC} {message}")
 
 
 def print_warning(message: str):
-    print(f"{Colors.YELLOW}[ABI-CONFIG]{Colors.NC} {message}")
+    print(f"{Colors.YELLOW}[bia-CONFIG]{Colors.NC} {message}")
 
 
 def print_error(message: str):
-    print(f"{Colors.RED}[ABI-CONFIG]{Colors.NC} {message}")
+    print(f"{Colors.RED}[bia-CONFIG]{Colors.NC} {message}")
 
 
 def check_python_version() -> bool:
@@ -179,7 +179,7 @@ def check_moose_config() -> bool:
         with open(config_path, 'r') as f:
             content = f.read()
         
-        # Check for ABI-specific configuration sections
+        # Check for bia-specific configuration sections
         required_sections = [
             '[data_model]',
             '[plugin_system]',
@@ -193,9 +193,9 @@ def check_moose_config() -> bool:
                 missing_sections.append(section.strip('[]'))
         
         if missing_sections:
-            print_warning(f"Missing ABI configuration sections: {', '.join(missing_sections)}")
+            print_warning(f"Missing bia configuration sections: {', '.join(missing_sections)}")
         else:
-            print_success("Moose configuration includes ABI sections")
+            print_success("Moose configuration includes bia sections")
         
         # Check FOCUS specification
         if 'specification = "focus"' in content:
@@ -285,7 +285,7 @@ def check_port_availability() -> bool:
 
 def main():
     """Main validation function"""
-    print_status("Validating ABI development environment...")
+    print_status("Validating bia development environment...")
     print()
     
     checks = [
@@ -327,7 +327,7 @@ def main():
     print(f"Passed: {passed}/{len(results)}")
     
     if passed == len(results):
-        print_success("All checks passed! ABI development environment is ready.")
+        print_success("All checks passed! bia development environment is ready.")
         return 0
     else:
         print_error("Some checks failed. Please fix the issues above.")

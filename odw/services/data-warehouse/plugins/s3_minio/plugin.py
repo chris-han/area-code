@@ -149,7 +149,7 @@ class S3MinIOPlugin(BasePlugin):
             "name": "s3-minio-csv",
             "version": "1.0.0",
             "description": "S3/MinIO CSV data source plugin for billing data extraction",
-            "author": "ABI Team",
+            "author": "bia Team",
             "category": "data_source",
             "plugin_type": "data_source",
             "tags": ["s3", "minio", "csv", "billing", "storage"],

@@ -2,7 +2,7 @@
 Plugin Registry Module
 
 PostgreSQL-based plugin registry for managing plugin metadata,
-installations, and configurations in the ABI plugin marketplace.
+installations, and configurations in the bia plugin marketplace.
 """
 
 from .plugin_registry import (

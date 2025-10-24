@@ -139,7 +139,7 @@ class AzureEAPlugin(BasePlugin):
             "name": "azure-ea-api",
             "version": "1.0.0",
             "description": "Azure Enterprise Agreement API connector for billing data extraction",
-            "author": "ABI Team",
+            "author": "bia Team",
             "category": "data_source",
             "plugin_type": "data_source",
             "tags": ["azure", "billing", "enterprise", "ea"],

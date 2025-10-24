@@ -14,7 +14,7 @@ This separation keeps the Moose runtime focused on Moose-native contracts while 
 ```
 app/
 ├── main.py                # Moose CLI entry point (Moose-only FastAPI shell)
-├── abi/                   # ABI analytics registered as Moose Consumption APIs
+├── bia/                   # bia analytics registered as Moose Consumption APIs
 ├── apis/                  # Moose ingestion & consumption endpoints
 ├── scripts/               # Moose stack helpers (dev/clean)
 └── …
@@ -32,15 +32,15 @@ bia_backend/
 |--------------------------------|-----------------------------------------------|------|
 | Moose CLI (ingest/consume)     | `moose dev` → `app/main.py`                   | 4200 |
 | Run BIA-only HTTP API          | `uvicorn bia_backend.main:app --port 4300`    | 4300 |
-| Dev helper script              | `./scripts/abi-api.sh`                        | 4300 |
-| Combined Moose + BIA dev stack | `./scripts/abi-dev.sh`                        | 4200 + 4300 |
+| Dev helper script              | `../../../bia_admin/scripts/bia-api.sh`       | 4300 |
+| Combined Moose + BIA dev stack | `./scripts/bia-dev.sh`                        | 4200 + 4300 |
 
-> Note: `./scripts/run-abi-standalone.sh` now targets `bia_backend.main:app` as well.
+> Note: `./scripts/run-bia-standalone.sh` now targets `bia_backend.main:app` as well.
 
 ## Moose Surface (`app/main.py`)
 
 - Provides a bare FastAPI instance—no general routers mounted.
-- Moose automatically wires `/ingest/*` and `/consumption/*` routes based on the registered pipelines and `ConsumptionApi` definitions (including the ABI analytics APIs under `app/abi/`).
+- Moose automatically wires `/ingest/*` and `/consumption/*` routes based on the registered pipelines and `ConsumptionApi` definitions (including the bia analytics APIs under `app/bia/`).
 - Safe to import in any Moose tooling or CLI flows.
 
 ## BIA Backend (`bia_backend/app.py`)
@@ -59,21 +59,21 @@ bia_backend/
 
 | Script                                    | Purpose                                      | Target |
 |-------------------------------------------|----------------------------------------------|--------|
-| `scripts/abi-api.sh`                      | Run only the BIA FastAPI app                 | `bia_backend.main:app`
-| `scripts/run-abi-standalone.sh`           | Manual launch of the BIA FastAPI app        | `bia_backend.main:app`
-| `scripts/abi-dev.sh`                      | Concurrent Moose stack + BIA backend dev     | `app/main.py` + `bia_backend/main.py`
+| `../../../bia_admin/scripts/bia-api.sh`   | Run only the BIA FastAPI app                 | `bia_backend.main:app`
+| `scripts/run-bia-standalone.sh`           | Manual launch of the BIA FastAPI app        | `bia_backend.main:app`
+| `scripts/bia-dev.sh`                      | Concurrent Moose stack + BIA backend dev     | `app/main.py` + `bia_backend/main.py`
 
 ## Azure Blob Staging Workflow
 
 - New connector + workflow pair (`connectors.azure_blob_connector`, `app/azure_billing/workflows/azure_blob_ingest_workflow.py`) reads parquet blobs described by plugin metadata.
 - Rows land in the Moose-managed ingest pipeline `AzureBlobStaging`, providing a ClickHouse staging table for follow-on transformations.
 - The workflow honours the Azure Blob Storage connector metadata, validating required fields before iterating containers and pushing records through Moose ingest.
-- Temporal integration exposes the workflow through the ABI admin UI’s “Create New Workflow → Azure Blob Parquet Ingest” entry and the `/api/v1/workflows/trigger` endpoint (`workflow_type="azure_blob_ingest"`).
+- Temporal integration exposes the workflow through the bia admin UI’s “Create New Workflow → Azure Blob Parquet Ingest” entry and the `/api/v1/workflows/trigger` endpoint (`workflow_type="azure_blob_ingest"`).
 
 ## Verification Tips
 
 1. **Moose APIs** – Execute `moose dev` and confirm `/consumption/*` endpoints continue to resolve (via Moose CLI or curl).
-2. **BIA Backend** – Run `./scripts/abi-api.sh` and hit `http://localhost:4300/api/v1/health/ping`.
+2. **BIA Backend** – Run `../../../bia_admin/scripts/bia-api.sh` and hit `http://localhost:4300/api/v1/health/ping`.
 3. **Import checks** – `python -m compileall bia_backend app/main.py` ensures the new modules compile.
 
 ## Why This Matters

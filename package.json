@@ -10,10 +10,12 @@
     "ufa-lite/services/*",
     "odw/apps/*",
     "odw/packages/*",
-    "odw/services/*"
+    "odw/services/*",
+    "bia_admin",
+    "bia_admin/bia-frontend"
   ],
   "scripts": {
-    "ufa:dev": "NODE_ENV=development turbo run ufa:dev --ui=tui",
+    "ufa:dev": "./scripts/run-ufa-dev.sh",
     "ufa:dev:clean": "turbo run ufa:dev:clean && find . -name 'node_modules' -type d -exec rm -rf {} + && find . -name '.moose' -type d -exec rm -rf {} + && find . -name '.ts-node' -type d -exec rm -rf {} +",
     "ufa:dev:seed": "./ufa/scripts/dev-seed.sh",
     "ufa:dev:seed:transactional-supabase-foobar": "./ufa/scripts/dev-seed.sh --service=transactional-supabase-foobar",
@@ -24,8 +26,8 @@
     "odw:dev": "turbo run odw:dev --ui=tui",
     "odw:dev:clean": "turbo run odw:dev:clean",
     "odw:dev:seed": "./odw/scripts/dev-seed.sh",
-    "abi:dev": "ABI_SKIP_PATTERN_KILL=1 ./odw/services/data-warehouse/scripts/free-ports.sh && turbo run abi:dev --ui=tui",
-    "abi:dev:clean": "./odw/services/data-warehouse/scripts/free-ports.sh"
+    "bia:dev": "ABI_SKIP_PATTERN_KILL=1 ./bia_admin/scripts/free-ports.sh && turbo run bia:dev --filter=@workspace/bia-frontend --filter=@workspace/bia-admin --ui=tui",
+    "bia:dev:clean": "./bia_admin/scripts/free-ports.sh"
   },
   "devDependencies": {
     "@turbo/gen": "^1.13.4",

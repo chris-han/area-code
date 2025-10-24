@@ -1,8 +1,8 @@
-# Azure Billing Intelligence (ABI) Design Document
+# Azure Billing Intelligence (bia) Design Document
 
 ## Overview
 
-The Azure Billing Intelligence (ABI) system is designed as a modern, cloud-native data platform that provides comprehensive Azure billing analytics and workflow orchestration. The system leverages the Moose framework for data infrastructure, Temporal for workflow orchestration, ClickHouse for high-performance analytics, and React with ShadCN UI for the frontend experience.
+The Azure Billing Intelligence (bia) system is designed as a modern, cloud-native data platform that provides comprehensive Azure billing analytics and workflow orchestration. The system leverages the Moose framework for data infrastructure, Temporal for workflow orchestration, ClickHouse for high-performance analytics, and React with ShadCN UI for the frontend experience.
 
 The architecture follows a microservices pattern with clear separation of concerns: data ingestion, processing, storage, and presentation layers. The system is designed to handle large-scale Azure billing data with real-time processing capabilities and provides intuitive interfaces for FinOps teams to analyze and optimize cloud costs.
 
@@ -24,7 +24,7 @@ graph TB
         REMOTE_PG[Remote PostgreSQL<br/>marspbi.postgres...<br/>Plugin Registry Only]
     end
     
-    subgraph "ABI System"
+    subgraph "bia System"
         subgraph "Frontend Layer"
             REACT[React Frontend<br/>ShadCN + Tailwind]
             PLUGIN_UI[Plugin Marketplace UI]
@@ -97,7 +97,7 @@ graph TB
     subgraph "Development Environment"
         subgraph "Frontend Services"
             DATALENS_L[DataLens Frontend<br/>localhost:8080]
-            ABI_EXT[ABI Extensions<br/>FOCUS Dashboards]
+            ABI_EXT[bia Extensions<br/>FOCUS Dashboards]
             PLUGIN_UI[Plugin Marketplace<br/>localhost:8080/plugins]
         end
         
@@ -186,7 +186,7 @@ graph TB
 **Technology Stack**:
 - DataLens platform as base framework
 - React 18+ with TypeScript extensions
-- ShadCN UI component library for ABI-specific components
+- ShadCN UI component library for bia-specific components
 - Tailwind CSS for custom styling
 - DataLens native visualization engine
 - TanStack Query for additional data fetching
@@ -428,7 +428,7 @@ server_servlet_contextpath = "/"
 
 [redis_config]
 url = "redis://127.0.0.1:6379"
-key_prefix = "ABI"
+key_prefix = "bia"
 
 [http_server_config]
 host = "localhost"
@@ -441,7 +441,7 @@ endpoint_url = "http://localhost:9500"
 access_key_id = "minioadmin"
 secret_access_key = "minioadmin"
 region_name = "us-east-1"
-bucket_name = "abi-data"
+bucket_name = "bia-data"
 signature_version = "s3v4"
 
 [git_config]
@@ -454,7 +454,7 @@ data_model_v2 = true
 
 [plugin_system]
 plugin_directory = "./plugins"
-marketplace_url = "https://abi-plugins.registry.com"
+marketplace_url = "https://bia-plugins.registry.com"
 auto_update = false
 lazy_loading = true
 cache_plugins = true
@@ -510,7 +510,7 @@ S3_ENDPOINT_URL=http://localhost:9500
 S3_ACCESS_KEY_ID=minioadmin
 S3_SECRET_ACCESS_KEY=minioadmin
 S3_REGION_NAME=us-east-1
-S3_BUCKET_NAME=abi-data
+S3_BUCKET_NAME=bia-data
 
 # LLM Configuration for Unstructured Data Processing
 ANTHROPIC_API_KEY=
@@ -804,7 +804,7 @@ class AzureEAPlugin(DataSourcePlugin):
             name="azure-ea-api",
             version="1.0.0",
             description="Azure Enterprise Agreement API connector for billing data",
-            author="ABI Team",
+            author="bia Team",
             category="billing",
             tags=["azure", "billing", "enterprise"],
             requirements=["requests>=2.28.0", "azure-identity>=1.12.0"],
@@ -842,7 +842,7 @@ class S3MinIOPlugin(DataSourcePlugin):
             name="s3-minio",
             version="1.0.0",
             description="S3 and MinIO object storage connector",
-            author="ABI Team",
+            author="bia Team",
             category="storage",
             tags=["s3", "minio", "object-storage"],
             requirements=["boto3>=1.26.0", "minio>=7.1.0"],
@@ -1041,7 +1041,7 @@ class PluginIntegrationService:
                 "name": "Azure Blob Storage",
                 "version": "1.0.0",
                 "description": "FOCUS-compliant data source for Azure Blob Storage parquet files",
-                "author": "ABI Team",
+                "author": "bia Team",
                 "category": "storage",
                 "tags": ["azure", "blob", "parquet", "focus", "ncei"],
                 "configSchema": {
@@ -1152,7 +1152,7 @@ graph TB
     
     subgraph "Analytics Layer"
         DATALENS_CORE[DataLens Core Engine]
-        ABI_EXTENSIONS[ABI Custom Extensions]
+        ABI_EXTENSIONS[bia Custom Extensions]
         FOCUS_WIDGETS[FOCUS-compliant Widgets]
     end
     
@@ -1297,7 +1297,7 @@ class DataLensTransformationEngine:
 
 **Purpose**: Provide centralized management interface for all supporting infrastructure services with direct access to their native management UIs.
 
-**Design Decision**: Integrate infrastructure management directly into the ABI frontend while providing seamless access to native service UIs (RedPanda UI, MinIO Console, Temporal UI).
+**Design Decision**: Integrate infrastructure management directly into the bia frontend while providing seamless access to native service UIs (RedPanda UI, MinIO Console, Temporal UI).
 
 **Key Components**:
 
@@ -1535,9 +1535,9 @@ async def list_minio_buckets() -> List[str]:
 
 ### 8. DataLens Frontend Integration
 
-**Purpose**: Extend DataLens open-source BI platform with ABI-specific functionality while maintaining compatibility with the core DataLens ecosystem.
+**Purpose**: Extend DataLens open-source BI platform with bia-specific functionality while maintaining compatibility with the core DataLens ecosystem.
 
-**Design Decision**: Use DataLens as the foundational frontend platform and extend it with ABI-specific widgets, dashboards, and FOCUS-compliant analytics capabilities rather than building a custom frontend from scratch.
+**Design Decision**: Use DataLens as the foundational frontend platform and extend it with bia-specific widgets, dashboards, and FOCUS-compliant analytics capabilities rather than building a custom frontend from scratch.
 
 **Rationale**: DataLens provides a proven, enterprise-grade BI platform with robust visualization capabilities, SQL-based dataset management, and extensible architecture. This approach reduces development time while ensuring professional-grade analytics capabilities.
 
@@ -1552,7 +1552,7 @@ interface ABIDataLensConfig {
     defaultConnection: string;
   };
   
-  // ABI-specific extensions
+  // bia-specific extensions
   extensions: {
     focusCompliance: boolean;
     azureBillingWidgets: boolean;
@@ -1946,22 +1946,22 @@ async def test_azure_billing_workflow(test_environment):
 
 ### Monorepo Architecture
 
-**Design Decision**: Organize the ABI system as a monorepo using Turbo for orchestration, with clear separation between apps, services, and packages.
+**Design Decision**: Organize the bia system as a monorepo using Turbo for orchestration, with clear separation between apps, services, and packages.
 
 **Structure**:
 ```
 azure-billing-intelligence/
 ├── apps/
-│   ├── abi-frontend/                 # DataLens-based frontend
-│   └── abi-admin/                    # Admin interface (optional)
+│   ├── bia-frontend/                 # DataLens-based frontend
+│   └── bia-admin/                    # Admin interface (optional)
 ├── services/
-│   ├── @workspace/abi-api/           # FastAPI backend
-│   ├── @workspace/abi-workflows/     # Temporal workflows
-│   └── @workspace/abi-plugins/       # Plugin system
+│   ├── @workspace/bia-api/           # FastAPI backend
+│   ├── @workspace/bia-workflows/     # Temporal workflows
+│   └── @workspace/bia-plugins/       # Plugin system
 ├── packages/
-│   ├── @workspace/abi-models/        # Shared data models
-│   ├── @workspace/abi-config/        # Shared configurations
-│   └── @workspace/abi-ui/            # Shared UI components
+│   ├── @workspace/bia-models/        # Shared data models
+│   ├── @workspace/bia-config/        # Shared configurations
+│   └── @workspace/bia-ui/            # Shared UI components
 ├── turbo.json                        # Turbo configuration
 ├── package.json                      # Root package.json
 └── docker-compose.yml               # Infrastructure services
@@ -2115,7 +2115,7 @@ uv run pytest
 **Implementation**:
 ```json
 {
-  "name": "@workspace/abi-frontend",
+  "name": "@workspace/bia-frontend",
   "version": "0.1.0",
   "type": "module",
   "scripts": {
@@ -2245,7 +2245,7 @@ bun test
 
 ## ⚙️ Configuration Workflow
 
-The ABI system follows the ODW layered configuration model where secrets stay local while shared defaults live in version control.
+The bia system follows the ODW layered configuration model where secrets stay local while shared defaults live in version control.
 
 **Key Files**
 
@@ -2321,19 +2321,19 @@ Following ODW patterns for consistent development experience:
 **Available Scripts**
 ```bash
 # Development
-bun run abi:dev              # Start all ABI services
-bun run abi:dev:clean        # Clean all services
+bun run bia:dev              # Start all bia services
+bun run bia:dev:clean        # Clean all services
 
 # Individual services
 bun run --cwd services/data-warehouse dev     # Moose backend only
-bun run --cwd apps/abi-frontend dev           # DataLens frontend only
+bun run --cwd apps/bia-frontend dev           # DataLens frontend only
 ```
 
 **Project Structure**
 ```
 azure-billing-intelligence/
 ├── services/
-│   ├── data-warehouse/          # Main Moose ABI service
+│   ├── data-warehouse/          # Main Moose bia service
 │   │   ├── app/
 │   │   │   ├── apis/           # REST API endpoints
 │   │   │   ├── azure_billing/  # Azure billing workflows
@@ -2345,8 +2345,8 @@ azure-billing-intelligence/
 │   │   └── requirements.txt    # Python dependencies
 │   └── plugin-manager/         # Plugin marketplace service
 └── apps/
-    └── abi-frontend/           # DataLens-based frontend
-        ├── components/         # ABI-specific components
+    └── bia-frontend/           # DataLens-based frontend
+        ├── components/         # bia-specific components
         ├── dashboards/         # FOCUS dashboards
         └── plugins/            # Plugin marketplace UI
 ```

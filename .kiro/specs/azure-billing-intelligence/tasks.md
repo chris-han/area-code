@@ -9,7 +9,7 @@
   - _Requirements: 6.1, 6.2, 6.3, 11.1, 11.2_
 
 - [x] 1.1 Initialize Moose Project with Remote Database
-  - Execute `moose init moose-abi --from-remote "https://finops:cU2f947&9T{6d@ck.mightytech.cn:8443/?database=finops-odw" --language python`
+  - Execute `moose init moose-bia --from-remote "https://finops:cU2f947&9T{6d@ck.mightytech.cn:8443/?database=finops-odw" --language python`
   - Configure moose.config.toml with FOCUS specification and DataLens settings
   - Set up project directory structure with source models, target models, and transformation modules
   - _Requirements: 6.1, 6.4_
@@ -17,7 +17,7 @@
 - [x] 1.2 Configure Development Environment
   - Set up UV for Python backend package management following ODW patterns
   - Configure Bun for frontend package management with package.json
-  - Create development scripts following ODW structure: `bun run abi:dev`, `bun run abi:dev:clean`
+  - Create development scripts following ODW structure: `bun run bia:dev`, `bun run bia:dev:clean`
   - Set up .env file with verified service configurations and port mappings
   - _Requirements: 11.1, 11.2, 11.3_
 
@@ -123,7 +123,7 @@
   - _Requirements: 1.1, 1.2, 4.1, 4.2, 4.3_
 
 - [x] 4.1 Extend Moose API Application Structure
-  - Extend existing Moose API framework with ABI-specific endpoints and routers
+  - Extend existing Moose API framework with bia-specific endpoints and routers
   - Implement dependency injection for ClickHouse (localhost:18123), Temporal (localhost:7233), and plugin manager connections
   - Set up Pydantic models for FOCUS-compliant request/response validation
   - _Requirements: 1.1, 1.2_
@@ -191,7 +191,7 @@
 
 - [x] 6. DataLens Frontend Integration and Extension
   - Set up DataLens platform as base frontend framework
-  - Implement ABI-specific extensions and FOCUS-compliant widgets
+  - Implement bia-specific extensions and FOCUS-compliant widgets
   - Create custom dashboards for cost optimization and resource utilization
   - Develop plugin marketplace and infrastructure management UIs
   - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 9.1, 10.1, 10.2, 10.3, 13.1, 13.2, 13.3, 13.4_
@@ -209,7 +209,7 @@
   - Implement budget tracking and cost allocation visualization components
   - _Requirements: 5.1, 5.2, 13.2, 13.3_
 
-- [x] 6.3 Build ABI-Specific Dashboard Templates
+- [x] 6.3 Build bia-Specific Dashboard Templates
   - Create cost optimization dashboard with anomaly detection and recommendations
   - Develop resource utilization dashboard with efficiency metrics and trends
   - Implement budget tracking dashboard with variance analysis and forecasting

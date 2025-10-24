@@ -12,7 +12,7 @@
 ### app/main.py
 - Provides a bare FastAPI instance for Moose tooling.
 - Keeps the import side effects that register Moose ingestion/consumption APIs.
-- No longer mounts ABI routers or mixes lifecycle logic.
+- No longer mounts bia routers or mixes lifecycle logic.
 
 ### bia_backend/app.py
 - Hosts the `ABIApplication` class, dependency initialization, and FastAPI factory.
@@ -20,14 +20,14 @@
 - Exposes `abi_fastapi_app`/`bia_fastapi_app` for consumers and compatibility.
 
 ### Routers
-- Moved from `app/abi/routers` to `bia_backend/routers`.
+- Moved from `app/bia/routers` to `bia_backend/routers`.
 - Imports updated to use `bia_backend.app` for dependencies.
 
 ### Scripts
-- `scripts/abi-api.sh`, `scripts/run-abi-standalone.sh`, and `scripts/abi-dev.sh` now point to `bia_backend.main:app` (port 4300).
+- `../../../bia_admin/scripts/bia-api.sh`, `scripts/run-bia-standalone.sh`, and `scripts/bia-dev.sh` now point to `bia_backend.main:app` (port 4300).
 
 ## Follow-up Checks
 
 1. `python -m compileall bia_backend app/main.py`
-2. `./scripts/abi-api.sh` → check `http://localhost:4300/api/v1/health/ping`
+2. `../../../bia_admin/scripts/bia-api.sh` → check `http://localhost:4300/api/v1/health/ping`
 3. `moose dev` → verify `/consumption/*` endpoints

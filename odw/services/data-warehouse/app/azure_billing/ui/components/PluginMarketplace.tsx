@@ -409,7 +409,7 @@ const PluginMarketplace: React.FC<PluginMarketplaceProps> = ({
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Plugin Marketplace</h1>
-        <p className="text-gray-600">Discover and install plugins to extend ABI functionality</p>
+        <p className="text-gray-600">Discover and install plugins to extend bia functionality</p>
       </div>
 
       {/* Error Alert */}

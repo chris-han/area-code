@@ -477,7 +477,7 @@ def main():
         
         print("\n🎉 Plugin configuration setup completed successfully!")
         print("\nNext steps:")
-        print("1. Update plugin configurations through the ABI frontend UI")
+        print("1. Update plugin configurations through the bia frontend UI")
         print("2. Add your Azure storage account and SAS token")
         print("3. Verify ClickHouse connection settings")
         print("4. Test plugin connections in the admin panel")

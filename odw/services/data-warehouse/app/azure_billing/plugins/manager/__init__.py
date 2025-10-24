@@ -2,7 +2,7 @@
 Plugin Manager Module
 
 Manages plugin lifecycle with lazy loading, discovery, installation,
-and configuration validation for the ABI plugin system.
+and configuration validation for the bia plugin system.
 """
 
 from .plugin_manager import (

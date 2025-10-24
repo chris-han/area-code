@@ -7,8 +7,6 @@
     "clean": "./app/scripts/clean.sh",
     "odw:dev": "./app/scripts/dev.sh",
     "odw:dev:clean": "./app/scripts/clean.sh",
-    "abi:dev": "./scripts/abi-api.sh",
-    "abi:dev:clean": "./app/scripts/clean.sh",
     "odw:moose:dev": "./app/scripts/dev.sh"
   }
 }

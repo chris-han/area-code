@@ -71,7 +71,7 @@ docker exec -it data-warehouse-postgresql-1 psql -U temporal -d bia_config -c "S
 
 The plugin registry database integrates with:
 
-- **ABI Frontend**: Plugin management UI at `http://localhost:3003/admin/plugins`
+- **bia Frontend**: Plugin management UI at `http://localhost:3003/admin/plugins`
 - **FastAPI Backend**: Plugin configuration APIs (`/configurePlugin`, `/getPluginConfiguration`, etc.)
 - **Workflow System**: Plugin selection and configuration in workflow creation
 

@@ -1,7 +1,7 @@
 /**
  * Plugin UI Components
  * 
- * Export all plugin-related UI components for the ABI plugin marketplace
+ * Export all plugin-related UI components for the bia plugin marketplace
  */
 
 export { default as PluginManager } from './PluginManager';

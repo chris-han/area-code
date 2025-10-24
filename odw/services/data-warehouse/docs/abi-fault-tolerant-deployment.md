@@ -15,7 +15,7 @@ The Billing Intelligence API (BIA) now runs as an independent FastAPI applicatio
 uvicorn bia_backend.main:app --host 0.0.0.0 --port 4300
 
 # Or via helper script
-./scripts/abi-api.sh
+../../../bia_admin/scripts/bia-api.sh
 ```
 
 Moose ingestion/consumption endpoints remain available through `moose dev` (port 4200) and are unaffected by the BIA process.

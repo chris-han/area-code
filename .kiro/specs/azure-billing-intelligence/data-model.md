@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Azure Billing Intelligence (ABI) system implements a dual data model architecture based on the FinOps Open Cost and Usage Specification (FOCUS). This approach separates source data models from the canonical target data model, enabling flexible data ingestion from multiple sources while maintaining standardized analytics and reporting.
+The Azure Billing Intelligence (bia) system implements a dual data model architecture based on the FinOps Open Cost and Usage Specification (FOCUS). This approach separates source data models from the canonical target data model, enabling flexible data ingestion from multiple sources while maintaining standardized analytics and reporting.
 
 ## FOCUS Specification Implementation
 

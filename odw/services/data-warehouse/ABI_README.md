@@ -1,8 +1,8 @@
-# Azure Billing Intelligence (ABI) System
+# Azure Billing Intelligence (bia) System
 
 ## Overview
 
-The Azure Billing Intelligence (ABI) system is a comprehensive data platform built on the Moose framework that provides real-time analytics, workflow orchestration, and intelligent insights for Azure billing data. The system integrates Azure EA API data sources with ClickHouse analytics, Temporal workflow orchestration, and modern web interfaces to deliver a complete FinOps solution.
+The Azure Billing Intelligence (bia) system is a comprehensive data platform built on the Moose framework that provides real-time analytics, workflow orchestration, and intelligent insights for Azure billing data. The system integrates Azure EA API data sources with ClickHouse analytics, Temporal workflow orchestration, and modern web interfaces to deliver a complete FinOps solution.
 
 ## Key Features
 
@@ -14,12 +14,12 @@ The Azure Billing Intelligence (ABI) system is a comprehensive data platform bui
 
 ## Architecture
 
-The ABI system extends the existing ODW (Operation Data Warehouse) infrastructure with Azure billing-specific capabilities:
+The bia system extends the existing ODW (Operation Data Warehouse) infrastructure with Azure billing-specific capabilities:
 
 ```
 odw/services/data-warehouse/
 ├── app/
-│   ├── azure_billing/          # ABI core modules
+│   ├── azure_billing/          # bia core modules
 │   │   ├── models/            # FOCUS and source data models
 │   │   ├── workflows/         # Temporal workflows
 │   │   └── transformations/   # SQL transformation modules
@@ -27,7 +27,7 @@ odw/services/data-warehouse/
 ├── plugins/                   # Data source plugins
 │   ├── azure_ea/             # Azure EA API plugin
 │   └── s3_minio/             # S3/MinIO plugin
-├── moose.config.toml         # Extended with ABI configuration
+├── moose.config.toml         # Extended with bia configuration
 └── .env                      # Environment variables
 ```
 
@@ -86,12 +86,12 @@ The configuration includes:
 
 3. **Start Development Services**:
    ```bash
-   bun run abi:dev
+   bun run bia:dev
    ```
 
 4. **Clean and Restart**:
    ```bash
-   bun run abi:dev:clean
+   bun run bia:dev:clean
    ```
 
 ### Available Services

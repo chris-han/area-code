@@ -26,7 +26,7 @@ class AzureBlobIngestParams(BaseModel):
     Runtime parameters for the Azure Blob ingestion workflow.
 
     Values default to environment variables to keep the workflow compatible with
-    existing plugin metadata and the ABI plugin configuration UX.
+    existing plugin metadata and the bia plugin configuration UX.
     """
 
     account_url: Optional[str] = Field(

@@ -2,7 +2,7 @@
 Plugin Interfaces
 
 Defines standard interfaces for different types of plugins
-in the ABI plugin system.
+in the bia plugin system.
 """
 
 from abc import ABC, abstractmethod
@@ -254,7 +254,7 @@ class UtilityPlugin(BasePlugin):
     Abstract base class for utility plugins.
     
     Utility plugins provide helper functions and tools
-    for the ABI system.
+    for the bia system.
     """
     
     @abstractmethod

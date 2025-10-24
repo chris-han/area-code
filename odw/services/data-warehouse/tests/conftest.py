@@ -1,5 +1,5 @@
 """
-Pytest configuration and fixtures for ABI tests.
+Pytest configuration and fixtures for bia tests.
 """
 
 import pytest
@@ -180,7 +180,7 @@ async def mock_plugin_integration_service():
             "name": "Azure EA API",
             "version": "1.0.0",
             "description": "Azure Enterprise Agreement API connector",
-            "author": "ABI Team",
+            "author": "bia Team",
             "category": "billing",
             "tags": ["azure", "billing", "enterprise"],
             "isInstalled": True,
@@ -192,7 +192,7 @@ async def mock_plugin_integration_service():
             "name": "Azure Blob Storage",
             "version": "1.0.0", 
             "description": "Azure Blob Storage connector for parquet files",
-            "author": "ABI Team",
+            "author": "bia Team",
             "category": "storage",
             "tags": ["azure", "storage", "parquet"],
             "isInstalled": True,

@@ -41,5 +41,8 @@
       "driver": "ClickHouse",
       "name": "moose"
     }
-  ]
+  ],
+  "python.defaultInterpreterPath": "${workspaceFolder}/bia_admin/bia_backend/.venv/bin/python",
+  "python.pythonPath": "${workspaceFolder}/bia_admin/bia_backend/.venv/bin/python",
+  "python.terminal.activateEnvironment": true
 }

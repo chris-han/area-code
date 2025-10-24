@@ -95,8 +95,8 @@ CREATE TABLE IF NOT EXISTS plugin_installations (
     version_id UUID REFERENCES plugin_versions(id) ON DELETE SET NULL,
     
     -- Installation details
-    installation_id VARCHAR(255) NOT NULL UNIQUE, -- Unique per ABI instance
-    instance_id VARCHAR(255) NOT NULL, -- ABI instance identifier
+    installation_id VARCHAR(255) NOT NULL UNIQUE, -- Unique per bia instance
+    instance_id VARCHAR(255) NOT NULL, -- bia instance identifier
     
     -- Installation configuration
     config JSONB,

@@ -2,7 +2,7 @@
 Plugin Manager
 
 Manages plugin lifecycle with lazy loading, discovery, installation,
-and configuration validation for the ABI plugin system.
+and configuration validation for the bia plugin system.
 """
 
 from typing import Dict, Any, List, Optional, Type, Callable, Union
@@ -52,7 +52,7 @@ class PluginInstance:
 
 class BasePlugin(ABC):
     """
-    Abstract base class for all ABI plugins.
+    Abstract base class for all bia plugins.
     
     All plugins must inherit from this class and implement the required methods.
     """

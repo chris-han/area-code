@@ -8,7 +8,7 @@ from temporalio.client import Client
 # Import the TemporalClient to test its mapping
 import sys
 import os
-sys.path.append('/home/chris/repo/area-code/odw/services/data-warehouse')
+sys.path.append('/home/chris/repo/area-code/bia_admin')
 from bia_backend.services.temporal_client import TemporalClient
 
 async def debug_workflow_mapping():

@@ -35,5 +35,5 @@ services/*/temp_migration/
 services/*/dev-*.log
 services/*/.moose/
 odw/scripts/memo*
-odw/apps/abi-frontend/.next/
+bia_admin/bia-frontend/.next/
 *.parquet

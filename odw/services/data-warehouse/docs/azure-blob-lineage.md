@@ -24,7 +24,7 @@ flowchart TD
     subgraph Downstream[Downstream Processing]
         D1[FOCUS Transformations\n`app/azure_billing/transformations/*`]
         D2[Analytics Views\n`app/views/*`]
-        D3[ABI Consumption APIs\n`bia_backend/*`]
+        D3[bia Consumption APIs\n`bia_backend/*`]
     end
 
     A1 -->|Plugin metadata config| B1
@@ -48,7 +48,7 @@ sequenceDiagram
     participant Ingest as Moose Ingest API
     participant ClickHouse as ClickHouse Staging
     participant Transform as FOCUS Transformations
-    participant API as ABI Consumption APIs
+    participant API as bia Consumption APIs
 
     Azure->>Workflow: Plugin metadata (containers, prefix, SAS)
     Workflow->>Connector: Instantiate with resolved config
@@ -57,7 +57,7 @@ sequenceDiagram
     Workflow->>Ingest: POST /ingest/AzureBlobStaging
     Ingest->>ClickHouse: Persist staging rows
     ClickHouse->>Transform: Provide staging dataset
-    Transform->>API: Serve analytics + ABI routes
+    Transform->>API: Serve analytics + bia routes
 ```
 
 ## Stages
@@ -66,8 +66,8 @@ sequenceDiagram
 - **Azure Blob Connector** – Implemented in `odw/services/connectors/src/azure_blob_connector.py`; uses plugin metadata to resolve containers, enumerates parquet files, normalizes Arrow rows, and prepares JSON payloads.
 - **Moose Workflow** – Defined in `odw/services/data-warehouse/app/azure_billing/workflows/azure_blob_ingest_workflow.py`; validates config, orchestrates the connector, and posts to Moose ingest.
 - **Moose Ingest** – `AzureBlobStaging` pipeline in `odw/services/data-warehouse/app/ingest/models.py` that persists rows to a ClickHouse staging table exposed via Moose CLI.
-- **Downstream Processing** – Transformation engines convert staging data into FOCUS models, expose analytical views, and serve ABI APIs.
-- **Trigger Surface** – Available via the ABI admin UI (`Create New Workflow → Azure Blob Parquet Ingest`) and through the `/api/v1/workflows/trigger` endpoint using `workflow_type="azure_blob_ingest"`.
+- **Downstream Processing** – Transformation engines convert staging data into FOCUS models, expose analytical views, and serve bia APIs.
+- **Trigger Surface** – Available via the bia admin UI (`Create New Workflow → Azure Blob Parquet Ingest`) and through the `/api/v1/workflows/trigger` endpoint using `workflow_type="azure_blob_ingest"`.
 
 ## Components & Paths
 
