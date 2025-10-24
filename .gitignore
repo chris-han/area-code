@@ -37,3 +37,4 @@ services/*/.moose/
 odw/scripts/memo*
 bia_admin/bia-frontend/.next/
 *.parquet
+bia_admin/bia_backend/routers/__pycache__/

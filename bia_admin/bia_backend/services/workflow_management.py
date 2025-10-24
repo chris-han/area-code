@@ -303,6 +303,16 @@ async def trigger_workflow(temporal_client: TemporalClient, params: WorkflowTrig
     """Trigger a new workflow execution using Temporal."""
 
     try:
+        # Import here to avoid circular imports
+        from .worker_management import get_worker_manager
+
+        # Ensure worker is running before triggering workflow
+        worker_manager = get_worker_manager()
+        worker_running = await worker_manager.ensure_worker_running()
+
+        if not worker_running:
+            logger.warning("Failed to start worker, but proceeding with workflow trigger")
+
         workflow_id = f"wf_{params.workflow_type.value}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
 
         duration_estimates = {
@@ -323,15 +333,20 @@ async def trigger_workflow(temporal_client: TemporalClient, params: WorkflowTrig
         )
 
         logger.info(
-            "Successfully triggered workflow %s with ID %s",
+            "Successfully triggered workflow %s with ID %s (worker running: %s)",
             params.workflow_type.value,
             execution_id,
+            worker_running,
         )
+
+        message = f"Workflow {params.workflow_type.value} triggered successfully"
+        if worker_running:
+            message += " (worker started automatically)"
 
         return WorkflowTriggerResponse(
             success=True,
             workflow_id=execution_id,
-            message=f"Workflow {params.workflow_type.value} triggered successfully",
+            message=message,
             estimated_duration=duration_estimates.get(params.workflow_type),
         )
 

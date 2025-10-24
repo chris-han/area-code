@@ -17,6 +17,7 @@ from bia_backend.services.workflow_management import (
     WorkflowStatusQuery, WorkflowStatusResponse, get_workflow_status,
     WorkflowMetricsQuery, WorkflowMetricsResponse, get_workflow_metrics,
 )
+from bia_backend.services.worker_management import get_worker_manager
 
 logger = logging.getLogger(__name__)
 
@@ -223,4 +224,95 @@ async def get_workflow_metrics_endpoint(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get workflow metrics: {str(e)}"
+        )
+
+
+@workflow_management_router.get("/worker/status")
+async def get_worker_status():
+    """
+    Get current Temporal worker status.
+
+    Returns information about the worker process including:
+    - Whether it's running
+    - Process ID
+    - Script being used (run_worker_with_correct_host.py)
+    - Current status
+    """
+    try:
+        worker_manager = get_worker_manager()
+        status_info = await worker_manager.get_worker_status()
+
+        return {
+            "success": True,
+            "worker": status_info,
+            "message": "Worker status retrieved successfully"
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting worker status: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get worker status: {str(e)}"
+        )
+
+
+@workflow_management_router.post("/worker/start")
+async def start_worker():
+    """
+    Manually start the Temporal worker.
+
+    Uses run_worker_with_correct_host.py as the default worker script.
+    This endpoint is useful for manually ensuring a worker is running.
+    """
+    try:
+        worker_manager = get_worker_manager()
+        success = await worker_manager.ensure_worker_running()
+
+        if success:
+            return {
+                "success": True,
+                "message": "Worker started successfully using run_worker_with_correct_host.py"
+            }
+        else:
+            return {
+                "success": False,
+                "message": "Failed to start worker"
+            }
+
+    except Exception as e:
+        logger.error(f"Error starting worker: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to start worker: {str(e)}"
+        )
+
+
+@workflow_management_router.post("/worker/restart")
+async def restart_worker():
+    """
+    Restart the Temporal worker.
+
+    Stops the current worker process and starts a new one using
+    run_worker_with_correct_host.py.
+    """
+    try:
+        worker_manager = get_worker_manager()
+        success = await worker_manager.restart_worker()
+
+        if success:
+            return {
+                "success": True,
+                "message": "Worker restarted successfully using run_worker_with_correct_host.py"
+            }
+        else:
+            return {
+                "success": False,
+                "message": "Failed to restart worker"
+            }
+
+    except Exception as e:
+        logger.error(f"Error restarting worker: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to restart worker: {str(e)}"
         )

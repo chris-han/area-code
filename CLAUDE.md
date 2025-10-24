@@ -57,11 +57,10 @@ python run_worker_with_correct_host.py
 
 ### 3. Starting a Workflow
 ```bash
-# 1. Start the worker first
-cd odw/services/data-warehouse
-python run_worker_with_correct_host.py
+# AUTOMATIC WORKER STARTUP (NEW DEFAULT)
+# The API now automatically starts run_worker_with_correct_host.py when triggering workflows
 
-# 2. Trigger workflow via API
+# 1. Trigger workflow via API (worker starts automatically)
 curl -X POST "http://localhost:4300/api/v1/workflows/trigger" \
   -H "Content-Type: application/json" \
   -d '{
@@ -73,18 +72,25 @@ curl -X POST "http://localhost:4300/api/v1/workflows/trigger" \
     }
   }'
 
-# 3. Check workflow status
+# 2. Check workflow status
 curl -X POST "http://localhost:4300/api/v1/workflows/status" \
   -H "Content-Type: application/json" \
   -d '{"workflow_id": "WORKFLOW_ID_FROM_RESPONSE"}'
+
+# 3. Check worker status (optional)
+curl -X GET "http://localhost:4300/api/v1/workflows/worker/status"
+
+# 4. Manual worker management (optional)
+curl -X POST "http://localhost:4300/api/v1/workflows/worker/start"   # Start worker
+curl -X POST "http://localhost:4300/api/v1/workflows/worker/restart" # Restart worker
 ```
 
 ### 4. Critical Requirements
-✅ **Worker must be running** before triggering workflows
+✅ **Worker auto-starts** when triggering workflows (uses `run_worker_with_correct_host.py` by default)
 ✅ **Temporal server** must be accessible at `172.18.0.3:7233`
 ✅ **BIA backend** must be running on port 4300
 ✅ **Datetime handling**: Activities must handle both datetime objects and ISO strings
-✅ **Connection**: Use `run_worker_with_correct_host.py` for proper Docker network connection
+✅ **Connection**: `run_worker_with_correct_host.py` is used automatically for proper Docker network connection
 
 ### 5. Common Issues & Solutions
 - **Worker connection**: Use container IP (`172.18.0.3:7233`) not localhost
