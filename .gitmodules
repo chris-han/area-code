@@ -7,3 +7,6 @@
 [submodule "odw/datalens-backend"]
 	path = odw/datalens-backend
 	url = https://github.com/chris-han/datalens-backend.git
+[submodule "FOCUS_Spec"]
+	path = FOCUS_Spec
+	url = https://github.com/FinOps-Open-Cost-and-Usage-Spec/FOCUS_Spec.git
