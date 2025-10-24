@@ -38,3 +38,5 @@ odw/scripts/memo*
 bia_admin/bia-frontend/.next/
 *.parquet
 bia_admin/bia_backend/routers/__pycache__/
+odw/services/data-warehouse/app/.azure_billing
+focus-mcp-main/data/
