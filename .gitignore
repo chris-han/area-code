@@ -41,3 +41,4 @@ bia_admin/bia_backend/routers/__pycache__/
 odw/services/data-warehouse/app/.azure_billing
 focus-mcp-main/data/
 .venv
+odw/services/data-warehouse/app/focus_billing/data/
