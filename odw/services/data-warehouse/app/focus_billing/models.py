@@ -125,8 +125,8 @@ class FocusCostUsage(BaseModel):
     
     # Audit fields
     source_system: str = Field(default="focus_parquet", description="Source system identifier")
-    created_at: datetime = Field(default_factory=datetime.utcnow, description="Record creation timestamp")
-    updated_at: datetime = Field(default_factory=datetime.utcnow, description="Record update timestamp")
+    created_at: datetime = Field(default_factory=lambda: datetime.now(), description="Record creation timestamp")
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(), description="Record update timestamp")
 
     class Config:
         # Allow extra fields for extended provider columns
@@ -176,8 +176,8 @@ class FocusContractCommitment(BaseModel):
     
     # Audit fields
     source_system: str = Field(default="focus_parquet", description="Source system identifier")
-    created_at: datetime = Field(default_factory=datetime.utcnow, description="Record creation timestamp")
-    updated_at: datetime = Field(default_factory=datetime.utcnow, description="Record update timestamp")
+    created_at: datetime = Field(default_factory=lambda: datetime.now(), description="Record creation timestamp")
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(), description="Record update timestamp")
 
     class Config:
         extra = "allow"
@@ -235,7 +235,7 @@ class FocusIngestManifest(BaseModel):
     rows_processed: int = Field(description="Number of rows processed")
     processing_status: str = Field(description="Processing status (success, failed, skipped)")
     error_message: Optional[str] = Field(None, description="Error message if processing failed")
-    processed_at: datetime = Field(default_factory=datetime.utcnow, description="Processing timestamp")
+    processed_at: datetime = Field(default_factory=lambda: datetime.now(), description="Processing timestamp")
     manifest_metadata: Optional[Dict[str, Any]] = Field(None, description="Additional metadata from manifest.json")
 
     class Config:

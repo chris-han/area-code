@@ -11,7 +11,7 @@ from typing import List, Dict, Any, Optional, Tuple
 from pathlib import Path
 from .ddl_generator import FocusClickHouseDDLGenerator, generate_all_focus_ddl
 from .schema.loader import FocusSchemaLoader
-from .config import focus_config
+from .config import get_focus_config
 
 
 logger = logging.getLogger(__name__)

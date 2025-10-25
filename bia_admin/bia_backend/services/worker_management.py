@@ -82,13 +82,18 @@ class WorkerManager:
             venv_python = work_dir / ".venv" / "bin" / "python"
             python_cmd = str(venv_python) if venv_python.exists() else "python"
 
-            # Start the worker process
+            # Start the worker process - write logs to file for debugging
+            log_file_path = work_dir / "worker.log"
+            log_file = open(log_file_path, "w")
+
             logger.info(f"Starting Temporal worker: {worker_script} with {python_cmd}")
+            logger.info(f"Worker logs will be written to: {log_file_path}")
+
             self._worker_process = subprocess.Popen(
                 [python_cmd, str(worker_script)],
                 cwd=str(work_dir),
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                stdout=log_file,
+                stderr=subprocess.STDOUT,
                 preexec_fn=os.setsid  # Create new process group
             )
 
@@ -100,8 +105,13 @@ class WorkerManager:
                 logger.info(f"Worker started successfully with PID {self._worker_process.pid}")
                 return True
             else:
-                stdout, stderr = self._worker_process.communicate()
-                logger.error(f"Worker failed to start. stdout: {stdout.decode()}, stderr: {stderr.decode()}")
+                # Read the log file to get error details
+                try:
+                    with open(log_file_path, "r") as f:
+                        logs = f.read()
+                    logger.error(f"Worker failed to start. Logs:\n{logs}")
+                except Exception as e:
+                    logger.error(f"Worker failed to start and couldn't read logs: {e}")
                 return False
 
         except Exception as e:

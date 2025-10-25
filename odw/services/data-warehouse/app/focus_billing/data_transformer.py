@@ -17,7 +17,7 @@ from typing import Dict, Any, List, Optional, Union, Tuple
 from dataclasses import dataclass
 
 from .file_discovery import ParquetFileInfo
-from .config import focus_config
+from .config import get_focus_config
 
 
 @dataclass

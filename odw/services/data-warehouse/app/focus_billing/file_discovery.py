@@ -12,7 +12,7 @@ from typing import List, Dict, Any, Optional, Tuple
 from datetime import datetime
 from dataclasses import dataclass
 
-from .config import focus_config
+from .config import get_focus_config
 from .models import FocusIngestManifest
 
 
@@ -50,7 +50,7 @@ class FocusFileDiscovery:
     
     def __init__(self, data_root: Optional[str] = None):
         """Initialize file discovery with optional data root override"""
-        self.data_root = Path(data_root or focus_config.focus_data_root)
+        self.data_root = Path(data_root or get_focus_config().focus_data_root)
         
     def discover_parquet_files(self) -> List[ParquetFileInfo]:
         """
@@ -203,7 +203,7 @@ class ProcessedFileTracker:
     """
     
     def __init__(self):
-        self.manifest_table = focus_config.manifest_table_name
+        self.manifest_table = get_focus_config().manifest_table_name
     
     def is_file_processed(self, file_info: ParquetFileInfo) -> bool:
         """

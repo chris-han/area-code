@@ -18,7 +18,7 @@ def test_imports():
     print("=== Testing Imports ===")
     
     try:
-        from focus_billing.config import focus_config
+        from focus_billing.config import get_focus_config
         print("✓ Configuration module imported")
         
         from focus_billing.query_loader import FocusQueryLoader
@@ -40,14 +40,14 @@ def test_configuration():
     print("\n=== Testing Configuration ===")
     
     try:
-        from focus_billing.config import focus_config
+        from focus_billing.config import get_focus_config
         
-        print(f"ClickHouse host: {focus_config.clickhouse_host}")
-        print(f"Database: {focus_config.clickhouse_database}")
-        print(f"Data root: {focus_config.focus_data_root}")
+        print(f"ClickHouse host: {get_focus_config().clickhouse_host}")
+        print(f"Database: {get_focus_config().clickhouse_database}")
+        print(f"Data root: {get_focus_config().focus_data_root}")
         
         # Test path validation
-        path_status = focus_config.validate_paths()
+        path_status = get_focus_config().validate_paths()
         print(f"Path validation: {sum(path_status.values())}/{len(path_status)} paths exist")
         
         return True

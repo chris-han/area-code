@@ -355,9 +355,9 @@ class TestFocusVerificationCI:
         # Test configuration loading without external dependencies
         try:
             config_dict = {
-                "clickhouse_host": focus_config.clickhouse_host,
-                "clickhouse_database": focus_config.clickhouse_database,
-                "focus_data_root": focus_config.focus_data_root
+                "clickhouse_host": get_focus_config().clickhouse_host,
+                "clickhouse_database": get_focus_config().clickhouse_database,
+                "focus_data_root": get_focus_config().focus_data_root
             }
             
             assert all(v is not None for v in config_dict.values())

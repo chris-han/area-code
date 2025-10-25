@@ -275,5 +275,12 @@ class FocusBillingConfig(BaseModel):
             return False
 
 
-# Global configuration instance
-focus_config = FocusBillingConfig.from_env_and_moose_config()
+# Lazy configuration instance (avoid module-level initialization for Temporal sandbox)
+_focus_config_instance = None
+
+def get_focus_config() -> FocusBillingConfig:
+    """Get or create the global FOCUS configuration instance (lazy initialization)"""
+    global _focus_config_instance
+    if _focus_config_instance is None:
+        _focus_config_instance = FocusBillingConfig.from_env_and_moose_config()
+    return _focus_config_instance

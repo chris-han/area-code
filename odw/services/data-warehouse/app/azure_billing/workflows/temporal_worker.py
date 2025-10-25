@@ -52,10 +52,20 @@ class TemporalWorkerManager:
             
             # Create worker
             task_queue = self.config.get('task_queue', 'bia-workflows')
-            
+
+            # Configure sandbox to passthrough focus_billing (avoids complex dependencies with moose_lib, clickhouse_connect)
+            from temporalio.worker.workflow_sandbox import SandboxedWorkflowRunner, SandboxRestrictions
+
+            sandbox_restrictions = SandboxRestrictions.default.with_passthrough_modules(
+                "app.focus_billing",
+                "moose_lib",
+                "clickhouse_connect",
+            )
+
             self.worker = Worker(
                 self.client,
                 task_queue=task_queue,
+                workflow_runner=SandboxedWorkflowRunner(restrictions=sandbox_restrictions),
                 workflows=[
                     AzureBillingWorkflow,
                     FOCUSTransformationWorkflow,

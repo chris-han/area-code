@@ -14,7 +14,7 @@ from pathlib import Path
 # Add the app directory to Python path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from focus_billing.config import focus_config
+from focus_billing.config import get_focus_config
 from focus_billing.observability import focus_observability
 
 
@@ -31,7 +31,7 @@ def validate_configuration() -> Dict[str, Any]:
     
     try:
         # Validate paths
-        path_results = focus_config.validate_paths()
+        path_results = get_focus_config().validate_paths()
         results['paths'] = path_results
         
         for path_name, exists in path_results.items():
@@ -45,12 +45,12 @@ def validate_configuration() -> Dict[str, Any]:
         
         # Validate ClickHouse connection
         print(f"\n--- ClickHouse Connection ---")
-        print(f"Host: {focus_config.clickhouse_host}:{focus_config.clickhouse_port}")
-        print(f"Database: {focus_config.clickhouse_database}")
-        print(f"User: {focus_config.clickhouse_user}")
-        print(f"SSL: {focus_config.clickhouse_use_ssl}")
+        print(f"Host: {get_focus_config().clickhouse_host}:{get_focus_config().clickhouse_port}")
+        print(f"Database: {get_focus_config().clickhouse_database}")
+        print(f"User: {get_focus_config().clickhouse_user}")
+        print(f"SSL: {get_focus_config().clickhouse_use_ssl}")
         
-        ch_connected = focus_config.validate_clickhouse_connection()
+        ch_connected = get_focus_config().validate_clickhouse_connection()
         results['clickhouse']['connected'] = ch_connected
         
         status = "✓" if ch_connected else "✗"
@@ -62,10 +62,10 @@ def validate_configuration() -> Dict[str, Any]:
         
         # Validate workflow parameters
         print(f"\n--- Workflow Configuration ---")
-        print(f"Batch size: {focus_config.batch_size}")
-        print(f"Max workers: {focus_config.max_workers}")
-        print(f"Connection timeout: {focus_config.connection_timeout}s")
-        print(f"Send/receive timeout: {focus_config.send_receive_timeout}s")
+        print(f"Batch size: {get_focus_config().batch_size}")
+        print(f"Max workers: {get_focus_config().max_workers}")
+        print(f"Connection timeout: {get_focus_config().connection_timeout}s")
+        print(f"Send/receive timeout: {get_focus_config().send_receive_timeout}s")
         
     except Exception as e:
         results['config_valid'] = False
@@ -89,9 +89,9 @@ def validate_database_schema() -> Dict[str, Any]:
     try:
         # Check required tables exist
         required_tables = [
-            focus_config.cost_usage_table_name,
-            focus_config.contract_commitment_table_name,
-            focus_config.manifest_table_name
+            get_focus_config().cost_usage_table_name,
+            get_focus_config().contract_commitment_table_name,
+            get_focus_config().manifest_table_name
         ]
         
         table_results = focus_observability.verify_tables_exist(required_tables)
@@ -119,10 +119,10 @@ def validate_database_schema() -> Dict[str, Any]:
                     print(f"{table_name}: Error getting count")
         
         # Check views exist (if tables exist)
-        if results['tables'].get(focus_config.cost_usage_table_name, False):
+        if results['tables'].get(get_focus_config().cost_usage_table_name, False):
             view_results = focus_observability.verify_tables_exist([
-                focus_config.cost_usage_view_name,
-                focus_config.contract_commitment_view_name
+                get_focus_config().cost_usage_view_name,
+                get_focus_config().contract_commitment_view_name
             ])
             
             print(f"\n--- Views ---")

@@ -14,7 +14,7 @@ from pydantic import BaseModel
 
 from moose_lib import Task, TaskConfig, Workflow, WorkflowConfig, cli_log, CliLogData
 
-from .config import focus_config
+from .config import get_focus_config
 from .file_discovery import FocusFileDiscovery, ProcessedFileTracker, ParquetFileInfo
 from .data_transformer import FocusDataTransformer, TransformationResult
 from .clickhouse_inserter import ClickHouseInserter, InsertionResult
@@ -217,7 +217,7 @@ class FocusBillingIngestWorkflow:
     def _initialize_clickhouse_inserter(self) -> None:
         """Initialize ClickHouse inserter with workflow parameters"""
         try:
-            batch_size = self.params.batch_size or focus_config.batch_size
+            batch_size = self.params.batch_size or get_focus_config().batch_size
             self.clickhouse_inserter = ClickHouseInserter(batch_size)
             self._log_info(f"Initialized ClickHouse inserter with batch size: {batch_size}")
             
@@ -340,9 +340,9 @@ class FocusBillingIngestWorkflow:
         with TimedOperation(focus_observability, "focus.workflow.preflight_validation_time"):
             # Validate required tables exist
             required_tables = [
-                focus_config.cost_usage_table_name,
-                focus_config.contract_commitment_table_name,
-                focus_config.manifest_table_name
+                get_focus_config().cost_usage_table_name,
+                get_focus_config().contract_commitment_table_name,
+                get_focus_config().manifest_table_name
             ]
             
             validation_results = focus_observability.verify_tables_exist(required_tables)
@@ -413,9 +413,9 @@ class FocusBillingIngestWorkflow:
                 
                 # Get updated row counts
                 row_counts = focus_observability.get_table_row_counts([
-                    focus_config.cost_usage_table_name,
-                    focus_config.contract_commitment_table_name,
-                    focus_config.manifest_table_name
+                    get_focus_config().cost_usage_table_name,
+                    get_focus_config().contract_commitment_table_name,
+                    get_focus_config().manifest_table_name
                 ])
                 
                 self._log_info(f"Final table row counts: {row_counts}")
@@ -437,8 +437,8 @@ class FocusBillingIngestWorkflow:
     def _log_workflow_params(self) -> None:
         """Log workflow parameters for debugging"""
         self._log_info("Workflow parameters:")
-        self._log_info(f"  - Data root: {self.params.data_root or focus_config.focus_data_root}")
-        self._log_info(f"  - Batch size: {self.params.batch_size or focus_config.batch_size}")
+        self._log_info(f"  - Data root: {self.params.data_root or get_focus_config().focus_data_root}")
+        self._log_info(f"  - Batch size: {self.params.batch_size or get_focus_config().batch_size}")
         self._log_info(f"  - Max files: {self.params.max_files or 'unlimited'}")
         self._log_info(f"  - Dry run: {self.params.dry_run}")
         self._log_info(f"  - Dataset filter: {self.params.dataset_type_filter or 'all'}")

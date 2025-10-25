@@ -9,7 +9,7 @@ from pathlib import Path
 
 from .workflow import FocusBillingIngestParams, FocusBillingIngestWorkflow
 from .file_discovery import discover_focus_files
-from .config import focus_config
+from .config import get_focus_config
 
 
 def test_file_discovery_integration():
@@ -17,7 +17,7 @@ def test_file_discovery_integration():
     print("Testing file discovery with actual FOCUS data...")
     
     # Check if FOCUS data directory exists
-    data_root = Path(focus_config.focus_data_root)
+    data_root = Path(get_focus_config().focus_data_root)
     if not data_root.exists():
         print(f"FOCUS data directory not found: {data_root}")
         print("Skipping integration test")
@@ -62,7 +62,7 @@ def test_workflow_dry_run_integration():
     print("\nTesting workflow dry run with actual data...")
     
     # Check if FOCUS data directory exists
-    data_root = Path(focus_config.focus_data_root)
+    data_root = Path(get_focus_config().focus_data_root)
     if not data_root.exists():
         print(f"FOCUS data directory not found: {data_root}")
         print("Skipping workflow test")

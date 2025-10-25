@@ -13,7 +13,7 @@ from dataclasses import dataclass
 import time
 import traceback
 
-from .config import focus_config
+from .config import get_focus_config
 from .data_transformer import TransformationResult
 from .file_discovery import ParquetFileInfo
 from .observability import focus_observability, TimedOperation
@@ -48,7 +48,7 @@ class ClickHouseInserter:
         Args:
             batch_size: Override default batch size for insertions
         """
-        self.batch_size = batch_size or focus_config.batch_size
+        self.batch_size = batch_size or get_focus_config().batch_size
         self.client = None
         self._connect()
     
@@ -56,7 +56,7 @@ class ClickHouseInserter:
         """Establish connection to ClickHouse"""
         try:
             with TimedOperation(focus_observability, "focus.clickhouse.connection_time"):
-                self.client = clickhouse_connect.get_client(**focus_config.get_clickhouse_connection_params())
+                self.client = clickhouse_connect.get_client(**get_focus_config().get_clickhouse_connection_params())
                 
                 # Test connection
                 self.client.ping()
@@ -194,9 +194,9 @@ class ClickHouseInserter:
     def _get_target_table(self, dataset_type: str) -> str:
         """Get target table name for dataset type"""
         if dataset_type == 'cost_usage':
-            return focus_config.cost_usage_table_name
+            return get_focus_config().cost_usage_table_name
         elif dataset_type == 'contract_commitment':
-            return focus_config.contract_commitment_table_name
+            return get_focus_config().contract_commitment_table_name
         else:
             raise ValueError(f"Unknown dataset type: {dataset_type}")
     
@@ -206,7 +206,7 @@ class ClickHouseInserter:
             query = f"""
             SELECT 1 
             FROM system.tables 
-            WHERE database = '{focus_config.clickhouse_database}' 
+            WHERE database = '{get_focus_config().clickhouse_database}' 
             AND name = '{table_name}'
             """
             result = self.client.query(query)
@@ -260,7 +260,7 @@ class ClickHouseInserter:
             query = f"""
             SELECT name, type
             FROM system.columns
-            WHERE database = '{focus_config.clickhouse_database}'
+            WHERE database = '{get_focus_config().clickhouse_database}'
             AND table = '{table_name}'
             ORDER BY position
             """
@@ -367,12 +367,12 @@ class ClickHouseInserter:
             insertion_result: Result of insertion operation
         """
         try:
-            if not self._table_exists(focus_config.manifest_table_name):
-                print(f"Warning: Manifest table {focus_config.manifest_table_name} does not exist")
+            if not self._table_exists(get_focus_config().manifest_table_name):
+                print(f"Warning: Manifest table {get_focus_config().manifest_table_name} does not exist")
                 return
             
             update_query = f"""
-            ALTER TABLE {focus_config.manifest_table_name}
+            ALTER TABLE {get_focus_config().manifest_table_name}
             UPDATE 
                 processing_status = 'success',
                 rows_processed = {insertion_result.rows_inserted},
@@ -399,15 +399,15 @@ class ClickHouseInserter:
             error_message: Error message describing the failure
         """
         try:
-            if not self._table_exists(focus_config.manifest_table_name):
-                print(f"Warning: Manifest table {focus_config.manifest_table_name} does not exist")
+            if not self._table_exists(get_focus_config().manifest_table_name):
+                print(f"Warning: Manifest table {get_focus_config().manifest_table_name} does not exist")
                 return
             
             # Escape single quotes in error message
             escaped_error = error_message.replace("'", "''")
             
             update_query = f"""
-            ALTER TABLE {focus_config.manifest_table_name}
+            ALTER TABLE {get_focus_config().manifest_table_name}
             UPDATE 
                 processing_status = 'failed',
                 processed_at = now(),
@@ -433,8 +433,8 @@ class ClickHouseInserter:
             manifest_id: Unique manifest entry ID
         """
         try:
-            if not self._table_exists(focus_config.manifest_table_name):
-                print(f"Warning: Manifest table {focus_config.manifest_table_name} does not exist")
+            if not self._table_exists(get_focus_config().manifest_table_name):
+                print(f"Warning: Manifest table {get_focus_config().manifest_table_name} does not exist")
                 return
             
             # Prepare manifest data
@@ -452,7 +452,7 @@ class ClickHouseInserter:
             
             # Insert manifest entry
             self.client.insert(
-                table=focus_config.manifest_table_name,
+                table=get_focus_config().manifest_table_name,
                 data=[list(manifest_data.values())],
                 column_names=list(manifest_data.keys())
             )

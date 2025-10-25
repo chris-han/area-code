@@ -19,8 +19,8 @@ class FocusColumnMetadataLoader(IColumnMetadataLoader):
     """Loads FOCUS column metadata from specification files"""
 
     def __init__(self, spec_root: Optional[str] = None):
-        self.spec_root = Path(spec_root or focus_config.focus_spec_root)
-        self.specifications_root = Path(focus_config.focus_specifications_root)
+        self.spec_root = Path(spec_root or get_focus_config().focus_spec_root)
+        self.specifications_root = Path(get_focus_config().focus_specifications_root)
 
     def load_column_metadata(self, dataset_name: str) -> List[FocusColumn]:
         """Load column metadata for a specific FOCUS dataset"""

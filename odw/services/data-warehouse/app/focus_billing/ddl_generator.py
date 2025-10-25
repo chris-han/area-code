@@ -13,7 +13,7 @@ from .models import FocusDataset, FocusColumn
 from .schema.loader import FocusSchemaLoader
 from .utils.naming import to_snake_case
 from .utils.type_mapping import map_focus_to_clickhouse_type
-from .config import focus_config
+from .config import get_focus_config
 
 
 class FocusClickHouseDDLGenerator(IDDLGenerator):
@@ -21,7 +21,7 @@ class FocusClickHouseDDLGenerator(IDDLGenerator):
 
     def __init__(self):
         self.schema_loader = FocusSchemaLoader()
-        self.focus_spec_root = Path(focus_config.focus_spec_root)
+        self.focus_spec_root = Path(get_focus_config().focus_spec_root)
 
     def generate_table_ddl(self, dataset: FocusDataset) -> str:
         """

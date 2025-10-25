@@ -25,7 +25,7 @@ from datetime import datetime
 # Add the app directory to Python path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from focus_billing.config import focus_config
+from focus_billing.config import get_focus_config
 
 
 class FocusTestRunner:
@@ -172,18 +172,18 @@ class FocusTestRunner:
         try:
             # Test basic configuration loading
             config_valid = (
-                focus_config.clickhouse_host is not None and
-                focus_config.clickhouse_database is not None and
-                focus_config.focus_data_root is not None
+                get_focus_config().clickhouse_host is not None and
+                get_focus_config().clickhouse_database is not None and
+                get_focus_config().focus_data_root is not None
             )
             
             return {
                 "success": config_valid,
                 "message": "Configuration loaded successfully" if config_valid else "Configuration validation failed",
                 "details": {
-                    "clickhouse_host": focus_config.clickhouse_host,
-                    "clickhouse_database": focus_config.clickhouse_database,
-                    "focus_data_root": focus_config.focus_data_root
+                    "clickhouse_host": get_focus_config().clickhouse_host,
+                    "clickhouse_database": get_focus_config().clickhouse_database,
+                    "focus_data_root": get_focus_config().focus_data_root
                 }
             }
             
@@ -256,7 +256,7 @@ class FocusTestRunner:
     def _check_data_paths(self) -> Dict[str, Any]:
         """Check data path accessibility"""
         try:
-            path_status = focus_config.validate_paths()
+            path_status = get_focus_config().validate_paths()
             
             critical_paths = ["focus_data_root", "focus_spec_root"]
             critical_paths_exist = all(

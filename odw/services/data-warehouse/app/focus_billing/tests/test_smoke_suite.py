@@ -348,11 +348,11 @@ class TestFocusBillingSystemHealth:
         """Validate system configuration is healthy"""
         # Test configuration loading
         assert focus_config is not None
-        assert focus_config.clickhouse_host is not None
-        assert focus_config.clickhouse_database is not None
+        assert get_focus_config().clickhouse_host is not None
+        assert get_focus_config().clickhouse_database is not None
         
         # Test path validation
-        path_status = focus_config.validate_paths()
+        path_status = get_focus_config().validate_paths()
         
         # At least focus_data_root should exist or be creatable
         critical_paths = ["focus_data_root"]

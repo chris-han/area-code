@@ -8,7 +8,7 @@ and ready for use.
 import sys
 from pathlib import Path
 
-from .config import focus_config
+from .config import get_focus_config
 from .workflow import FocusBillingIngestParams, focus_billing_ingest_task, focus_billing_ingest_workflow
 
 
@@ -20,19 +20,19 @@ def validate_configuration():
     warnings = []
     
     # Check data paths
-    data_root = Path(focus_config.focus_data_root)
+    data_root = Path(get_focus_config().focus_data_root)
     if not data_root.exists():
         errors.append(f"FOCUS data root does not exist: {data_root}")
     else:
         print(f"✓ FOCUS data root found: {data_root}")
     
-    spec_root = Path(focus_config.focus_spec_root)
+    spec_root = Path(get_focus_config().focus_spec_root)
     if not spec_root.exists():
         warnings.append(f"FOCUS spec root does not exist: {spec_root}")
     else:
         print(f"✓ FOCUS spec root found: {spec_root}")
     
-    queries_root = Path(focus_config.focus_queries_root)
+    queries_root = Path(get_focus_config().focus_queries_root)
     if not queries_root.exists():
         warnings.append(f"FOCUS queries root does not exist: {queries_root}")
     else:
@@ -40,18 +40,18 @@ def validate_configuration():
     
     # Check ClickHouse configuration
     print(f"✓ ClickHouse configuration:")
-    print(f"  - Host: {focus_config.clickhouse_host}")
-    print(f"  - Port: {focus_config.clickhouse_port}")
-    print(f"  - Database: {focus_config.clickhouse_database}")
-    print(f"  - SSL: {focus_config.clickhouse_use_ssl}")
+    print(f"  - Host: {get_focus_config().clickhouse_host}")
+    print(f"  - Port: {get_focus_config().clickhouse_port}")
+    print(f"  - Database: {get_focus_config().clickhouse_database}")
+    print(f"  - SSL: {get_focus_config().clickhouse_use_ssl}")
     
     # Check workflow configuration
     print(f"✓ Workflow configuration:")
-    print(f"  - Batch size: {focus_config.batch_size}")
-    print(f"  - Max workers: {focus_config.max_workers}")
-    print(f"  - Cost usage table: {focus_config.cost_usage_table_name}")
-    print(f"  - Contract commitment table: {focus_config.contract_commitment_table_name}")
-    print(f"  - Manifest table: {focus_config.manifest_table_name}")
+    print(f"  - Batch size: {get_focus_config().batch_size}")
+    print(f"  - Max workers: {get_focus_config().max_workers}")
+    print(f"  - Cost usage table: {get_focus_config().cost_usage_table_name}")
+    print(f"  - Contract commitment table: {get_focus_config().contract_commitment_table_name}")
+    print(f"  - Manifest table: {get_focus_config().manifest_table_name}")
     
     return errors, warnings
 

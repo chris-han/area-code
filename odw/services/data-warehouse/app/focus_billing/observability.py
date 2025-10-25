@@ -14,7 +14,7 @@ from enum import Enum
 if TYPE_CHECKING:
     import clickhouse_connect
 
-from .config import focus_config
+from .config import get_focus_config
 
 
 class MetricType(Enum):
@@ -67,7 +67,7 @@ class FocusObservability:
         """Get or create ClickHouse client"""
         if self.client is None:
             import clickhouse_connect
-            self.client = clickhouse_connect.get_client(**focus_config.get_clickhouse_connection_params())
+            self.client = clickhouse_connect.get_client(**get_focus_config().get_clickhouse_connection_params())
         return self.client
     
     def emit_metric(
@@ -130,7 +130,7 @@ class FocusObservability:
             query = f"""
             SELECT 1 
             FROM system.tables 
-            WHERE database = '{focus_config.clickhouse_database}' 
+            WHERE database = '{get_focus_config().clickhouse_database}' 
             AND name = '{table_name}'
             """
             
@@ -141,7 +141,7 @@ class FocusObservability:
                 check_name=f"table_exists_{table_name}",
                 passed=exists,
                 message=f"Table {table_name} {'exists' if exists else 'does not exist'}",
-                details={'table_name': table_name, 'database': focus_config.clickhouse_database}
+                details={'table_name': table_name, 'database': get_focus_config().clickhouse_database}
             )
             
             self.validation_results.append(validation_result)
@@ -199,8 +199,8 @@ class FocusObservability:
             client = self._get_client()
             
             # Check if both tables exist first
-            cost_usage_exists = self.verify_table_exists(focus_config.cost_usage_table_name)
-            commitment_exists = self.verify_table_exists(focus_config.contract_commitment_table_name)
+            cost_usage_exists = self.verify_table_exists(get_focus_config().cost_usage_table_name)
+            commitment_exists = self.verify_table_exists(get_focus_config().contract_commitment_table_name)
             
             if not (cost_usage_exists.passed and commitment_exists.passed):
                 return ValidationResult(
@@ -216,8 +216,8 @@ class FocusObservability:
             # Find contract_commitment_ids in cost_usage that don't exist in contract_commitment
             orphaned_query = f"""
             SELECT COUNT(*) as orphaned_count
-            FROM {focus_config.cost_usage_table_name} cu
-            LEFT JOIN {focus_config.contract_commitment_table_name} cc 
+            FROM {get_focus_config().cost_usage_table_name} cu
+            LEFT JOIN {get_focus_config().contract_commitment_table_name} cc 
                 ON cu.contract_commitment_id = cc.contract_commitment_id
             WHERE cu.contract_commitment_id IS NOT NULL 
             AND cc.contract_commitment_id IS NULL
@@ -229,7 +229,7 @@ class FocusObservability:
             # Get total count of cost_usage records with contract_commitment_id
             total_query = f"""
             SELECT COUNT(*) as total_count
-            FROM {focus_config.cost_usage_table_name}
+            FROM {get_focus_config().cost_usage_table_name}
             WHERE contract_commitment_id IS NOT NULL
             """
             
@@ -357,9 +357,9 @@ class FocusObservability:
         
         # Check core tables exist
         core_tables = [
-            focus_config.cost_usage_table_name,
-            focus_config.contract_commitment_table_name,
-            focus_config.manifest_table_name
+            get_focus_config().cost_usage_table_name,
+            get_focus_config().contract_commitment_table_name,
+            get_focus_config().manifest_table_name
         ]
         
         table_results = self.verify_tables_exist(core_tables)

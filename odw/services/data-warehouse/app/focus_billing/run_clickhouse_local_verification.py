@@ -23,7 +23,7 @@ import argparse
 # Add the app directory to Python path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from focus_billing.config import focus_config
+from focus_billing.config import get_focus_config
 from focus_billing.query_loader import FocusQueryLoader
 
 
@@ -293,7 +293,7 @@ def main():
     parser = argparse.ArgumentParser(description="ClickHouse Local Verification Runner")
     parser.add_argument(
         "--data-root", 
-        default=focus_config.focus_data_root,
+        default=get_focus_config().focus_data_root,
         help="Root directory containing FOCUS Parquet files"
     )
     parser.add_argument(
