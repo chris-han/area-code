@@ -142,7 +142,7 @@ install_dependencies() {
     install_connectors_package
 
     print_status "Installing data-warehouse dependencies in virtual environment..."
-    uv pip install .
+    uv pip install . --offline 2>/dev/null || uv pip install .
     print_success "Data warehouse dependencies installed successfully in virtual environment"
 
     # Check Moose CLI

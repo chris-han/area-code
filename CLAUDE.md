@@ -110,3 +110,4 @@ curl -X POST "http://localhost:4300/api/v1/workflows/worker/restart"
 - **Import errors**: Avoid FastAPI imports in workflow sandbox (keep in activities only)
 - **Worker registration**: All workflows/activities must be registered in `temporal_worker.py`
 - **Worker not starting**: Check `/api/v1/workflows/worker/status` and restart if needed
+- main the overall architecture design at /home/chris/repo/area-code/README.md

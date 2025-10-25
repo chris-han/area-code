@@ -78,10 +78,14 @@ class WorkerManager:
             # Change to the correct directory
             work_dir = repo_root / "odw" / "services" / "data-warehouse"
 
+            # Use virtual environment Python
+            venv_python = work_dir / ".venv" / "bin" / "python"
+            python_cmd = str(venv_python) if venv_python.exists() else "python"
+
             # Start the worker process
-            logger.info(f"Starting Temporal worker: {worker_script}")
+            logger.info(f"Starting Temporal worker: {worker_script} with {python_cmd}")
             self._worker_process = subprocess.Popen(
-                ["python", str(worker_script)],
+                [python_cmd, str(worker_script)],
                 cwd=str(work_dir),
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,

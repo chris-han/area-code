@@ -23,8 +23,8 @@ class ExecuteFocusUseCaseQueryParams(BaseModel):
     slug: str = Field(description="Use case slug identifier")
     start_date: Optional[date] = Field(None, description="Start date parameter")
     end_date: Optional[date] = Field(None, description="End date parameter")
-    parameters: Dict[str, Union[str, int, float, date, datetime]] = Field(
-        default_factory=dict, 
+    parameters: Dict[str, Any] = Field(
+        default_factory=dict,
         description="Additional query parameters"
     )
     limit: Optional[int] = Field(None, ge=1, le=10000, description="Maximum number of rows to return")

@@ -37,7 +37,7 @@ class TemporalClient:
         "scheduled_report": "ScheduledReportWorkflow",
         "azure_blob_ingest": "AzureBlobIngestWorkflow",
         "test_workflow": "AzureBillingTestWorkflow",
-        "focus_billing_ingest": "FocusBillingIngestWorkflow",
+        "focus_billing_ingest": "FocusBillingTemporalWorkflow",
     }
 
     STATUS_MAP = {
@@ -112,7 +112,7 @@ class TemporalClient:
                 "data_validation": "DataValidationWorkflow",
                 "scheduled_report": "ScheduledReportWorkflow",
                 "azure_blob_ingest": "AzureBlobIngestWorkflow",
-                "focus_billing_ingest": "FocusBillingIngestWorkflow",
+                "focus_billing_ingest": "FocusBillingTemporalWorkflow",
             }
             
             workflow_class = self.WORKFLOW_CLASS_MAP.get(workflow_type)

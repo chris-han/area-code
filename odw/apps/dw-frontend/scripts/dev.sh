@@ -151,11 +151,14 @@ start_dw_frontend_service() {
 }
 
 main() {
+
     print_status "Starting Data Warehouse dashboard..."
 
     check_environment
-    install_dependencies
+    create_venv_if_missing
+    ensure_venv_activated
     start_dw_frontend_service
+    # print_status "Slip Starting steamlit fontend..."
 }
 
 main "$@"

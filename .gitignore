@@ -42,3 +42,4 @@ odw/services/data-warehouse/app/.azure_billing
 focus-mcp-main/data/
 .venv
 odw/services/data-warehouse/app/focus_billing/data/
+bia_admin/bia_backend/services/__pycache__/temporal_client.cpython-312.pyc

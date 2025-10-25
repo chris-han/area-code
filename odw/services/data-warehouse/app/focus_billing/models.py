@@ -203,14 +203,14 @@ class FocusQuery(BaseModel):
 class FocusQueryParameter(BaseModel):
     """Parameter for FOCUS query execution"""
     name: str
-    value: Union[str, int, float, date, datetime]
+    value: Any
     data_type: str
 
 
 class FocusQueryRequest(BaseModel):
     """Request model for executing FOCUS queries"""
     query_slug: str
-    parameters: Dict[str, Union[str, int, float, date, datetime]] = Field(default_factory=dict)
+    parameters: Dict[str, Any] = Field(default_factory=dict)
     limit: Optional[int] = Field(None, ge=1, le=10000)
     offset: int = Field(default=0, ge=0)
 

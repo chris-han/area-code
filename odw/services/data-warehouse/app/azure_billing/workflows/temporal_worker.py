@@ -27,6 +27,10 @@ from .temporal_workflows import (
     generate_mock_azure_billing_data_activity,
     write_mock_azure_billing_data_activity,
 )
+from app.focus_billing.temporal_workflow import (
+    FocusBillingTemporalWorkflow,
+    run_focus_billing_ingest_activity,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +62,7 @@ class TemporalWorkerManager:
                     DataValidationWorkflow,
                     AzureBlobIngestWorkflow,
                     AzureBillingTestWorkflow,
+                    FocusBillingTemporalWorkflow,
                 ],
                 activities=[
                     extract_azure_billing_data_activity,
@@ -67,6 +72,7 @@ class TemporalWorkerManager:
                     run_azure_blob_ingest_activity,
                     generate_mock_azure_billing_data_activity,
                     write_mock_azure_billing_data_activity,
+                    run_focus_billing_ingest_activity,
                 ]
             )
             

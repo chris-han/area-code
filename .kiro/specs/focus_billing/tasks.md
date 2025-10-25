@@ -122,19 +122,6 @@
   - Verify ClickHouse credential reuse
   - Test configuration validation
 
-- [ ] 8. Create documentation and operational guides
-- [ ] 8.1 Write comprehensive documentation
-  - Update repo README with FOCUS billing integration instructions
-  - Document all environment variables and configuration options
-  - Create operational checklist for DDL application and workflow execution
-
-- [ ] 8.2 Document dataset caveats and limitations
-  - Note missing contracted metrics in sample Parquet files
-  - Document JSON type differences between local and production environments
-  - Provide troubleshooting guide for common issues
-  - Add orchestration doc entry to ensure the new workflow is registered in `bia_admin/bia_backend/services/workflow_management.py`
-  - Add task to register the workflow in `WorkflowType` enum so the frontend can discover and start it
-
 - [x] 9. Implement end-to-end validation and testing
 - [x] 9.1 Create smoke test suite
   - Ingest small Parquet sample and verify table population
@@ -157,3 +144,16 @@
   - Add workflow type mapping in temporal client resolution
   - Update duration estimates for UI display
   - Ensure frontend can discover and trigger FOCUS billing workflows
+
+- [ ] 11. Create documentation and operational guides
+- [x] 11.1 Write comprehensive documentation
+  - Update repo README with FOCUS billing integration instructions, architecture design with sequence diagram in mermaid format
+  - Document all environment variables and configuration options
+  - Create operational checklist for DDL application and workflow execution
+
+- [ ] 11.2 Document dataset caveats and limitations
+  - Note missing contracted metrics in sample Parquet files
+  - Document JSON type differences between local and production environments
+  - Provide troubleshooting guide for common issues
+  - Add orchestration doc entry to ensure the new workflow is registered in `bia_admin/bia_backend/services/workflow_management.py`
+  - Add task to register the workflow in `WorkflowType` enum so the frontend can discover and start it
