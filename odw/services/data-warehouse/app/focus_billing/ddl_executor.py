@@ -42,12 +42,15 @@ class FocusDDLExecutor:
             
             logger.info(f"Executing DDL: {description}")
             logger.debug(f"DDL Statement: {ddl}")
-            
-            # Execute using Moose MCP tools
-            from kiro import mcp_moose_dev_query_olap
-            
-            result = mcp_moose_dev_query_olap(query=ddl, limit=1)
-            
+
+            # Execute using ClickHouse client
+            import clickhouse_connect
+            from .config import get_focus_config
+
+            client = clickhouse_connect.get_client(**get_focus_config().get_clickhouse_connection_params())
+            client.command(ddl)
+            client.close()
+
             logger.info(f"Successfully executed DDL: {description}")
             return True, f"Successfully executed: {description}"
             
@@ -69,18 +72,17 @@ class FocusDDLExecutor:
         try:
             describe_sql = f"DESCRIBE TABLE {table_name}"
             logger.debug(f"Verifying table exists: {table_name}")
-            
-            # Execute using Moose MCP tools
-            from kiro import mcp_moose_dev_query_olap
-            
-            result = mcp_moose_dev_query_olap(query=describe_sql, limit=100)
-            
+
+            # Execute using ClickHouse client
+            import clickhouse_connect
+            from .config import get_focus_config
+
+            client = clickhouse_connect.get_client(**get_focus_config().get_clickhouse_connection_params())
+            result = client.query(describe_sql)
+            client.close()
+
             # If we get here without exception, table exists
-            columns = []
-            if hasattr(result, 'rows') and result.rows:
-                columns = result.rows
-            elif isinstance(result, list):
-                columns = result
+            columns = result.result_rows if result.result_rows else []
             
             return True, {"columns": columns, "engine": "MergeTree"}
             
@@ -101,18 +103,19 @@ class FocusDDLExecutor:
         try:
             show_sql = f"SHOW CREATE VIEW {view_name}"
             logger.debug(f"Verifying view exists: {view_name}")
-            
-            # Execute using Moose MCP tools
-            from kiro import mcp_moose_dev_query_olap
-            
-            result = mcp_moose_dev_query_olap(query=show_sql, limit=1)
-            
+
+            # Execute using ClickHouse client
+            import clickhouse_connect
+            from .config import get_focus_config
+
+            client = clickhouse_connect.get_client(**get_focus_config().get_clickhouse_connection_params())
+            result = client.query(show_sql)
+            client.close()
+
             # Extract view definition from result
             definition = None
-            if hasattr(result, 'rows') and result.rows:
-                definition = result.rows[0].get('statement', '')
-            elif isinstance(result, list) and result:
-                definition = result[0].get('statement', '')
+            if result.result_rows:
+                definition = result.result_rows[0][0] if result.result_rows[0] else None
             
             return True, definition
             

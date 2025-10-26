@@ -293,7 +293,9 @@ class ClickHouseInserter:
                 if 'DateTime' in clickhouse_type:
                     df[col_name] = pd.to_datetime(df[col_name], errors='coerce')
                 elif 'Date' in clickhouse_type and 'DateTime' not in clickhouse_type:
-                    df[col_name] = pd.to_datetime(df[col_name], errors='coerce').dt.date
+                    # Convert to datetime, extract date, handle None
+                    date_series = pd.to_datetime(df[col_name], errors='coerce')
+                    df[col_name] = date_series.apply(lambda x: x.date() if pd.notna(x) else None)
                 elif 'Decimal' in clickhouse_type:
                     df[col_name] = pd.to_numeric(df[col_name], errors='coerce')
                 elif 'UInt8' in clickhouse_type:
@@ -301,7 +303,7 @@ class ClickHouseInserter:
                     df[col_name] = pd.to_numeric(df[col_name], errors='coerce').fillna(0).astype('int8')
                 elif 'String' in clickhouse_type:
                     df[col_name] = df[col_name].astype('string').where(df[col_name].notna(), None)
-                
+
             except Exception as e:
                 print(f"Warning: Failed to convert column {col_name} to {clickhouse_type}: {e}")
                 continue
@@ -331,28 +333,45 @@ class ClickHouseInserter:
             return 0
         
         try:
-            # Convert DataFrame to format suitable for ClickHouse
-            data_dict = self._dataframe_to_clickhouse_format(batch_df)
-            
-            # Insert using clickhouse_connect
+            # Convert DataFrame: replace pd.NA with np.nan, then all to None
+            import numpy as np
+
+            # First pass: convert object columns to handle pd.NA
+            batch_clean = batch_df.astype(object).where(batch_df.notna(), None)
+
+            # Insert using values (list of lists)
             self.client.insert(
                 table=table_name,
-                data=data_dict,
+                data=batch_clean.values.tolist(),
                 column_names=list(batch_df.columns)
             )
-            
+
             return len(batch_df)
             
         except Exception as e:
             raise Exception(f"Batch insertion failed for table {table_name}: {e}")
     
-    def _dataframe_to_clickhouse_format(self, df: pd.DataFrame) -> List[List[Any]]:
-        """Convert DataFrame to list of lists for ClickHouse insertion"""
-        # Replace NaN/None values with None for ClickHouse
-        df_clean = df.where(pd.notna(df), None)
-        
-        # Convert to list of lists (row-wise)
-        return df_clean.values.tolist()
+    def _dataframe_to_column_dict(self, df: pd.DataFrame) -> List[List[Any]]:
+        """Convert DataFrame to column-oriented list of lists for ClickHouse insertion"""
+        result = []
+
+        for col_name in df.columns:
+            col_data = df[col_name]
+
+            # Replace pd.NA with None
+            col_data = col_data.replace({pd.NA: None})
+
+            # Convert to list and replace NaN with None
+            col_list = []
+            for val in col_data:
+                if pd.isna(val):
+                    col_list.append(None)
+                else:
+                    col_list.append(val)
+
+            result.append(col_list)
+
+        return result
     
     def update_manifest_success(
         self,

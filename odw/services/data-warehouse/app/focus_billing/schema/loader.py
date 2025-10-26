@@ -11,7 +11,7 @@ from ..interfaces.schema_loader import ISchemaLoader, IColumnMetadataLoader
 from ..models import FocusColumn, FocusDataset, FocusColumnType, FocusFeatureLevel, FocusDataType
 from ..utils.naming import pascal_to_snake_case
 from ..utils.type_mapping import map_focus_to_clickhouse_type
-from ..config import focus_config
+from ..config import get_focus_config
 from ..constants import FocusTableNames, FocusViewNames
 
 

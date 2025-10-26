@@ -79,27 +79,71 @@
   - Validate that required params are supplied before execution; raise descriptive errors otherwise.
 - Caching: rely on Moose default caching (optional future enhancement).
 
-## Ingestion Workflow
-### Workflow Overview
-- Create `FocusBillingIngestWorkflow` under `app/focus_billing/workflow.py`.
+## Ingestion Workflow (Updated: Moose-Native Approach)
+### Architecture Change
+**Previous**: Direct ClickHouse insertion via `clickhouse_connect` with manual DDL management
+**New**: Moose-native ingestion using data models in `app/ingest/` with automatic schema sync
+
+### Benefits of Moose-Native Approach
+1. **Automatic Schema Management**: Moose handles table creation, migrations, and schema sync
+2. **Type Safety**: Pydantic models provide validation and type checking
+3. **Streaming + Batch**: Support both streaming ingestion APIs and batch Parquet processing
+4. **Consistent Patterns**: Aligns with existing Moose app architecture
+5. **Built-in Monitoring**: Leverage Moose's observability for ingestion metrics
+
+### Data Model Structure
+Create Moose data models in `app/ingest/focus/`:
+
+```
+app/ingest/focus/
+├── models.py                    # Pydantic data models
+│   ├── FocusCostUsage_0_0      # Version 0.0 (snake_case storage)
+│   └── FocusContractCommitment_0_0
+├── flow.py                      # Stream functions for transformations
+└── views/                       # Materialized views
+    ├── focus_data_table.py      # PascalCase view for YAML queries
+    └── focus_contract_commitment_view.py
+```
+
+### Workflow Steps (Revised)
+- Create `FocusBillingIngestWorkflow` under `app/focus_billing/workflow.py`
 - Steps per run:
-  1. Discover Parquet blobs under configured root (default `focus-mcp-main/data/focus` but allow override via env).
-  2. Read `manifest.json` for metadata (row counts, period).
-  3. Load Parquet into pandas/pyarrow to transform:
-     - Standardize column case to snake_case.
-     - Apply type casts: `INT96` → `DateTime64(3)`, Parquet decimals → ClickHouse `Decimal(38, 18)`, booleans → `UInt8`.
-     - Normalize decimals (cast to Python `Decimal`).
-     - Convert timestamps.
-     - Add `id`, `source_system`, `created_at`, `updated_at`.
-  4. Write chunked inserts to ClickHouse using `clickhouse_connect` client (respecting 10k row batches).
-     - Populate `focus_cost_usage` during the primary pass so analytical queries stay aligned with the latest exports.
-     - When Contract Commitment exports are present, materialize them into `focus_contract_commitment` using the same metadata enrichment rules.
-  5. Record processed files in audit table `focus_ingest_manifest` (new table with file path, checksum, ingested_at).
-  6. Skip already processed files (based on manifest table).
-- Error handling:
-  - Wrap insert in try/except, log to Moose CLI log + raise to fail workflow.
-  - On failure, mark manifest entry with status `failed` and store error message.
-- Testing hook: ability to run dry-run that prints schema mapping without inserting (for unit tests).
+  1. **Discover Parquet files** under configured root (default `focus-mcp-main/data/focus`)
+  2. **Read manifest metadata** for row counts and period validation
+  3. **Transform to Moose format**:
+     - Load Parquet using pandas/pyarrow
+     - Map PascalCase → snake_case to match Moose model fields
+     - Type conversions: `INT96` → `DateTime64(3)`, decimals, booleans
+     - Add audit fields: `id`, `source_system`, `created_at`, `updated_at`
+  4. **Ingest via Moose APIs**:
+     - Use Moose's `IngestApi` endpoints (HTTP POST to `/ingest/FocusCostUsage_0_0`)
+     - OR use Moose's file-based ingestion with Parquet format support
+     - Moose handles batching, ClickHouse writes, and schema validation
+  5. **Track processing** in `focus_ingest_manifest` table (managed by Moose)
+  6. **Skip processed files** based on manifest checksum
+
+### File-Based Ingestion Option
+Moose supports direct Parquet ingestion:
+```python
+# Option 1: Stream through Moose HTTP API
+for batch in parquet_batches:
+    moose_client.ingest("FocusCostUsage_0_0", batch)
+
+# Option 2: Use Moose file-based ingestion (if supported)
+moose_client.ingest_file("FocusCostUsage_0_0", parquet_path)
+```
+
+### Schema Management
+- **Moose Data Models** define schema with FOCUS metadata in field descriptions
+- **Automatic DDL**: Moose generates and applies ClickHouse DDL on model changes
+- **Views**: Create Moose aggregations/views for PascalCase column renaming
+- **Migrations**: Moose handles version transitions (e.g., `_0_0` → `_0_1`)
+
+### Error Handling
+- Moose ingestion APIs provide built-in validation and error responses
+- Workflow catches ingestion errors and updates manifest with failure status
+- Retry logic leverages Temporal's built-in retry policies
+- Testing: Dry-run mode validates transformations without sending to Moose
 
 ## Configuration
 - Add `FOCUS_DATA_ROOT` env (default to path in focus-mcp project). Document fallback.
