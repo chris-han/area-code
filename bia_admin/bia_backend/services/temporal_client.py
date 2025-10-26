@@ -124,15 +124,43 @@ class TemporalClient:
                 )
             
             # Start workflow
-            handle = await self._client.start_workflow(
-                workflow_class,
-                parameters,
-                id=workflow_id,
-                task_queue=self.task_queue,
-                retry_policy=retry_policy,
-                execution_timeout=timedelta(hours=2),
-                run_timeout=timedelta(hours=1)
-            )
+            # For schema_migration workflow, pass parameters as args list
+            if workflow_type == "schema_migration":
+                # SchemaMigrationWorkflow expects 3 positional args
+                # Provide defaults if not specified
+                from pathlib import Path
+                repo_root = Path(__file__).resolve().parents[3]  # Go up to area-code root
+
+                default_parquet = str(repo_root / "odw/services/data-warehouse/app/focus_billing/data/focus/20250701-20250731/202507220944/b1861aa3-c2fe-460d-9ff2-a6f28d0ef073/part_0_0001.snappy.parquet")
+                default_spec = str(repo_root / "FOCUS_Spec/specification/datasets")
+
+                workflow_args = [
+                    parameters.get("source_parquet_path", default_parquet),
+                    parameters.get("canonical_schema_path", default_spec),
+                    parameters.get("current_version", "0_0")
+                ]
+
+                logger.info(f"Schema migration params: parquet={workflow_args[0]}, spec={workflow_args[1]}, version={workflow_args[2]}")
+
+                handle = await self._client.start_workflow(
+                    workflow_class,
+                    args=workflow_args,
+                    id=workflow_id,
+                    task_queue=self.task_queue,
+                    retry_policy=retry_policy,
+                    execution_timeout=timedelta(hours=2),
+                    run_timeout=timedelta(hours=1)
+                )
+            else:
+                handle = await self._client.start_workflow(
+                    workflow_class,
+                    parameters,
+                    id=workflow_id,
+                    task_queue=self.task_queue,
+                    retry_policy=retry_policy,
+                    execution_timeout=timedelta(hours=2),
+                    run_timeout=timedelta(hours=1)
+                )
             
             logger.info(f"Started workflow {workflow_type} with ID {workflow_id}")
             return handle.id

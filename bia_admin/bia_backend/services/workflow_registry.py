@@ -113,14 +113,9 @@ class WorkflowRegistry:
             # Try to import the workflow class to get its docstring
             workflow_class = None
             try:
-                # Try focus_billing module first
-                from app.focus_billing.temporal_workflow import FocusBillingTemporalWorkflow
-                from app.focus_billing.schema_migration import SchemaMigrationWorkflow
-
-                if workflow_class_name == 'FocusBillingTemporalWorkflow':
-                    workflow_class = FocusBillingTemporalWorkflow
-                elif workflow_class_name == 'SchemaMigrationWorkflow':
-                    workflow_class = SchemaMigrationWorkflow
+                # Try focus_billing module first - but these depend on moose_lib
+                # which isn't available in BIA backend, so we'll use fallback
+                pass
             except ImportError:
                 logger.warning(f"Could not import workflow class {workflow_class_name}")
 
