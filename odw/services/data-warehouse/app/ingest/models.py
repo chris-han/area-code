@@ -187,3 +187,6 @@ azureBlobStagingModel = IngestPipeline[AzureBlobStagingRecord](
         dead_letter_queue=True
     )
 )
+
+# Import FOCUS models
+from .focus.models import focusCostUsageModel

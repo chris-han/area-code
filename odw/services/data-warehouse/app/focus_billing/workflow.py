@@ -17,7 +17,7 @@ from moose_lib import Task, TaskConfig, Workflow, WorkflowConfig, cli_log, CliLo
 from .config import get_focus_config
 from .file_discovery import FocusFileDiscovery, ProcessedFileTracker, ParquetFileInfo
 from .data_transformer import FocusDataTransformer, TransformationResult
-from .clickhouse_inserter import ClickHouseInserter, InsertionResult
+from .moose_ingestion_adapter import MooseIngestionAdapter, MooseIngestionResult
 from .observability import focus_observability, TimedOperation
 
 
@@ -79,7 +79,7 @@ class FocusBillingIngestWorkflow:
         self.file_discovery = FocusFileDiscovery(params.data_root)
         self.file_tracker = ProcessedFileTracker()
         self.data_transformer = FocusDataTransformer()
-        self.clickhouse_inserter = None
+        self.moose_ingestion_adapter = None
         
         # Setup logging
         self.workflow_start_time = None
@@ -117,8 +117,8 @@ class FocusBillingIngestWorkflow:
                 focus_observability.emit_counter("focus.workflow.completed", 1.0, {'status': 'no_files_after_filter'})
                 return self.stats
             
-            # Step 3: Initialize ClickHouse inserter
-            self._initialize_clickhouse_inserter()
+            # Step 3: Initialize Moose ingestion adapter
+            self._initialize_moose_ingestion_adapter()
             
             # Step 4: Process files
             with TimedOperation(focus_observability, "focus.workflow.file_processing_time"):
@@ -214,15 +214,15 @@ class FocusBillingIngestWorkflow:
         
         return filtered_files
     
-    def _initialize_clickhouse_inserter(self) -> None:
-        """Initialize ClickHouse inserter with workflow parameters"""
+    def _initialize_moose_ingestion_adapter(self) -> None:
+        """Initialize Moose ingestion adapter with workflow parameters"""
         try:
             batch_size = self.params.batch_size or get_focus_config().batch_size
-            self.clickhouse_inserter = ClickHouseInserter(batch_size)
-            self._log_info(f"Initialized ClickHouse inserter with batch size: {batch_size}")
-            
+            self.moose_ingestion_adapter = MooseIngestionAdapter(batch_size)
+            self._log_info(f"Initialized Moose ingestion adapter with batch size: {batch_size}")
+
         except Exception as e:
-            error_msg = f"Failed to initialize ClickHouse inserter: {str(e)}"
+            error_msg = f"Failed to initialize Moose ingestion adapter: {str(e)}"
             self._log_error(error_msg)
             raise Exception(error_msg)
     
@@ -288,15 +288,18 @@ class FocusBillingIngestWorkflow:
             
             rows_transformed = transformation_result.rows_processed
             self._log_info(f"Transformed {rows_transformed} rows")
-            
-            # Step 2: Insert into ClickHouse
-            self._log_info(f"Inserting data into ClickHouse")
-            insertion_result = self.clickhouse_inserter.insert_transformed_data(
-                transformation_result, file_info, manifest_id
+
+            # Step 2: Ingest via Moose API
+            self._log_info(f"Ingesting data via Moose API")
+            import asyncio
+            insertion_result = asyncio.run(
+                self.moose_ingestion_adapter.ingest_transformed_data(
+                    transformation_result, file_info, manifest_id
+                )
             )
-            
+
             if not insertion_result.success:
-                error_msg = f"ClickHouse insertion failed: {insertion_result.error_message}"
+                error_msg = f"Moose ingestion failed: {insertion_result.error_message}"
                 self._log_error(error_msg)
                 self.file_tracker.mark_file_processing_failed(manifest_id, error_msg)
                 return False
@@ -422,9 +425,9 @@ class FocusBillingIngestWorkflow:
     
     def _cleanup(self) -> None:
         """Clean up resources"""
-        if self.clickhouse_inserter:
+        if self.moose_ingestion_adapter:
             try:
-                self.clickhouse_inserter.close()
+                self.moose_ingestion_adapter.close()
             except Exception:
                 pass
         

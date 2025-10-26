@@ -82,68 +82,173 @@
 ## Ingestion Workflow (Updated: Moose-Native Approach)
 ### Architecture Change
 **Previous**: Direct ClickHouse insertion via `clickhouse_connect` with manual DDL management
-**New**: Moose-native ingestion using data models in `app/ingest/` with automatic schema sync
+**New**: Moose-native ingestion using data models in `app/ingest/focus/` with automatic schema sync
 
 ### Benefits of Moose-Native Approach
-1. **Automatic Schema Management**: Moose handles table creation, migrations, and schema sync
-2. **Type Safety**: Pydantic models provide validation and type checking
+1. **Automatic Schema Management**: Moose handles table creation, migrations, and schema sync from Pydantic models
+2. **Type Safety**: Pydantic models provide validation and type checking aligned with FOCUS spec
 3. **Streaming + Batch**: Support both streaming ingestion APIs and batch Parquet processing
-4. **Consistent Patterns**: Aligns with existing Moose app architecture
+4. **Consistent Patterns**: Aligns with existing Moose app architecture (see `app/ingest/models.py`)
 5. **Built-in Monitoring**: Leverage Moose's observability for ingestion metrics
 
 ### Data Model Structure
-Create Moose data models in `app/ingest/focus/`:
+Create Moose data models in `app/ingest/focus/models.py`:
 
+```python
+from moose_lib import Key, IngestPipeline, IngestPipelineConfig
+from pydantic import BaseModel, Field
+from typing import Optional
+from decimal import Decimal
+from datetime import datetime
+
+class FocusCostUsage(BaseModel):
+    """FOCUS 1.2 Cost and Usage dataset - snake_case for ClickHouse storage"""
+
+    # Primary key - deterministic hash
+    id: Key[str] = Field(description="Deterministic hash: billing_account_id + charge_period_start + resource_id + sku_meter")
+
+    # Mandatory dimensions (FOCUS spec)
+    billing_account_id: str = Field(description="FOCUS: BillingAccountId (Mandatory)")
+    billing_account_name: Optional[str] = Field(description="FOCUS: BillingAccountName (Mandatory, allows nulls)")
+    billing_currency: str = Field(description="FOCUS: BillingCurrency (Mandatory)")
+    billing_period_start: datetime = Field(description="FOCUS: BillingPeriodStart (Mandatory)")
+    billing_period_end: datetime = Field(description="FOCUS: BillingPeriodEnd (Mandatory)")
+    charge_period_start: datetime = Field(description="FOCUS: ChargePeriodStart (Mandatory)")
+    charge_period_end: datetime = Field(description="FOCUS: ChargePeriodEnd (Mandatory)")
+    charge_category: str = Field(description="FOCUS: ChargeCategory (Mandatory)")
+    provider_name: str = Field(description="FOCUS: Provider (Mandatory)")
+    publisher_name: str = Field(description="FOCUS: Publisher (Mandatory)")
+    invoice_issuer_name: str = Field(description="FOCUS: InvoiceIssuer (Mandatory)")
+    service_category: str = Field(description="FOCUS: ServiceCategory (Mandatory)")
+    service_name: str = Field(description="FOCUS: ServiceName (Mandatory)")
+
+    # Mandatory metrics (FOCUS spec)
+    billed_cost: Decimal = Field(description="FOCUS: BilledCost (Mandatory, Decimal(38,18))")
+    contracted_cost: Decimal = Field(description="FOCUS: ContractedCost (Mandatory, Decimal(38,18))")
+    effective_cost: Decimal = Field(description="FOCUS: EffectiveCost (Mandatory, Decimal(38,18))")
+    list_cost: Decimal = Field(description="FOCUS: ListCost (Mandatory, Decimal(38,18))")
+    pricing_quantity: Optional[Decimal] = Field(description="FOCUS: PricingQuantity (Mandatory, allows nulls)")
+    pricing_unit: Optional[str] = Field(description="FOCUS: PricingUnit (Mandatory, allows nulls)")
+
+    # Conditional/Recommended dimensions (FOCUS spec - allows nulls)
+    charge_class: Optional[str] = Field(description="FOCUS: ChargeClass (Mandatory, allows nulls)")
+    charge_description: Optional[str] = Field(description="FOCUS: ChargeDescription (Mandatory, allows nulls)")
+    charge_frequency: Optional[str] = Field(description="FOCUS: ChargeFrequency (Recommended)")
+    availability_zone: Optional[str] = Field(description="FOCUS: AvailabilityZone (Recommended)")
+    region_id: Optional[str] = Field(description="FOCUS: RegionId (Conditional)")
+    region_name: Optional[str] = Field(description="FOCUS: RegionName (Conditional)")
+    resource_id: Optional[str] = Field(description="FOCUS: ResourceId (Conditional)")
+    resource_name: Optional[str] = Field(description="FOCUS: ResourceName (Conditional)")
+    resource_type: Optional[str] = Field(description="FOCUS: ResourceType (Conditional)")
+    service_subcategory: Optional[str] = Field(description="FOCUS: ServiceSubcategory (Recommended)")
+    sku_id: Optional[str] = Field(description="FOCUS: SkuId (Conditional)")
+    sku_meter: Optional[str] = Field(description="FOCUS: SkuMeter (Conditional)")
+    sku_price_id: Optional[str] = Field(description="FOCUS: SkuPriceId (Conditional)")
+
+    # JSON fields (FOCUS spec)
+    tags: Optional[str] = Field(description="FOCUS: Tags (Conditional, JSON as String)")
+    sku_price_details: Optional[str] = Field(description="FOCUS: SkuPriceDetails (Conditional, JSON as String)")
+
+    # Extended provider columns (x_* fields from Azure)
+    x_account_id: Optional[str] = None
+    x_billed_cost_in_usd: Optional[Decimal] = None
+    x_effective_cost_in_usd: Optional[Decimal] = None
+    # ... (additional x_* fields as needed from parquet schema)
+
+    # Audit fields
+    source_system: str = Field(default="focus_parquet")
+    ingested_at: datetime = Field(default_factory=datetime.utcnow)
+
+# Create Moose IngestPipeline
+focusCostUsageModel = IngestPipeline[FocusCostUsage](
+    "FocusCostUsage",
+    IngestPipelineConfig(
+        ingest=True,      # Enable HTTP ingestion endpoint
+        stream=True,      # Create Kafka/Redpanda topic
+        table=True,       # Create ClickHouse table
+        dead_letter_queue=True
+    )
+)
 ```
-app/ingest/focus/
-├── models.py                    # Pydantic data models
-│   ├── FocusCostUsage_0_0      # Version 0.0 (snake_case storage)
-│   └── FocusContractCommitment_0_0
-├── flow.py                      # Stream functions for transformations
-└── views/                       # Materialized views
-    ├── focus_data_table.py      # PascalCase view for YAML queries
-    └── focus_contract_commitment_view.py
+
+**Key Design Decisions:**
+- **Column names**: Use `snake_case` in Pydantic models → Moose generates ClickHouse tables with `snake_case`
+- **FOCUS metadata**: Capture in Field `description` for documentation and introspection
+- **Type mapping**:
+  - FOCUS `Decimal` → Python `Decimal` → ClickHouse `Decimal(38,18)`
+  - FOCUS `Date/Time` → Python `datetime` → ClickHouse `DateTime64(3)`
+  - FOCUS `JSON` → Python `str` (JSON string) → ClickHouse `Nullable(String)`
+  - Extended `x_*` columns → Optional fields for Azure-specific metadata
+- **Primary key**: Deterministic hash `id` as `Key[str]` for deduplication
+- **Nullability**: Use `Optional[T]` for FOCUS columns with "Allows Nulls = True"
+
+### PascalCase View for YAML Queries
+Create ClickHouse view `focus_data_table` that aliases `snake_case` → `PascalCase`:
+
+```sql
+CREATE VIEW focus_data_table AS
+SELECT
+    id,
+    billing_account_id AS BillingAccountId,
+    billing_account_name AS BillingAccountName,
+    billing_currency AS BillingCurrency,
+    billing_period_start AS BillingPeriodStart,
+    billing_period_end AS BillingPeriodEnd,
+    charge_period_start AS ChargePeriodStart,
+    charge_period_end AS ChargePeriodEnd,
+    billed_cost AS BilledCost,
+    effective_cost AS EffectiveCost,
+    -- ... (all columns renamed to PascalCase)
+FROM FocusCostUsage_0_0;
 ```
+
+This view enables FOCUS YAML queries to run without modification.
 
 ### Workflow Steps (Revised)
-- Create `FocusBillingIngestWorkflow` under `app/focus_billing/workflow.py`
-- Steps per run:
-  1. **Discover Parquet files** under configured root (default `focus-mcp-main/data/focus`)
-  2. **Read manifest metadata** for row counts and period validation
-  3. **Transform to Moose format**:
-     - Load Parquet using pandas/pyarrow
-     - Map PascalCase → snake_case to match Moose model fields
-     - Type conversions: `INT96` → `DateTime64(3)`, decimals, booleans
-     - Add audit fields: `id`, `source_system`, `created_at`, `updated_at`
-  4. **Ingest via Moose APIs**:
-     - Use Moose's `IngestApi` endpoints (HTTP POST to `/ingest/FocusCostUsage_0_0`)
-     - OR use Moose's file-based ingestion with Parquet format support
-     - Moose handles batching, ClickHouse writes, and schema validation
-  5. **Track processing** in `focus_ingest_manifest` table (managed by Moose)
-  6. **Skip processed files** based on manifest checksum
+`FocusBillingIngestWorkflow` in `app/focus_billing/workflow.py`:
 
-### File-Based Ingestion Option
-Moose supports direct Parquet ingestion:
+1. **Discover Parquet files** under `FOCUS_DATA_ROOT` (env var or default path)
+2. **Read manifest metadata** (period, dataset type, row count)
+3. **Transform Parquet → Moose format**:
+   - Load with `pyarrow.parquet.read_table()`
+   - Map PascalCase → snake_case column names
+   - Convert types: timestamps, decimals, booleans, JSON strings
+   - Generate deterministic `id` hash
+   - Add `source_system`, `ingested_at` audit fields
+4. **Batch ingestion to Moose**:
+   - Convert to list of Pydantic `FocusCostUsage` instances
+   - POST batches to Moose HTTP API: `POST /ingest/FocusCostUsage`
+   - Moose validates schema, writes to ClickHouse `FocusCostUsage_0_0` table
+5. **Track processing** in `focus_ingest_manifest` table
+6. **Skip already-processed files** (checksum-based deduplication)
+
+### Ingestion Code Pattern
 ```python
-# Option 1: Stream through Moose HTTP API
-for batch in parquet_batches:
-    moose_client.ingest("FocusCostUsage_0_0", batch)
+import httpx
+from .ingest.focus.models import FocusCostUsage
 
-# Option 2: Use Moose file-based ingestion (if supported)
-moose_client.ingest_file("FocusCostUsage_0_0", parquet_path)
+async def ingest_focus_batch(records: List[FocusCostUsage]):
+    """Send batch to Moose ingestion API"""
+    moose_url = "http://localhost:4200/ingest/FocusCostUsage"
+    payload = [record.model_dump(mode='json') for record in records]
+
+    async with httpx.AsyncClient() as client:
+        response = await client.post(moose_url, json=payload, timeout=30.0)
+        response.raise_for_status()
+        return response.json()
 ```
 
 ### Schema Management
-- **Moose Data Models** define schema with FOCUS metadata in field descriptions
-- **Automatic DDL**: Moose generates and applies ClickHouse DDL on model changes
-- **Views**: Create Moose aggregations/views for PascalCase column renaming
-- **Migrations**: Moose handles version transitions (e.g., `_0_0` → `_0_1`)
+- **Source of Truth**: Pydantic models in `app/ingest/focus/models.py` define schema
+- **Automatic DDL**: Moose CLI generates and applies ClickHouse DDL on startup
+- **Schema Evolution**: Version models (e.g., `FocusCostUsage_0_1`) for breaking changes
+- **Views**: Create PascalCase view manually or via Moose aggregations
 
 ### Error Handling
-- Moose ingestion APIs provide built-in validation and error responses
-- Workflow catches ingestion errors and updates manifest with failure status
-- Retry logic leverages Temporal's built-in retry policies
-- Testing: Dry-run mode validates transformations without sending to Moose
+- **Validation**: Pydantic validates data before ingestion (type errors, required fields)
+- **DLQ**: Moose routes failed records to dead-letter queue for inspection
+- **Retry Logic**: Temporal workflow retries on transient failures (network, ClickHouse unavailable)
+- **Dry-Run Mode**: Workflow parameter to validate transformations without sending to Moose
 
 ## Configuration
 - Add `FOCUS_DATA_ROOT` env (default to path in focus-mcp project). Document fallback.

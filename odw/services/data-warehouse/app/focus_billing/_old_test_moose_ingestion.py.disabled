@@ -1,0 +1,101 @@
+#!/usr/bin/env python3
+"""
+Test script for FOCUS billing Moose ingestion workflow.
+
+Tests the complete pipeline:
+1. Moose data model creation
+2. Parquet file transformation
+3. Ingestion via Moose HTTP API
+4. Query verification
+"""
+
+import asyncio
+import sys
+from pathlib import Path
+
+# Add app directory to path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from focus_billing.workflow import FocusBillingIngestWorkflow, FocusBillingIngestParams
+
+
+async def test_moose_ingestion():
+    """Test FOCUS data ingestion via Moose API"""
+
+    print("=" * 80)
+    print("FOCUS Billing - Moose Ingestion Test")
+    print("=" * 80)
+    print()
+
+    # Configure test parameters
+    test_data_path = Path(__file__).parent / "data/focus/20250701-20250731"
+
+    params = FocusBillingIngestParams(
+        data_root=str(test_data_path.parent.parent),  # Point to root 'focus' directory
+        batch_size=100,
+        max_files=1,  # Test with single file
+        dry_run=False,
+        dataset_type_filter=None,  # Process all types
+        period_filter="20250701-20250731",
+        continue_on_error=True,
+        skip_processed=False  # Reprocess for testing
+    )
+
+    print(f"Test Parameters:")
+    print(f"  Data root: {params.data_root}")
+    print(f"  Batch size: {params.batch_size}")
+    print(f"  Max files: {params.max_files}")
+    print(f"  Period filter: {params.period_filter}")
+    print()
+
+    # Run workflow
+    print("Executing workflow...")
+    print("-" * 80)
+
+    workflow = FocusBillingIngestWorkflow(params)
+    stats = workflow.execute()
+
+    print()
+    print("-" * 80)
+    print("Workflow Results:")
+    print(f"  Files discovered: {stats.files_discovered}")
+    print(f"  Files processed: {stats.files_processed}")
+    print(f"  Files skipped: {stats.files_skipped}")
+    print(f"  Files failed: {stats.files_failed}")
+    print(f"  Total rows: {stats.total_rows_processed}")
+    print(f"  Processing time: {stats.total_processing_time:.2f}s")
+
+    if stats.errors:
+        print()
+        print("Errors encountered:")
+        for error in stats.errors:
+            print(f"  - {error}")
+
+    print()
+    print("=" * 80)
+
+    if stats.files_processed > 0 and stats.files_failed == 0:
+        print("✓ Test PASSED: Data successfully ingested via Moose")
+        return 0
+    else:
+        print("✗ Test FAILED: Ingestion errors occurred")
+        return 1
+
+
+def main():
+    """Main test entry point"""
+    try:
+        exit_code = asyncio.run(test_moose_ingestion())
+        sys.exit(exit_code)
+    except KeyboardInterrupt:
+        print("\nTest interrupted by user")
+        sys.exit(130)
+    except Exception as e:
+        print(f"\n✗ Test failed with exception: {e}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
