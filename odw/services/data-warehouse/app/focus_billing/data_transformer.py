@@ -294,14 +294,21 @@ class FocusDataTransformer:
         def safe_decimal_convert(value):
             if pd.isna(value):
                 return None
+
+            # Handle empty strings and whitespace
+            if isinstance(value, str):
+                value = value.strip()
+                if value == '' or value.lower() == 'nan' or value.lower() == 'null':
+                    return None
+
             try:
                 # Convert to Decimal with appropriate precision
                 decimal_val = Decimal(str(value))
                 # Limit to ClickHouse Decimal(38,18) precision
                 return decimal_val.quantize(Decimal('0.000000000000000001'))
-            except (InvalidOperation, ValueError):
+            except (InvalidOperation, ValueError, TypeError):
                 return None
-        
+
         return series.apply(safe_decimal_convert)
     
     def _convert_to_boolean(self, series: pd.Series) -> pd.Series:

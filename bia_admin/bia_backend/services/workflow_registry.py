@@ -40,52 +40,47 @@ class WorkflowRegistry:
 
     def _discover_workflows(self):
         """
-        Discover workflows by importing temporal_worker and inspecting
-        its registered workflows.
+        Discover workflows by reading temporal_worker source directly
+        without importing (avoids moose_lib dependency).
         """
         try:
-            # Import the temporal_worker module from data-warehouse
-            from app.workflows import temporal_worker
+            # Read temporal_worker source file directly (no import)
+            import os
+            from pathlib import Path
 
-            # Extract workflow classes from the worker configuration
-            # We look for the Worker initialization in the module
-            worker_module = inspect.getmembers(temporal_worker, inspect.isclass)
+            # Find temporal_worker.py in data-warehouse
+            repo_root = Path(__file__).resolve().parents[3]
+            worker_file = repo_root / "odw/services/data-warehouse/app/workflows/temporal_worker.py"
 
-            # Get the TemporalWorkerManager class
-            worker_manager_class = None
-            for name, obj in worker_module:
-                if name == 'TemporalWorkerManager':
-                    worker_manager_class = obj
-                    break
-
-            if not worker_manager_class:
-                logger.warning("Could not find TemporalWorkerManager in temporal_worker")
+            if not worker_file.exists():
+                logger.warning(f"Could not find temporal_worker.py at {worker_file}")
+                self._register_fallback_workflows()
                 return
 
-            # Read the source code to extract workflow list
-            source_file = inspect.getsourcefile(worker_manager_class)
-            if not source_file:
-                logger.warning("Could not find source file for TemporalWorkerManager")
-                return
-
-            with open(source_file, 'r') as f:
+            with open(worker_file, 'r') as f:
                 source_code = f.read()
 
             # Parse workflow registrations from source
-            # This is a simple approach - looks for the workflows= list in Worker()
+            # Look for workflows= list in Worker()
             import re
             workflow_pattern = r'workflows=\[(.*?)\]'
             match = re.search(workflow_pattern, source_code, re.DOTALL)
 
             if not match:
                 logger.warning("Could not find workflows list in temporal_worker")
+                self._register_fallback_workflows()
                 return
 
             workflow_list_str = match.group(1)
             # Extract workflow class names
             workflow_names = re.findall(r'(\w+Workflow)', workflow_list_str)
 
-            # Import and register each workflow
+            if not workflow_names:
+                logger.warning("No workflow classes found in temporal_worker")
+                self._register_fallback_workflows()
+                return
+
+            # Register each discovered workflow
             for workflow_name in workflow_names:
                 self._register_workflow_from_name(workflow_name)
 

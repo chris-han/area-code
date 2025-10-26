@@ -174,7 +174,9 @@ class MooseIngestionAdapter:
         """
         # Handle Decimal
         if isinstance(value, Decimal):
-            return str(value)
+            # Convert to string, avoiding scientific notation for JSON
+            # Use fixed-point notation for JSON compatibility
+            return float(value)
 
         # Handle datetime
         if isinstance(value, (datetime, pd.Timestamp)):

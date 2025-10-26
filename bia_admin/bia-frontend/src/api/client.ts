@@ -2,16 +2,27 @@ import { NEXT_PUBLIC_API_BASE_URL, NEXT_PUBLIC_MOOSE_CONSUMPTION_BASE_URL } from
 
 export class ApiClient {
   private baseURL: string
+  private proxyPrefix?: string
 
-  constructor(baseURL: string = NEXT_PUBLIC_API_BASE_URL) {
+  constructor(baseURL: string = NEXT_PUBLIC_API_BASE_URL, proxyPrefix?: string) {
     this.baseURL = baseURL
+    this.proxyPrefix = proxyPrefix
   }
 
   async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const isBrowser = typeof window !== 'undefined'
-    const url = isBrowser
-      ? `/api/bia${endpoint}`
-      : `${this.baseURL}${endpoint}`
+    let url: string
+
+    if (isBrowser && this.proxyPrefix) {
+      // Use Next.js API route proxy
+      url = `${this.proxyPrefix}${endpoint}`
+    } else if (isBrowser) {
+      // Direct browser request (for services with CORS enabled)
+      url = `${this.baseURL}${endpoint}`
+    } else {
+      // Server-side request
+      url = `${this.baseURL}${endpoint}`
+    }
     
     const config: RequestInit = {
       headers: {
@@ -75,7 +86,10 @@ export class ApiClient {
   }
 }
 
-export const biaClient = new ApiClient(NEXT_PUBLIC_API_BASE_URL)
+// BIA Backend API - use Next.js proxy for CORS
+export const biaClient = new ApiClient(NEXT_PUBLIC_API_BASE_URL, '/api/bia')
+
+// Moose Consumption API - direct connection (CORS enabled)
 export const mooseClient = new ApiClient(NEXT_PUBLIC_MOOSE_CONSUMPTION_BASE_URL)
 
 // Backwards-compatible exports

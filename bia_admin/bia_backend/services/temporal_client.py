@@ -31,7 +31,7 @@ class TemporalClient:
     """Enhanced Temporal client for bia workflow management"""
 
     WORKFLOW_CLASS_MAP = {
-        "focus_billing_ingest": "FocusBillingTemporalWorkflow",
+        "focus_billing": "FocusBillingTemporalWorkflow",
         "schema_migration": "SchemaMigrationWorkflow",
     }
 

@@ -124,8 +124,8 @@ class FocusBillingConfig(BaseModel):
     
     # Workflow configuration with environment variable support
     batch_size: int = Field(
-        default_factory=lambda: int(os.getenv('FOCUS_BATCH_SIZE', '10000')),
-        description="Batch size for ClickHouse insertions"
+        default_factory=lambda: int(os.getenv('FOCUS_BATCH_SIZE', '500')),
+        description="Batch size for Moose API ingestion (max ~10MB per request)"
     )
     
     max_workers: int = Field(

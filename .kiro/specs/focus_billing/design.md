@@ -8,6 +8,55 @@ This specification defines a modular, schema-aware architecture that integrates 
 - **Apply migrations safely** using versioned ClickHouse tables and materialized views
 - **Orchestrate end-to-end** via Temporal workflows for auditability and resilience
 
+## Implementation Status
+
+### ✅ Completed Components
+
+1. **Schema Migration Workflow** (`app/focus_billing/schema_migration/`)
+   - Schema drift detection comparing Parquet vs FOCUS spec
+   - Dynamic SQL transformation generation
+   - Versioned table creation (`FocusCostUsage_0_0`, `FocusCostUsage_0_1`, etc.)
+   - Materialized view migrations for zero-downtime cutover
+   - Plugin Registry integration for ClickHouse configuration
+
+2. **Data Ingestion Workflow** (`app/focus_billing/`)
+   - Parquet file discovery and filtering
+   - Data transformation (PascalCase → snake_case)
+   - Type conversions (Decimal, DateTime, Boolean)
+   - Batch ingestion to Moose HTTP API
+   - Manifest tracking for processed files
+
+3. **Decimal Conversion Handling**
+   - Empty/invalid value handling (empty strings, 'nan', 'null')
+   - Scientific notation fix (Decimal('0E-18') → float)
+   - ClickHouse Decimal(38,18) precision compliance
+
+4. **Plugin Registry System** (`plugin_registry.plugin_configurations`)
+   - Centralized configuration in `bia_config` PostgreSQL database
+   - No environment variable dependencies
+   - PostgreSQL connection from `moose.config.toml [plugin_registry_db]`
+
+5. **BIA Frontend Integration**
+   - Dual backend architecture (BIA API port 4300, Moose API port 4201)
+   - API client with CORS support
+   - FinOps dashboard with 15 feature cards
+
+### ⚠️ In Progress
+
+1. **FOCUS Consumption APIs** (`app/apis/`)
+   - **Status**: API structure defined, first API file created (`cost_comparison.py`)
+   - **Remaining**: 13 additional consumption APIs need individual files
+   - **Issue**: Moose auto-discovery requires one file per API
+   - **Pattern**: Each API needs separate file (e.g., `cost_comparison.py`, `effective_cost_analysis.py`)
+
+### 📋 Next Steps
+
+1. Create remaining 13 FOCUS consumption API files in `app/apis/`
+2. Restart Moose dev server to trigger API re-discovery
+3. Verify all APIs accessible at `http://localhost:4201/api/consumption/*`
+4. Test frontend integration with real consumption APIs
+5. Document API parameter schemas and response formats
+
 ## Context
 - FOCUS 1.2 exports (Parquet with nested period folders) live in `focus-mcp-main/data/focus`.
 - Official column metadata lives in `resources/specifications/columns.yaml`; curated FOCUS use-case SQL lives in `resources/queries/*.yaml`.
@@ -257,6 +306,66 @@ async def ingest_focus_batch(records: List[FocusCostUsage]):
 - **DLQ**: Moose routes failed records to dead-letter queue for inspection
 - **Retry Logic**: Temporal workflow retries on transient failures (network, ClickHouse unavailable)
 - **Dry-Run Mode**: Workflow parameter to validate transformations without sending to Moose
+
+### Data Type Conversion Rules
+
+#### Decimal Conversion
+Decimal fields from Parquet must be converted carefully to avoid JSON serialization errors:
+
+1. **Empty/Invalid Values**:
+   - Empty strings (`''`)
+   - Whitespace-only strings
+   - String literals: `'nan'`, `'null'`, `'NaN'`, `'NULL'`
+   - All convert to `None` (JSON null)
+
+2. **Scientific Notation Handling**:
+   - Parquet may contain `Decimal('0E-18')` or similar scientific notation
+   - **Problem**: JSON does not support scientific notation in decimal strings
+   - **Solution**: Convert Decimal to `float` for JSON serialization
+   - Example: `Decimal('0E-18')` → `float(0.0)` → valid JSON
+
+3. **Precision Limits**:
+   - ClickHouse `Decimal(38,18)` has 18 decimal places
+   - Quantize decimals: `decimal_val.quantize(Decimal('0.000000000000000001'))`
+   - Handle `InvalidOperation`, `ValueError`, `TypeError` exceptions
+
+4. **Implementation Pattern**:
+```python
+def _convert_to_decimal(series: pd.Series) -> pd.Series:
+    """Convert series to decimal with proper precision"""
+    def safe_decimal_convert(value):
+        if pd.isna(value):
+            return None
+
+        # Handle empty strings and whitespace
+        if isinstance(value, str):
+            value = value.strip()
+            if value == '' or value.lower() in ['nan', 'null']:
+                return None
+
+        try:
+            # Convert to Decimal with appropriate precision
+            decimal_val = Decimal(str(value))
+            # Limit to ClickHouse Decimal(38,18) precision
+            return decimal_val.quantize(Decimal('0.000000000000000001'))
+        except (InvalidOperation, ValueError, TypeError):
+            return None
+
+    return series.apply(safe_decimal_convert)
+```
+
+5. **JSON Serialization**:
+```python
+def _convert_value_for_json(value: Any, column_name: str) -> Any:
+    """Convert Python value to JSON-serializable format"""
+    # Handle Decimal
+    if isinstance(value, Decimal):
+        # Convert to float to avoid scientific notation issues in JSON
+        # JSON parsers handle float properly, including special values
+        return float(value)
+```
+
+**Critical**: Do NOT use `str(Decimal)` for JSON serialization as it may produce scientific notation (`"0E-18"`) which is invalid JSON decimal format.
 
 ## Configuration
 
@@ -877,26 +986,49 @@ The FinOps dashboard exposes all 18 FOCUS supported features as interactive dash
 
 #### Moose Consumption API Endpoints
 
+**Base URL**: `http://localhost:4201/api`
+
+**Port Configuration**:
+- Port `4200`: Moose main server (ingestion, MCP)
+- Port `4201`: Moose consumption API proxy (`proxy_port` in `moose.config.toml`)
+
+**API Endpoints**:
+
 ```typescript
-// Base URL: http://localhost:4201/api
+// FOCUS Analytics Endpoints (under /api prefix)
+GET  /api/focus/features                    // List all supported features
+GET  /api/focus/features/:feature_id        // Get feature details
+POST /api/focus/queries/:feature_id/execute // Execute feature query
 
-// FOCUS Analytics Endpoints
-GET  /focus/features                    // List all supported features
-GET  /focus/features/:feature_id        // Get feature details
-POST /focus/queries/:feature_id/execute // Execute feature query
-
-// Pre-built Analytics
-POST /consumption/CostComparison
-POST /consumption/EffectiveCostAnalysis
-POST /consumption/CommitmentDiscountPurchases
-POST /consumption/CorrectionCharges
-POST /consumption/RecurringCharges
-POST /consumption/ResourceUsageByService
-POST /consumption/CostByLocation
-POST /consumption/AccountCostBreakdown
-POST /consumption/MarketplacePurchases
-POST /consumption/UnitPriceAnalysis
+// Pre-built Analytics (under /api prefix)
+POST /api/consumption/CostComparison
+POST /api/consumption/EffectiveCostAnalysis
+POST /api/consumption/CommitmentDiscountPurchases
+POST /api/consumption/CorrectionCharges
+POST /api/consumption/RecurringCharges
+POST /api/consumption/ResourceUsageByService
+POST /api/consumption/CostByLocation
+POST /api/consumption/AccountCostBreakdown
+POST /api/consumption/MarketplacePurchases
+POST /api/consumption/UnitPriceAnalysis
 ```
+
+**Frontend Configuration**:
+```typescript
+// src/lib/env.ts
+NEXT_PUBLIC_MOOSE_CONSUMPTION_BASE_URL = 'http://localhost:4201/api'
+
+// src/api/client.ts
+export const mooseClient = new ApiClient(NEXT_PUBLIC_MOOSE_CONSUMPTION_BASE_URL)
+
+// Usage in frontend - mooseClient already includes /api prefix
+mooseClient.post('/consumption/CostComparison', params)
+// → Calls: http://localhost:4201/api/consumption/CostComparison
+```
+
+**CORS Configuration**:
+- Moose consumption API must enable CORS for frontend origin: `http://localhost:3003`
+- Direct browser → Moose connection (no Next.js proxy needed)
 
 ### Frontend Implementation Plan
 
@@ -1056,6 +1188,123 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:4300
 - **Error Handling**: Implement fallback UI for API failures
 
 ---
+
+## Troubleshooting
+
+### Common Issues and Solutions
+
+#### 1. Invalid Decimal Format in JSON (`x_partner_credit_rate`)
+
+**Error**: `Invalid JSON: Error("Invalid decimal format at x_partner_credit_rate")`
+
+**Root Cause**: Parquet contains `Decimal('0E-18')` scientific notation which is invalid in JSON when converted to string.
+
+**Solution**: Convert Decimal to `float` instead of `str` for JSON serialization
+```python
+# ❌ Wrong - produces "0E-18" string
+return str(decimal_value)
+
+# ✅ Correct - produces valid JSON number
+return float(decimal_value)
+```
+
+**Files Modified**:
+- `app/focus_billing/moose_ingestion_adapter.py:177`
+- `app/focus_billing/data_transformer.py:292-312`
+
+#### 2. Request Body Too Large (413 Error)
+
+**Error**: `Moose API returned status 413: Request body too large. Maximum size is 10485760 bytes`
+
+**Root Cause**: Batch size of 10,000 rows exceeds Moose's 10MB request limit.
+
+**Solution**: Reduce batch size to 500 rows
+```python
+# app/focus_billing/config.py
+batch_size: int = Field(
+    default_factory=lambda: int(os.getenv('FOCUS_BATCH_SIZE', '500')),
+    description="Batch size for Moose API ingestion (max ~10MB per request)"
+)
+```
+
+#### 3. Workflow Registry `moose_lib` Import Error
+
+**Error**: `No module named 'moose_lib'` when BIA backend tries to discover workflows
+
+**Root Cause**: BIA backend environment doesn't have `moose_lib` installed.
+
+**Solution**: Read `temporal_worker.py` source file directly without importing
+```python
+# ❌ Wrong - requires moose_lib
+from app.workflows import temporal_worker
+
+# ✅ Correct - reads source file directly
+worker_file = repo_root / "odw/services/data-warehouse/app/workflows/temporal_worker.py"
+with open(worker_file, 'r') as f:
+    source_code = f.read()
+```
+
+**File Modified**: `bia_admin/bia_backend/services/workflow_registry.py:41-92`
+
+#### 4. FOCUS Consumption APIs Not Found (404)
+
+**Error**: `API consumption with version CostComparison not found`
+
+**Root Cause**: Moose requires one file per consumption API in `app/apis/` directory.
+
+**Solution**: Create individual API files following naming pattern
+```bash
+app/apis/
+├── cost_comparison.py          # ✅ Correct - individual file
+├── effective_cost_analysis.py  # ✅ Correct - individual file
+└── focus_features.py           # ❌ Wrong - bulk definitions not discovered
+```
+
+**Pattern**:
+```python
+# app/apis/cost_comparison.py
+cost_comparison = ConsumptionApi[RequestType, ResponseType](
+    name="CostComparison",  # API name for URL: /api/consumption/CostComparison
+    query_function=get_cost_comparison,
+    config=ConsumptionApiConfig()
+)
+```
+
+#### 5. Plugin Configuration Not Found
+
+**Error**: `ClickHouse Sink plugin not found in plugin_registry`
+
+**Root Cause**: Plugin configuration missing from `bia_config.plugin_registry.plugin_configurations` table.
+
+**Solution**: Ensure plugin is configured in PostgreSQL database
+```sql
+-- Check if plugin exists
+SELECT * FROM plugin_registry.plugin_configurations
+WHERE plugin_name = 'ClickHouse Sink' AND is_active = true;
+
+-- Configure if missing
+INSERT INTO plugin_registry.plugin_configurations (plugin_name, configuration, is_active)
+VALUES ('ClickHouse Sink', '{"host": "localhost", "port": 18123, ...}'::jsonb, true);
+```
+
+**File Reference**: `app/focus_billing/schema_migration/activities.py:19-97`
+
+#### 6. Schema Migration Skipped - Table Not Found
+
+**Behavior**: Migration workflow completes but returns `status: "skipped"`, `reason: "base_table_not_found"`
+
+**Root Cause**: Attempting schema migration before base table created via ingestion workflow.
+
+**Solution**: This is expected behavior. Run workflows in order:
+1. First: Run **FOCUS Billing Ingest** workflow to create base table
+2. Then: Run **Schema Migration** workflow to detect and apply schema changes
+
+**Workflow Order**:
+```
+Data Ingestion → Creates FocusCostUsage_0_0 table
+    ↓
+Schema Migration → Detects drift and creates FocusCostUsage_0_1 (if needed)
+```
 
 ## Open Questions / Assumptions
 - Initial delivery focuses on the two dataset tables + views; dimension tables staged for later if needed.

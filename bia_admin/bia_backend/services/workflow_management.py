@@ -47,7 +47,7 @@ class WorkflowType(str, Enum):
     """Workflow type identifiers exposed to the UI (dynamically populated)"""
 
     # Fallback static values for type hints and validation
-    FOCUS_BILLING_INGEST = "focus_billing_ingest"
+    FOCUS_BILLING = "focus_billing"
     SCHEMA_MIGRATION = "schema_migration"
 
     @classmethod
