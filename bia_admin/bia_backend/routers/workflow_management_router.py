@@ -18,6 +18,7 @@ from bia_backend.services.workflow_management import (
     WorkflowMetricsQuery, WorkflowMetricsResponse, get_workflow_metrics,
 )
 from bia_backend.services.worker_management import get_worker_manager
+from bia_backend.services.workflow_registry import get_workflow_registry
 
 logger = logging.getLogger(__name__)
 
@@ -315,4 +316,38 @@ async def restart_worker():
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to restart worker: {str(e)}"
+        )
+
+
+@workflow_management_router.get("/types")
+async def list_workflow_types():
+    """
+    Get list of available workflow types with metadata.
+
+    Returns all discovered workflows from the workflow registry, including:
+    - Workflow type identifier
+    - Display name
+    - Description
+    - Estimated duration
+    - Workflow class name
+
+    This endpoint dynamically discovers workflows at runtime from the
+    data-warehouse temporal_worker configuration.
+    """
+    try:
+        registry = get_workflow_registry()
+        workflows = registry.get_workflows()
+
+        return {
+            "success": True,
+            "workflows": workflows,
+            "total": len(workflows),
+            "message": f"Found {len(workflows)} registered workflow types"
+        }
+
+    except Exception as e:
+        logger.error(f"Error listing workflow types: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to list workflow types: {str(e)}"
         )

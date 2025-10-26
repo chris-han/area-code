@@ -16,6 +16,7 @@ from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 
 from .temporal_client import TemporalClient
+from .workflow_registry import get_workflow_registry
 
 logger = logging.getLogger(__name__)
 
@@ -31,17 +32,44 @@ class WorkflowStatus(str, Enum):
     TIMED_OUT = "timed_out"
 
 
-class WorkflowType(str, Enum):
-    """Workflow type identifiers exposed to the UI"""
+# Dynamic workflow type discovery
+_workflow_registry = None
 
-    AZURE_BILLING_EXTRACTION = "azure_billing_extraction"
-    FOCUS_TRANSFORMATION = "focus_transformation"
-    DATA_VALIDATION = "data_validation"
-    SCHEDULED_REPORT = "scheduled_report"
-    AZURE_BLOB_INGEST = "azure_blob_ingest"
-    MINIMAL_DEMO = "minimal_demo"
-    TEST_WORKFLOW = "test_workflow"
+def _get_registry():
+    """Get or initialize workflow registry"""
+    global _workflow_registry
+    if _workflow_registry is None:
+        _workflow_registry = get_workflow_registry()
+    return _workflow_registry
+
+class WorkflowType(str, Enum):
+    """Workflow type identifiers exposed to the UI (dynamically populated)"""
+
+    # Fallback static values for type hints and validation
     FOCUS_BILLING_INGEST = "focus_billing_ingest"
+    SCHEMA_MIGRATION = "schema_migration"
+
+    @classmethod
+    def _missing_(cls, value):
+        """Allow dynamic workflow types not in the enum"""
+        # Check if the value is in the dynamic registry
+        registry = _get_registry()
+        if value in registry.get_workflow_types():
+            # Dynamically create and return the enum member
+            return cls._value2member_map_.get(value, None)
+        return None
+
+    @classmethod
+    def get_all_workflow_types(cls) -> List[str]:
+        """Get all workflow types including dynamically discovered ones"""
+        registry = _get_registry()
+        return registry.get_workflow_types()
+
+    @classmethod
+    def get_workflow_metadata(cls, workflow_type: str) -> Optional[Dict[str, Any]]:
+        """Get metadata for a workflow type"""
+        registry = _get_registry()
+        return registry.get_workflow(workflow_type)
 
 
 class WorkflowExecution(BaseModel):
@@ -316,16 +344,10 @@ async def trigger_workflow(temporal_client: TemporalClient, params: WorkflowTrig
 
         workflow_id = f"wf_{params.workflow_type.value}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
 
-        duration_estimates = {
-            WorkflowType.AZURE_BILLING_EXTRACTION: "15-30 minutes",
-            WorkflowType.FOCUS_TRANSFORMATION: "5-15 minutes",
-            WorkflowType.DATA_VALIDATION: "2-10 minutes",
-            WorkflowType.SCHEDULED_REPORT: "1-5 minutes",
-            WorkflowType.AZURE_BLOB_INGEST: "5-15 minutes",
-            WorkflowType.MINIMAL_DEMO: "< 1 minute",
-            WorkflowType.TEST_WORKFLOW: "< 5 minutes",
-            WorkflowType.FOCUS_BILLING_INGEST: "10-20 minutes",
-        }
+        # Get estimated duration from workflow registry
+        registry = _get_registry()
+        workflow_metadata = registry.get_workflow(params.workflow_type.value)
+        estimated_duration = workflow_metadata.get('estimated_duration') if workflow_metadata else None
 
         execution_id = await temporal_client.start_workflow(
             workflow_type=params.workflow_type.value,
@@ -349,7 +371,7 @@ async def trigger_workflow(temporal_client: TemporalClient, params: WorkflowTrig
             success=True,
             workflow_id=execution_id,
             message=message,
-            estimated_duration=duration_estimates.get(params.workflow_type),
+            estimated_duration=estimated_duration,
         )
 
     except Exception as exc:  # pragma: no cover - Temporal connectivity errors

@@ -9,7 +9,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from bia_backend.app import get_clickhouse_client
+from bia_backend.dependencies import get_clickhouse_client
 from bia_backend.services.storage_management import (
     S3ConfigurationRequest, S3ConfigurationResponse, configure_s3_storage,
     S3ConnectionTest, S3ConnectionTestResponse, test_s3_connection,

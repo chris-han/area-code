@@ -47,7 +47,7 @@ async def main():
     os.environ['TEMPORAL_HOST'] = temporal_host
 
     # Import and run worker
-    from app.azure_billing.workflows.temporal_worker import run_worker
+    from app.workflows.temporal_worker import run_worker
 
     config = {
         'temporal_host': temporal_host,

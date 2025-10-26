@@ -1,66 +1,94 @@
+'use client'
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { WorkflowForm } from '@/components/workflow-form'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { 
+import {
   ArrowLeft,
   Workflow,
   Clock,
   Database,
   Settings,
   Zap,
-  Cloud
+  Cloud,
+  Loader2
 } from 'lucide-react'
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
+
+interface WorkflowType {
+  workflow_type: string
+  workflow_class: string
+  display_name: string
+  description: string
+  estimated_duration: string
+}
+
+interface WorkflowTypesResponse {
+  success: boolean
+  workflows: WorkflowType[]
+  total: number
+  message: string
+}
 
 export default function NewWorkflowPage() {
-  const workflowTypes = [
-    {
-      id: 'azure_billing_extraction',
-      name: 'Azure Billing Data Extraction',
-      description: 'Extract billing data from Azure Enterprise Agreement sources.',
-      icon: <Database className="h-6 w-6" />,
-      estimatedTime: '15-30 min',
-      complexity: 'Medium',
-      tags: ['Azure', 'Billing', 'Extraction']
-    },
-    {
-      id: 'azure_blob_ingest',
-      name: 'Azure Blob Parquet Ingest',
-      description: 'Ingest FOCUS parquet files from Azure Blob Storage into staging tables.',
-      icon: <Cloud className="h-6 w-6" />,
-      estimatedTime: '5-15 min',
-      complexity: 'Medium',
-      tags: ['Azure', 'Blob', 'Ingestion']
-    },
-    {
-      id: 'focus_transformation',
-      name: 'FOCUS 1.2 Transformation',
-      description: 'Transform raw billing data into FOCUS 1.2 compliant tables.',
-      icon: <Zap className="h-6 w-6" />,
-      estimatedTime: '10-20 min',
-      complexity: 'Medium',
-      tags: ['FOCUS', 'Transformation']
-    },
-    {
-      id: 'data_validation',
-      name: 'Data Quality Check',
-      description: 'Validate data integrity, completeness, and reconciliation.',
-      icon: <Settings className="h-6 w-6" />,
-      estimatedTime: '5-10 min',
-      complexity: 'Low',
-      tags: ['Validation', 'Quality']
-    },
-    {
-      id: 'scheduled_report',
-      name: 'Scheduled Cost Report',
-      description: 'Generate and distribute scheduled cost reports and insights.',
-      icon: <Workflow className="h-6 w-6" />,
-      estimatedTime: '20-40 min',
-      complexity: 'High',
-      tags: ['Reporting', 'Scheduling']
-    },
-  ]
+  const [workflowTypes, setWorkflowTypes] = useState<WorkflowType[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetchWorkflowTypes()
+  }, [])
+
+  const fetchWorkflowTypes = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      const response = await fetch('http://localhost:4300/api/v1/workflows/types')
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch workflow types: ${response.statusText}`)
+      }
+
+      const data: WorkflowTypesResponse = await response.json()
+
+      if (data.success) {
+        setWorkflowTypes(data.workflows)
+      } else {
+        throw new Error(data.message || 'Failed to fetch workflow types')
+      }
+    } catch (err) {
+      console.error('Error fetching workflow types:', err)
+      setError(err instanceof Error ? err.message : 'Unknown error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const getIconForWorkflowType = (workflowType: string) => {
+    if (workflowType.includes('ingest') || workflowType.includes('billing')) {
+      return <Database className="h-6 w-6" />
+    } else if (workflowType.includes('migration') || workflowType.includes('schema')) {
+      return <Settings className="h-6 w-6" />
+    } else if (workflowType.includes('transformation')) {
+      return <Zap className="h-6 w-6" />
+    } else if (workflowType.includes('blob') || workflowType.includes('cloud')) {
+      return <Cloud className="h-6 w-6" />
+    }
+    return <Workflow className="h-6 w-6" />
+  }
+
+  const getComplexityForWorkflow = (estimatedDuration: string) => {
+    // Parse estimated duration and determine complexity
+    if (estimatedDuration.includes('5-') || estimatedDuration.startsWith('5')) {
+      return 'Low'
+    } else if (estimatedDuration.includes('10-20') || estimatedDuration.includes('15-')) {
+      return 'Medium'
+    }
+    return 'High'
+  }
 
   const getComplexityBadge = (complexity: string) => {
     switch (complexity) {
@@ -73,6 +101,28 @@ export default function NewWorkflowPage() {
       default:
         return <Badge variant="secondary">{complexity}</Badge>
     }
+  }
+
+  const getTagsForWorkflowType = (workflowType: string, displayName: string) => {
+    const tags: string[] = []
+
+    if (workflowType.includes('focus') || displayName.includes('FOCUS')) {
+      tags.push('FOCUS')
+    }
+    if (workflowType.includes('billing')) {
+      tags.push('Billing')
+    }
+    if (workflowType.includes('ingest')) {
+      tags.push('Ingestion')
+    }
+    if (workflowType.includes('migration') || workflowType.includes('schema')) {
+      tags.push('Migration')
+    }
+    if (workflowType.includes('transformation')) {
+      tags.push('Transformation')
+    }
+
+    return tags.length > 0 ? tags : ['Workflow']
   }
 
   return (
@@ -99,45 +149,83 @@ export default function NewWorkflowPage() {
             <CardHeader>
               <CardTitle>Choose Workflow Type</CardTitle>
               <CardDescription>
-                Select the type of workflow you want to create
+                Select the type of workflow you want to create (dynamically loaded from backend)
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {workflowTypes.map((type) => (
-                  <Card key={type.id} className="border hover:shadow-md transition-shadow cursor-pointer">
-                    <CardContent className="p-4">
-                      <div className="flex items-start gap-3">
-                        <div className="p-2 bg-primary/10 rounded-lg text-primary">
-                          {type.icon}
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between mb-2">
-                            <h4 className="font-medium">{type.name}</h4>
-                            {getComplexityBadge(type.complexity)}
-                          </div>
-                          <p className="text-sm text-muted-foreground mb-3">
-                            {type.description}
-                          </p>
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <Clock className="h-3 w-3" />
-                              {type.estimatedTime}
+              {loading && (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  <span className="ml-2 text-muted-foreground">Loading workflow types...</span>
+                </div>
+              )}
+
+              {error && (
+                <div className="p-4 bg-destructive/10 text-destructive rounded-lg">
+                  <p className="font-medium">Failed to load workflow types</p>
+                  <p className="text-sm mt-1">{error}</p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-3"
+                    onClick={fetchWorkflowTypes}
+                  >
+                    Retry
+                  </Button>
+                </div>
+              )}
+
+              {!loading && !error && workflowTypes.length === 0 && (
+                <div className="p-4 bg-muted rounded-lg text-center">
+                  <p className="text-muted-foreground">No workflow types available</p>
+                </div>
+              )}
+
+              {!loading && !error && workflowTypes.length > 0 && (
+                <div className="space-y-3">
+                  {workflowTypes.map((type) => {
+                    const complexity = getComplexityForWorkflow(type.estimated_duration)
+                    const tags = getTagsForWorkflowType(type.workflow_type, type.display_name)
+
+                    return (
+                      <Card key={type.workflow_type} className="border hover:shadow-md transition-shadow cursor-pointer">
+                        <CardContent className="p-4">
+                          <div className="flex items-start gap-3">
+                            <div className="p-2 bg-primary/10 rounded-lg text-primary">
+                              {getIconForWorkflowType(type.workflow_type)}
                             </div>
-                            <div className="flex gap-1">
-                              {type.tags.map((tag) => (
-                                <Badge key={tag} variant="outline" className="text-xs">
-                                  {tag}
-                                </Badge>
-                              ))}
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between mb-2">
+                                <h4 className="font-medium">{type.display_name}</h4>
+                                {getComplexityBadge(complexity)}
+                              </div>
+                              <p className="text-sm text-muted-foreground mb-3">
+                                {type.description}
+                              </p>
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                  <Clock className="h-3 w-3" />
+                                  {type.estimated_duration}
+                                </div>
+                                <div className="flex gap-1">
+                                  {tags.map((tag) => (
+                                    <Badge key={tag} variant="outline" className="text-xs">
+                                      {tag}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                              <div className="mt-2 text-xs text-muted-foreground">
+                                Type: <code className="bg-muted px-1 py-0.5 rounded">{type.workflow_type}</code>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+                        </CardContent>
+                      </Card>
+                    )
+                  })}
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -161,19 +249,11 @@ export default function NewWorkflowPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="h-2 w-2 bg-green-500 rounded-full"></div>
-                  <span className="text-sm">Azure Blob Storage Connector is configured</span>
+                  <span className="text-sm">Data warehouse service is active</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="h-2 w-2 bg-green-500 rounded-full"></div>
-                  <span className="text-sm">FOCUS 1.2 Transformer is active</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 bg-green-500 rounded-full"></div>
-                  <span className="text-sm">ClickHouse Sink is configured</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 bg-yellow-500 rounded-full"></div>
-                  <span className="text-sm">Azure SAS token has valid permissions</span>
+                  <span className="text-sm">FOCUS data sources are configured</span>
                 </div>
               </div>
             </CardContent>
@@ -206,24 +286,10 @@ export default function NewWorkflowPage() {
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 border rounded-lg">
               <div className="flex items-center gap-3">
-                <Workflow className="h-5 w-5 text-muted-foreground" />
-                <div>
-                  <h4 className="font-medium">Azure to ClickHouse Pipeline - January Data</h4>
-                  <p className="text-sm text-muted-foreground">Created 1 hour ago • Completed successfully • 1.2M records → ClickHouse</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="success">Completed</Badge>
-                <Button variant="outline" size="sm">Clone</Button>
-              </div>
-            </div>
-            
-            <div className="flex items-center justify-between p-3 border rounded-lg">
-              <div className="flex items-center gap-3">
                 <Database className="h-5 w-5 text-muted-foreground" />
                 <div>
-                  <h4 className="font-medium">Azure Blob Ingestion - December FOCUS Data</h4>
-                  <p className="text-sm text-muted-foreground">Created 2 hours ago • Completed successfully • 950K records</p>
+                  <h4 className="font-medium">FOCUS Billing Ingest - July 2025</h4>
+                  <p className="text-sm text-muted-foreground">Created 1 hour ago • Completed successfully • 458K records</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -231,27 +297,27 @@ export default function NewWorkflowPage() {
                 <Button variant="outline" size="sm">Clone</Button>
               </div>
             </div>
-            
-            <div className="flex items-center justify-between p-3 border rounded-lg">
-              <div className="flex items-center gap-3">
-                <Zap className="h-5 w-5 text-muted-foreground" />
-                <div>
-                  <h4 className="font-medium">FOCUS 1.2 Transform - Q4 Parquet Files</h4>
-                  <p className="text-sm text-muted-foreground">Created yesterday • Completed successfully • 850K records transformed</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="success">Completed</Badge>
-                <Button variant="outline" size="sm">Clone</Button>
-              </div>
-            </div>
-            
+
             <div className="flex items-center justify-between p-3 border rounded-lg">
               <div className="flex items-center gap-3">
                 <Settings className="h-5 w-5 text-muted-foreground" />
                 <div>
-                  <h4 className="font-medium">Data Quality Check - December Billing</h4>
-                  <p className="text-sm text-muted-foreground">Created 3 days ago • Completed successfully • 99.8% quality score</p>
+                  <h4 className="font-medium">Schema Migration - FOCUS 1.2 Update</h4>
+                  <p className="text-sm text-muted-foreground">Created 2 hours ago • Completed successfully • Schema version 0_1</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant="success">Completed</Badge>
+                <Button variant="outline" size="sm">Clone</Button>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+              <div className="flex items-center gap-3">
+                <Database className="h-5 w-5 text-muted-foreground" />
+                <div>
+                  <h4 className="font-medium">FOCUS Billing Ingest - June 2025</h4>
+                  <p className="text-sm text-muted-foreground">Created yesterday • Completed successfully • 412K records</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">

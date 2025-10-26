@@ -27,15 +27,7 @@ try:  # Python 3.11+
 except ModuleNotFoundError:  # pragma: no cover
     import tomli as tomllib  # type: ignore[no-redef]
 
-# bia imports
-from app.azure_billing.plugins.manager.plugin_manager import (
-    PluginManager,
-    PluginManagerConfig,
-)
-from app.azure_billing.plugins.registry.plugin_registry import (
-    PluginRegistry,
-    PluginRegistryConfig,
-)
+# Removed plugin system imports (not needed for FOCUS billing)
 
 logger = logging.getLogger(__name__)
 
@@ -50,8 +42,6 @@ class ABIApplication:
 
     def __init__(self):
         self.app: Optional[FastAPI] = None
-        self.plugin_manager: Optional[PluginManager] = None
-        self.plugin_registry: Optional[PluginRegistry] = None
         self._clickhouse_client = None
         self._temporal_client = None
         self._redis_client = None
@@ -62,49 +52,13 @@ class ABIApplication:
         Initialize bia system dependencies.
 
         Initializes:
-        - Plugin registry and manager
         - ClickHouse client
         - Temporal client
         - Redis client
         """
         try:
             config = self._load_moose_config()
-            registry_config = PluginRegistryConfig.from_dict(
-                config.get("plugin_registry_db", {})
-            )
-
-            # Initialize plugin registry (optional)
-            try:
-                self.plugin_registry = PluginRegistry(registry_config)
-                await self.plugin_registry.initialize()
-                registry_for_manager = registry_config
-                logger.info("Plugin registry initialised successfully")
-            except Exception as registry_error:
-                logger.warning(
-                    "Plugin registry unavailable; continuing without persistent plugin configs: %s",
-                    registry_error,
-                )
-                self.plugin_registry = None
-                registry_for_manager = None
-
-            # Initialize plugin manager
-            plugin_system = config.get("plugin_system", {})
-            manager_config = PluginManagerConfig(
-                plugin_directory=plugin_system.get("plugin_directory", "./plugins"),
-                registry_config=registry_for_manager,
-                lazy_loading=plugin_system.get("lazy_loading", True),
-                cache_plugins=plugin_system.get("cache_plugins", True),
-                auto_health_check=plugin_system.get("auto_health_check", True),
-            )
-            self.plugin_manager = PluginManager(manager_config)
-            await self.plugin_manager.initialize()
-            if self.plugin_registry:
-                # Ensure the manager reuses the already-initialized registry pool
-                self.plugin_manager.registry = self.plugin_registry
-
-            # Initialize other clients (ClickHouse, Temporal, Redis)
             await self._initialize_clients(config)
-
             logger.info("bia dependencies initialized successfully")
 
         except Exception as e:
@@ -214,15 +168,6 @@ class ABIApplication:
             if self._clickhouse_client:
                 self._clickhouse_client.close()
 
-            if self.plugin_manager:
-                try:
-                    await self.plugin_manager.shutdown()
-                except Exception as shutdown_error:
-                    logger.warning(f"Plugin manager shutdown issue: {shutdown_error}")
-
-            if self.plugin_registry:
-                await self.plugin_registry.close()
-
             logger.info("bia dependencies cleaned up successfully")
 
         except Exception as e:
@@ -281,24 +226,6 @@ class ABIApplication:
                 detail="Redis client not available"
             )
         return self._redis_client
-    
-    def get_plugin_manager(self) -> PluginManager:
-        """Get plugin manager dependency"""
-        if not self.plugin_manager:
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Plugin manager not available"
-            )
-        return self.plugin_manager
-    
-    def get_plugin_registry(self) -> PluginRegistry:
-        """Get plugin registry dependency."""
-        if not self.plugin_registry:
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Plugin registry not available"
-            )
-        return self.plugin_registry
 
     def create_app(self) -> FastAPI:
         """
@@ -349,32 +276,9 @@ class ABIApplication:
 abi_app = ABIApplication()
 
 
-# Dependency functions for FastAPI
-def get_clickhouse_client():
-    """FastAPI dependency for ClickHouse client"""
-    return abi_app.get_clickhouse_client()
-
-
-def get_temporal_client():
-    """FastAPI dependency for Temporal client"""
-    return abi_app.get_temporal_client()
-
-
-def get_redis_client():
-    """FastAPI dependency for Redis client"""
-    return abi_app.get_redis_client()
-
-
-def get_plugin_manager() -> PluginManager:
-    """FastAPI dependency for plugin manager"""
-    return abi_app.get_plugin_manager()
-
-
-def get_plugin_registry() -> PluginRegistry:
-    """FastAPI dependency for plugin registry"""
-    return abi_app.get_plugin_registry()
-
-
+# Set the global application reference for dependencies (imported late to avoid circular import)
+import bia_backend.dependencies as dependencies
+dependencies.set_abi_app(abi_app)
 
 
 def create_abi_fastapi_app() -> FastAPI:
@@ -395,7 +299,6 @@ def create_abi_fastapi_app() -> FastAPI:
     from bia_backend.routers import (
         billing_analytics_router,
         workflow_management_router,
-        plugin_management_router,
         focus_data_router,
         health_check_router,
         storage_management_router,
@@ -408,7 +311,6 @@ def create_abi_fastapi_app() -> FastAPI:
     # Include all bia routers
     app.include_router(billing_analytics_router)
     app.include_router(workflow_management_router)
-    app.include_router(plugin_management_router)
     app.include_router(focus_data_router)
     app.include_router(health_check_router)
     app.include_router(storage_management_router)
@@ -427,7 +329,6 @@ def create_abi_fastapi_app() -> FastAPI:
                 "focus_data": "/api/v1/focus",
                 "billing_analytics": "/api/v1/billing/analytics",
                 "workflows": "/api/v1/workflows",
-                "plugins": "/api/v1/plugins",
                 "storage": "/api/v1/storage",
                 "moose_ingest": "/ingest/*",
                 "moose_consumption": "/consumption/*"
@@ -452,7 +353,6 @@ def create_abi_fastapi_app() -> FastAPI:
             "capabilities": {
                 "billing_analytics": True,
                 "workflow_orchestration": True,
-                "plugin_marketplace": True,
                 "focus_compliance": True,
                 "real_time_processing": True,
                 "moose_integration": True

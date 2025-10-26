@@ -9,7 +9,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from bia_backend.app import get_clickhouse_client, get_temporal_client, get_redis_client
+from bia_backend.dependencies import get_clickhouse_client, get_temporal_client, get_redis_client
 from bia_backend.services.health_check import (
     HealthCheckQuery, HealthCheckResponse, get_health_status
 )

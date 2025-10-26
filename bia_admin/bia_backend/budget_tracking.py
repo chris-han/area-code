@@ -13,7 +13,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
-from bia_backend.app import get_clickhouse_client
+from bia_backend.dependencies import get_clickhouse_client
 
 logger = logging.getLogger(__name__)
 

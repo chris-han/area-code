@@ -31,13 +31,8 @@ class TemporalClient:
     """Enhanced Temporal client for bia workflow management"""
 
     WORKFLOW_CLASS_MAP = {
-        "azure_billing_extraction": "AzureBillingWorkflow",
-        "focus_transformation": "FOCUSTransformationWorkflow",
-        "data_validation": "DataValidationWorkflow",
-        "scheduled_report": "ScheduledReportWorkflow",
-        "azure_blob_ingest": "AzureBlobIngestWorkflow",
-        "test_workflow": "AzureBillingTestWorkflow",
         "focus_billing_ingest": "FocusBillingTemporalWorkflow",
+        "schema_migration": "SchemaMigrationWorkflow",
     }
 
     STATUS_MAP = {

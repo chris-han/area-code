@@ -10,7 +10,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from bia_backend.app import get_clickhouse_client, get_redis_client
+from bia_backend.dependencies import get_clickhouse_client, get_redis_client
 from bia_backend.services.billing_analytics import (
     CostTrendQuery, CostTrendResponse, get_cost_trends,
     ResourceUtilizationQuery, ResourceUtilizationResponse, get_resource_utilization,

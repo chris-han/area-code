@@ -1,11 +1,31 @@
 import { biaClient, consumptionClient } from './client'
 import { WorkflowStatus, WorkflowTriggerRequest } from '@/types'
-import { WORKFLOW_TYPE_OPTIONS } from '@/lib/schemas'
 
-const WORKFLOW_LABELS = WORKFLOW_TYPE_OPTIONS.reduce<Record<string, string>>((acc, option) => {
-  acc[option.value] = option.label
-  return acc
-}, {})
+// Workflow labels cache - populated dynamically from API
+let WORKFLOW_LABELS_CACHE: Record<string, string> = {}
+
+// Fetch workflow types and build labels mapping
+const fetchWorkflowLabels = async (): Promise<Record<string, string>> => {
+  try {
+    const response = await fetch('http://localhost:4300/api/v1/workflows/types')
+    const data = await response.json()
+
+    if (data.success && Array.isArray(data.workflows)) {
+      const labels: Record<string, string> = {}
+      data.workflows.forEach((workflow: any) => {
+        labels[workflow.workflow_type] = workflow.display_name
+      })
+      WORKFLOW_LABELS_CACHE = labels
+      return labels
+    }
+  } catch (err) {
+    console.error('Failed to fetch workflow labels:', err)
+  }
+  return {}
+}
+
+// Initialize labels on module load
+fetchWorkflowLabels()
 
 const normalizeStatus = (status?: string): WorkflowStatus['status'] => {
   switch ((status ?? '').toLowerCase()) {
@@ -43,7 +63,7 @@ const mapWorkflow = (workflow: any): WorkflowStatus => {
 
   return {
     id,
-    name: WORKFLOW_LABELS[type] ?? String(type).replace(/[_-]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+    name: WORKFLOW_LABELS_CACHE[type] ?? String(type).replace(/[_-]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
     status: normalizeStatus(workflow.status),
     startTime: workflow.start_time ? new Date(workflow.start_time) : null,
     endTime: workflow.end_time ? new Date(workflow.end_time) : undefined,

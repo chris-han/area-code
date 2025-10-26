@@ -256,84 +256,523 @@ The ODW includes a comprehensive FOCUS (FinOps Open Cost and Usage Specification
 - **Workflow Orchestration**: Temporal-based workflows for reliable, resumable data processing
 - **Real-time Monitoring**: Comprehensive observability, validation, and error handling
 
-#### 🏗️ FOCUS Architecture
+#### 🏗️ FOCUS Architecture - Moose-Native with Schema Migration
+
+The FOCUS billing integration uses a modern, schema-aware architecture with Moose OLAP and Temporal workflows for automated ETL with schema drift detection.
 
 ```mermaid
-sequenceDiagram
-    participant P as Parquet Files<br/>(FOCUS_DATA_ROOT)
-    participant D as File Discovery
-    participant W as FOCUS Workflow
-    participant T as Data Transformer
-    participant C as ClickHouse<br/>(focus_cost_usage)
-    participant Q as Query Catalog<br/>(YAML Queries)
-    participant A as REST APIs
-    participant U as Frontend/Client
+graph TB
+    subgraph "📦 Data Source"
+        PARQUET["Parquet Files<br/>app/focus_billing/data/focus/<br/>20250701-20250731/<br/>202507161527/<br/>part_0_0001.snappy.parquet"]
+    end
 
-    Note over P,U: FOCUS Data Ingestion Pipeline
+    subgraph "🔍 Schema Migration Workflow (Temporal)"
+        DETECT["Activity 1:<br/>detect_schema_diff<br/>Compare Parquet vs FOCUS Spec"]
+        GENERATE["Activity 2:<br/>generate_transformation_code<br/>Create SQL for migration"]
+        APPLY["Activity 3:<br/>apply_transformation<br/>Execute migration safely"]
 
-    P->>D: Scan for new Parquet files
-    D->>W: Discovered files with metadata
-    W->>W: Filter by period/dataset type
-    W->>T: Transform file data
-    T->>T: PascalCase → snake_case
-    T->>T: Type conversions (INT96→DateTime64)
-    T->>T: Add computed columns (id, timestamps)
-    T->>C: Batch insert (10k rows)
-    C->>C: Store in focus_cost_usage &<br/>focus_contract_commitment
-    W->>W: Update manifest tracking
+        DETECT -->|Drift Found| GENERATE
+        GENERATE --> APPLY
+        DETECT -->|No Drift| SKIP["Skip Migration<br/>Use Current Version"]
+    end
 
-    Note over Q,U: FOCUS Query Consumption
+    subgraph "📊 Moose Data Models"
+        MODEL["FocusCostUsage (Pydantic)<br/>app/ingest/focus/models.py<br/>100+ fields from FOCUS 1.2 spec"]
+        PIPELINE["IngestPipeline Config<br/>- ingest: HTTP endpoint<br/>- stream: Redpanda topic<br/>- table: ClickHouse table<br/>- dead_letter_queue: true"]
 
-    Q->>A: Load YAML query definitions
-    U->>A: GET /listFocusUseCases
-    A->>U: Available queries with metadata
-    U->>A: POST /executeFocusUseCase<br/>{slug, start_date, end_date}
-    A->>A: Bind parameters & validate
-    A->>C: Execute parameterized SQL
-    C->>A: Query results
-    A->>U: Paginated response with metrics
+        MODEL --> PIPELINE
+    end
+
+    subgraph "🔄 Ingestion Workflow (Temporal)"
+        DISCOVER["File Discovery<br/>Scan data/focus/"]
+        FILTER["Filter by Period<br/>Dataset Type"]
+        TRANSFORM["Transform Data<br/>PascalCase → snake_case<br/>Type conversions<br/>Generate ID hash"]
+        BATCH["Batch Processor<br/>1000 rows/batch"]
+        INGEST["Moose HTTP API<br/>POST /ingest/FocusCostUsage"]
+
+        DISCOVER --> FILTER
+        FILTER --> TRANSFORM
+        TRANSFORM --> BATCH
+        BATCH --> INGEST
+    end
+
+    subgraph "🗄️ ClickHouse Storage"
+        TABLE["FocusCostUsage_0_0<br/>Versioned table with 100+ columns"]
+        VIEW["focus_data_table VIEW<br/>PascalCase aliases for YAML queries"]
+        VERSIONS["focus_schema_versions<br/>Migration audit trail"]
+
+        TABLE --> VIEW
+        APPLY --> VERSIONS
+    end
+
+    subgraph "🔌 Consumption APIs"
+        APIS["Moose Consumption APIs<br/>- CostComparison<br/>- EffectiveCostAnalysis<br/>- CommitmentDiscounts<br/>- CorrectionCharges<br/>- RecurringCharges"]
+    end
+
+    PARQUET --> DETECT
+    APPLY -->|New Version Created| MODEL
+    SKIP --> MODEL
+    MODEL -->|Auto-generates| TABLE
+    PARQUET --> DISCOVER
+    INGEST -->|Validated & Ingested| TABLE
+    VIEW --> APIS
+    TABLE --> APIS
+
+    classDef source fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef workflow fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef moose fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
+    classDef storage fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    classDef api fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+
+    class PARQUET source
+    class DETECT,GENERATE,APPLY,SKIP,DISCOVER,FILTER,TRANSFORM,BATCH,INGEST workflow
+    class MODEL,PIPELINE moose
+    class TABLE,VIEW,VERSIONS storage
+    class APIS api
 ```
 
-#### 🚀 Quick Start with FOCUS
+**Key Features:**
 
-1. **Configure FOCUS Data Path**:
-   ```bash
-   # Set environment variable (optional - has intelligent defaults)
-   export FOCUS_DATA_ROOT="/path/to/focus/parquet/files"
+1. **Schema-Aware Migration** (Temporal Workflow)
+   - Automatically detects schema drift between source Parquet and FOCUS spec
+   - Generates transformation SQL dynamically when drift detected
+   - Creates versioned tables (`FocusCostUsage_0_0`, `FocusCostUsage_0_1`, etc.)
+   - Uses materialized views for zero-downtime migrations
+   - Tracks all migrations in audit table
+
+2. **Moose-Native Ingestion**
+   - Pydantic models define schema with full FOCUS 1.2 compliance
+   - Moose auto-generates ClickHouse DDL from Python models
+   - HTTP ingestion endpoint with validation
+   - Streaming support via Redpanda topics
+   - Dead-letter queue for failed records
+
+3. **Versioned Schema Management**
+   - Tables suffixed with version: `FocusCostUsage_0_0`
+   - `focus_data_table` view always points to latest version
+   - Safe rollback capability by keeping old versions
+   - Audit trail in `focus_schema_versions` metadata table
+
+4. **Data Flow**
+   ```
+   Parquet → Schema Check → Migration (if needed) →
+   Moose Models → Transform → Batch → HTTP API →
+   ClickHouse → Consumption APIs
    ```
 
-2. **Start ODW with FOCUS Support**:
-   ```bash
-   bun run odw:dev
-   ```
+#### 🚀 End-to-End User Guide: Parquet → ClickHouse → Reports
 
-3. **Trigger FOCUS Ingestion**:
-   ```bash
-   # Via BIA Admin UI (recommended)
-   open http://localhost:3000
-   # Navigate to Workflows → Start New → FOCUS Billing Ingest
+This guide walks you through the complete FOCUS billing data pipeline from raw Parquet files to generated reports.
 
-   # Or via direct API call
-   curl -X POST http://localhost:4200/workflows/focus_billing_ingest \
-     -H "Content-Type: application/json" \
-     -d '{"data_root": "/path/to/focus/data", "dry_run": false}'
-   ```
+##### Prerequisites
 
-4. **Query FOCUS Data**:
-   ```bash
-   # List available use cases
-   curl http://localhost:4200/listFocusUseCases
+Ensure you have sample FOCUS data in the correct location:
+```bash
+# Verify data exists
+ls odw/services/data-warehouse/app/focus_billing/data/focus/20250701-20250731/
+```
 
-   # Execute a specific use case
-   curl -X POST http://localhost:4200/executeFocusUseCase \
-     -H "Content-Type: application/json" \
-     -d '{
-       "slug": "cost-by-service-monthly",
-       "start_date": "2025-07-01",
-       "end_date": "2025-07-31",
-       "limit": 100
-     }'
-   ```
+If data doesn't exist, you can generate sample data or use your own FOCUS 1.2 compliant Parquet exports.
+
+---
+
+##### Step 1: Start All Services
+
+```bash
+# Start the complete ODW stack
+bun run odw:dev
+```
+
+**What starts:**
+- ✅ Moose data warehouse (port 4200)
+- ✅ BIA Backend API (port 4300)
+- ✅ BIA Admin UI (port 3003)
+- ✅ Temporal workflow engine (port 7233)
+- ✅ Temporal UI (port 8080)
+- ✅ ClickHouse (port 18123)
+- ✅ Redpanda (port 19092)
+
+**Verify services are running:**
+```bash
+# Check Moose health
+curl http://localhost:4200/health
+
+# Check BIA backend
+curl http://localhost:4300/health
+
+# Check Temporal UI
+open http://localhost:8080
+```
+
+---
+
+##### Step 2: Schema Migration (First-Time Setup)
+
+Before ingesting data, ensure the ClickHouse schema matches your Parquet files:
+
+**Option A: Via BIA Admin UI (Recommended)**
+1. Open [http://localhost:3003](http://localhost:3003)
+2. Navigate to **Workflows** → **Start New**
+3. Select **Schema Migration**
+4. Fill in parameters:
+   - **Source Parquet Path**: `app/focus_billing/data/focus/20250701-20250731/202507161527/cc47e41e-a6ab-462e-9b26-fe7237024648/part_0_0001.snappy.parquet`
+   - **Canonical Schema Path**: `/home/chris/repo/area-code/FOCUS_Spec/specification/datasets`
+   - **Current Version**: `0_0`
+5. Click **Start Workflow**
+
+**Option B: Via API**
+```bash
+curl -X POST "http://localhost:4300/api/v1/workflows/trigger" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "workflow_type": "schema_migration",
+    "parameters": {
+      "source_parquet_path": "app/focus_billing/data/focus/20250701-20250731/202507161527/cc47e41e-a6ab-462e-9b26-fe7237024648/part_0_0001.snappy.parquet",
+      "canonical_schema_path": "/home/chris/repo/area-code/FOCUS_Spec/specification/datasets",
+      "current_version": "0_0"
+    }
+  }'
+```
+
+**Expected Response:**
+```json
+{
+  "success": true,
+  "workflow_id": "wf_schema_migration_20251026_123456",
+  "message": "Workflow triggered successfully",
+  "estimated_duration": "5-30 minutes"
+}
+```
+
+**What happens:**
+- ✅ Parquet schema compared against FOCUS 1.2 specification
+- ✅ Schema drift detected (if any)
+- ✅ Transformation SQL generated
+- ✅ ClickHouse table `FocusCostUsage_0_0` created
+- ✅ Materialized view for migration created
+- ✅ `focus_data_table` view created with PascalCase aliases
+
+---
+
+##### Step 3: Ingest FOCUS Data
+
+Now ingest your Parquet files into ClickHouse:
+
+**Option A: Via BIA Admin UI (Recommended)**
+1. Open [http://localhost:3003](http://localhost:3003)
+2. Navigate to **Workflows** → **Start New**
+3. Select **FOCUS Billing Ingest**
+4. Fill in parameters:
+   - **Data Root**: `app/focus_billing/data/focus`
+   - **Batch Size**: `1000`
+   - **Max Files**: Leave empty (ingest all)
+   - **Period Filter**: `20250701-20250731`
+5. Click **Start Workflow**
+
+**Option B: Via API**
+```bash
+curl -X POST "http://localhost:4300/api/v1/workflows/trigger" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "workflow_type": "focus_billing_ingest",
+    "parameters": {
+      "data_root": "app/focus_billing/data/focus",
+      "batch_size": 1000,
+      "max_files": null,
+      "period_filter": "20250701-20250731"
+    }
+  }'
+```
+
+**Expected Response:**
+```json
+{
+  "success": true,
+  "workflow_id": "wf_focus_billing_ingest_20251026_123500",
+  "message": "Workflow triggered successfully",
+  "estimated_duration": "10-20 minutes"
+}
+```
+
+**What happens:**
+- ✅ Files discovered in `app/focus_billing/data/focus/`
+- ✅ Files filtered by period (`20250701-20250731`)
+- ✅ Data transformed (PascalCase → snake_case)
+- ✅ Type conversions (INT96 → DateTime64, etc.)
+- ✅ Deterministic IDs generated
+- ✅ Batches ingested via Moose HTTP API
+- ✅ Data stored in `FocusCostUsage_0_0` table
+
+---
+
+##### Step 4: Monitor Workflow Progress
+
+**Via BIA Admin UI:**
+1. Go to [http://localhost:3003](http://localhost:3003)
+2. Click **Workflows**
+3. View real-time workflow status
+
+**Via Temporal UI:**
+1. Open [http://localhost:8080](http://localhost:8080)
+2. View detailed workflow execution
+3. See activity logs and retries
+
+**Via API:**
+```bash
+# Check workflow status
+curl -X POST "http://localhost:4300/api/v1/workflows/status" \
+  -H "Content-Type: application/json" \
+  -d '{"workflow_id": "wf_focus_billing_ingest_20251026_123500"}'
+```
+
+**Expected Response:**
+```json
+{
+  "workflow_id": "wf_focus_billing_ingest_20251026_123500",
+  "status": "completed",
+  "result": {
+    "files_discovered": 92,
+    "files_processed": 92,
+    "files_failed": 0,
+    "total_rows_processed": 458234,
+    "total_processing_time": 847.3
+  }
+}
+```
+
+---
+
+##### Step 5: Verify Data in ClickHouse
+
+**Check row count:**
+```bash
+docker exec -it data-warehouse-clickhouse-1 clickhouse-client --query \
+  "SELECT COUNT(*) as row_count FROM FocusCostUsage_0_0"
+```
+
+**Sample query:**
+```bash
+docker exec -it data-warehouse-clickhouse-1 clickhouse-client --query \
+  "SELECT
+     billing_account_id,
+     service_name,
+     SUM(billed_cost) as total_cost
+   FROM FocusCostUsage_0_0
+   WHERE charge_period_start >= '2025-07-01'
+   GROUP BY billing_account_id, service_name
+   ORDER BY total_cost DESC
+   LIMIT 10
+   FORMAT PrettyCompact"
+```
+
+---
+
+##### Step 6: Query via Consumption APIs
+
+The Moose consumption APIs provide pre-built analytics queries:
+
+**1. Cost Comparison (Identify Savings)**
+```bash
+curl -X POST "http://localhost:4200/consumption/CostComparison" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "billing_period_start": "2025-07-01",
+    "billing_period_end": "2025-08-01"
+  }' | jq
+```
+
+**Example Response:**
+```json
+[
+  {
+    "provider_name": "Azure",
+    "billing_account_id": "12345",
+    "total_effective_cost": 45678.90,
+    "total_billed_cost": 50000.00,
+    "total_list_cost": 62000.00,
+    "effective_discount": 26.32
+  }
+]
+```
+
+**2. Effective Cost Analysis**
+```bash
+curl -X POST "http://localhost:4200/consumption/EffectiveCostAnalysis" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "billing_period_start": "2025-07-01",
+    "billing_period_end": "2025-08-01"
+  }' | jq
+```
+
+**Example Response:**
+```json
+[
+  {
+    "service_category": "Compute",
+    "charge_category": "Usage",
+    "total_effective_cost": 12500.00,
+    "total_usage_quantity": 5000.0,
+    "unit": "GB-Hours"
+  },
+  {
+    "service_category": "Storage",
+    "charge_category": "Usage",
+    "total_effective_cost": 3400.50,
+    "total_usage_quantity": 15000.0,
+    "unit": "GB-Month"
+  }
+]
+```
+
+**3. Commitment Discount Purchases**
+```bash
+curl -X POST "http://localhost:4200/consumption/CommitmentDiscountPurchases" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "billing_period_start": "2025-07-01",
+    "billing_period_end": "2025-08-01"
+  }' | jq
+```
+
+**4. Correction Charges**
+```bash
+curl -X POST "http://localhost:4200/consumption/CorrectionCharges" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "billing_period_start": "2025-07-01",
+    "billing_period_end": "2025-08-01"
+  }' | jq
+```
+
+**5. Recurring Charges**
+```bash
+curl -X POST "http://localhost:4200/consumption/RecurringCharges" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "billing_period_start": "2025-07-01",
+    "billing_period_end": "2025-08-01"
+  }' | jq
+```
+
+---
+
+##### Step 7: Generate Reports
+
+**Create a simple report script:**
+
+```bash
+cat > generate_focus_report.sh << 'EOF'
+#!/bin/bash
+
+# FOCUS Billing Report Generator
+PERIOD_START="2025-07-01"
+PERIOD_END="2025-08-01"
+OUTPUT_DIR="./focus_reports"
+
+mkdir -p $OUTPUT_DIR
+
+echo "📊 Generating FOCUS Billing Reports for $PERIOD_START to $PERIOD_END"
+
+# Cost Comparison Report
+echo "📈 Cost Comparison Report..."
+curl -s -X POST "http://localhost:4200/consumption/CostComparison" \
+  -H "Content-Type: application/json" \
+  -d "{\"billing_period_start\": \"$PERIOD_START\", \"billing_period_end\": \"$PERIOD_END\"}" \
+  | jq '.' > $OUTPUT_DIR/cost_comparison.json
+
+# Effective Cost Analysis Report
+echo "💰 Effective Cost Analysis..."
+curl -s -X POST "http://localhost:4200/consumption/EffectiveCostAnalysis" \
+  -H "Content-Type: application/json" \
+  -d "{\"billing_period_start\": \"$PERIOD_START\", \"billing_period_end\": \"$PERIOD_END\"}" \
+  | jq '.' > $OUTPUT_DIR/effective_cost_analysis.json
+
+# Commitment Discounts Report
+echo "🎯 Commitment Discounts..."
+curl -s -X POST "http://localhost:4200/consumption/CommitmentDiscountPurchases" \
+  -H "Content-Type: application/json" \
+  -d "{\"billing_period_start\": \"$PERIOD_START\", \"billing_period_end\": \"$PERIOD_END\"}" \
+  | jq '.' > $OUTPUT_DIR/commitment_discounts.json
+
+echo "✅ Reports generated in $OUTPUT_DIR/"
+ls -lh $OUTPUT_DIR/
+EOF
+
+chmod +x generate_focus_report.sh
+./generate_focus_report.sh
+```
+
+**View generated reports:**
+```bash
+# Cost comparison report
+cat focus_reports/cost_comparison.json | jq
+
+# Effective cost analysis
+cat focus_reports/effective_cost_analysis.json | jq
+```
+
+---
+
+##### Complete Workflow Summary
+
+```mermaid
+graph LR
+    A[1. Start Services<br/>bun run odw:dev] --> B[2. Schema Migration<br/>Create tables]
+    B --> C[3. Data Ingestion<br/>Parquet → ClickHouse]
+    C --> D[4. Verify Data<br/>ClickHouse queries]
+    D --> E[5. Query APIs<br/>Consumption endpoints]
+    E --> F[6. Generate Reports<br/>JSON/CSV output]
+
+    style A fill:#e3f2fd,stroke:#1976d2
+    style B fill:#f3e5f5,stroke:#7b1fa2
+    style C fill:#e8f5e9,stroke:#388e3c
+    style D fill:#fff3e0,stroke:#f57c00
+    style E fill:#fce4ec,stroke:#c2185b
+    style F fill:#e0f2f1,stroke:#00695c
+```
+
+**Typical Timeline:**
+- **Step 1**: 2-3 minutes (service startup)
+- **Step 2**: 5-10 minutes (first-time schema migration)
+- **Step 3**: 10-20 minutes (data ingestion, depends on file count)
+- **Step 4**: < 1 minute (verification)
+- **Step 5**: < 5 seconds per API call
+- **Step 6**: < 1 minute (report generation)
+
+**Total Time**: ~20-35 minutes for first run, ~10-20 minutes for subsequent runs (no schema migration needed)
+
+---
+
+##### Troubleshooting
+
+**Issue: Workflow fails with "FocusCostUsage model not registered"**
+```bash
+# Solution: Restart Moose to register the model
+cd odw/services/data-warehouse
+bun run dev:clean
+bun run dev
+```
+
+**Issue: No data returned from APIs**
+```bash
+# Check if data was ingested
+docker exec -it data-warehouse-clickhouse-1 clickhouse-client --query \
+  "SELECT COUNT(*) FROM FocusCostUsage_0_0"
+
+# Check table structure
+docker exec -it data-warehouse-clickhouse-1 clickhouse-client --query \
+  "DESCRIBE TABLE FocusCostUsage_0_0"
+```
+
+**Issue: Workflow stuck in "running" status**
+```bash
+# Check Temporal UI for detailed logs
+open http://localhost:8080
+
+# Check worker logs
+docker logs data-warehouse-temporal-1 --tail 100
+```
 
 #### 📚 FOCUS Documentation
 

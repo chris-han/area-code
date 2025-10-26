@@ -1,4 +1,12 @@
-# Focus Billing Integration Design
+# Focus Billing Integration Design - Moose OLAP + Temporal Schema-Aware ETL
+
+## Overview
+
+This specification defines a modular, schema-aware architecture that integrates Moose OLAP with Temporalio to:
+- **Automatically detect schema drift** between source data and canonical FOCUS schema
+- **Generate transformation logic** dynamically using Moose OLAP
+- **Apply migrations safely** using versioned ClickHouse tables and materialized views
+- **Orchestrate end-to-end** via Temporal workflows for auditability and resilience
 
 ## Context
 - FOCUS 1.2 exports (Parquet with nested period folders) live in `focus-mcp-main/data/focus`.
@@ -261,8 +269,369 @@ async def ingest_focus_batch(records: List[FocusCostUsage]):
 - Validate `contract_commitment_id` referential integrity between the two dataset tables, logging gaps for downstream remediation.
 - Optionally call existing focus compliance tests after insert (future work).
 
+---
+
+## Schema-Aware Transformation Orchestration (Auto ETL)
+
+### 🎯 Goals
+- Automatically detect schema drift between source Parquet data and canonical FOCUS schema
+- Generate transformation logic dynamically when drift is detected
+- Apply migration plans safely using versioned ClickHouse tables and materialized views
+- Orchestrate the entire process via Temporal workflows for deterministic replay and auditability
+
+### 🧩 Components
+
+#### 1. Canonical Schema Source
+- **Location**: `/home/chris/repo/area-code/FOCUS_Spec/specification/datasets`
+- **Format**: JSON/YAML spec defining target FOCUS schema
+- **Parser**: Custom parser converts spec to Moose OLAP Python types (Pydantic models)
+
+#### 2. Source Data Schema Inference
+- **Format**: Parquet files in `focus-mcp-main/data/focus/`
+- **Schema Discovery**: PyArrow reads Parquet schema metadata
+- **Moose Integration**: Infer source schema and compare against canonical FOCUS spec
+
+#### 3. Schema Versioning Strategy
+- **Table Naming**: `FocusCostUsage_<major>_<minor>` (e.g., `FocusCostUsage_0_0`, `FocusCostUsage_0_1`)
+- **Moose Config**: Use `config.version` to suffix ClickHouse table names automatically
+- **Materialized Views**: Backfill and migrate data from old → new schema versions
+- **View Aliasing**: `focus_data_table` always points to latest version for query stability
+- **Cutover**: Readers/writers switch to new version after validation passes
+
+#### 4. Temporal Workflow: `SchemaMigrationWorkflow`
+
+**Purpose**: Orchestrate schema drift detection, transformation generation, and safe migration
+
+```python
+from temporalio import workflow
+from dataclasses import dataclass
+from typing import Optional
+
+@dataclass
+class SchemaDiff:
+    """Represents schema differences between source and canonical"""
+    requires_migration: bool
+    added_columns: list[str]
+    removed_columns: list[str]
+    type_changes: dict[str, tuple[str, str]]  # column -> (old_type, new_type)
+    new_version: str  # e.g., "0_1"
+
+@workflow.defn
+class SchemaMigrationWorkflow:
+    """Detects schema drift and applies transformations"""
+
+    @workflow.run
+    async def run(
+        self,
+        source_parquet_path: str,
+        canonical_schema_path: str,
+        current_version: str = "0_0"
+    ) -> dict:
+        """
+        Main workflow execution:
+        1. Detect schema differences
+        2. Generate transformation code if needed
+        3. Apply migration and load data
+        """
+        # Activity 1: Detect schema drift
+        diff = await workflow.execute_activity(
+            detect_schema_diff,
+            args=[source_parquet_path, canonical_schema_path, current_version],
+            start_to_close_timeout=timedelta(minutes=5)
+        )
+
+        if not diff.requires_migration:
+            workflow.logger.info("No schema drift detected, using existing version")
+            return {"migration_needed": False, "version": current_version}
+
+        # Activity 2: Generate transformation logic
+        transform_code = await workflow.execute_activity(
+            generate_transformation_code,
+            args=[diff],
+            start_to_close_timeout=timedelta(minutes=10)
+        )
+
+        # Activity 3: Apply transformation and create new table version
+        migration_result = await workflow.execute_activity(
+            apply_transformation_and_load_data,
+            args=[transform_code, diff.new_version],
+            start_to_close_timeout=timedelta(hours=1)
+        )
+
+        return {
+            "migration_needed": True,
+            "old_version": current_version,
+            "new_version": diff.new_version,
+            "diff": diff,
+            "rows_migrated": migration_result.get("rows_migrated")
+        }
+```
+
+### 🔧 Temporal Activities
+
+#### Activity 1: `detect_schema_diff`
+
+**Purpose**: Compare source Parquet schema against canonical FOCUS spec
+
+```python
+from temporalio import activity
+import pyarrow.parquet as pq
+import yaml
+from pathlib import Path
+
+@activity.defn
+async def detect_schema_diff(
+    source_parquet_path: str,
+    canonical_schema_path: str,
+    current_version: str
+) -> SchemaDiff:
+    """
+    Detect schema differences between source and canonical schemas.
+
+    Returns:
+        SchemaDiff object with migration requirements
+    """
+    # 1. Read source Parquet schema
+    parquet_table = pq.read_table(source_parquet_path)
+    source_schema = parquet_table.schema
+
+    # 2. Load canonical FOCUS spec
+    spec_path = Path(canonical_schema_path) / "cost_and_usage" / "dataset.md"
+    canonical_columns = parse_focus_spec(spec_path)
+
+    # 3. Compare schemas
+    added_columns = []
+    removed_columns = []
+    type_changes = {}
+
+    source_cols = {col.name: col.type for col in source_schema}
+    canonical_cols = {col['name']: col['type'] for col in canonical_columns}
+
+    for col_name, col_type in canonical_cols.items():
+        if col_name not in source_cols:
+            removed_columns.append(col_name)
+        elif source_cols[col_name] != col_type:
+            type_changes[col_name] = (source_cols[col_name], col_type)
+
+    for col_name in source_cols:
+        if col_name not in canonical_cols:
+            added_columns.append(col_name)
+
+    requires_migration = bool(added_columns or removed_columns or type_changes)
+
+    # Calculate new version
+    major, minor = map(int, current_version.split('_'))
+    new_version = f"{major}_{minor + 1}" if requires_migration else current_version
+
+    return SchemaDiff(
+        requires_migration=requires_migration,
+        added_columns=added_columns,
+        removed_columns=removed_columns,
+        type_changes=type_changes,
+        new_version=new_version
+    )
+```
+
+#### Activity 2: `generate_transformation_code`
+
+**Purpose**: Generate SQL/Python transformation logic based on schema diff
+
+```python
+@activity.defn
+async def generate_transformation_code(diff: SchemaDiff) -> str:
+    """
+    Generate transformation code to migrate from old to new schema.
+
+    Returns:
+        SQL transformation code as string
+    """
+    sql_parts = []
+
+    # Handle added columns (set defaults)
+    for col in diff.added_columns:
+        sql_parts.append(f"    NULL AS {col}")
+
+    # Handle removed columns (drop from SELECT)
+    # (implicitly handled by not including them)
+
+    # Handle type changes (cast expressions)
+    for col_name, (old_type, new_type) in diff.type_changes.items():
+        cast_expr = generate_cast_expression(col_name, old_type, new_type)
+        sql_parts.append(f"    {cast_expr} AS {col_name}")
+
+    # Generate materialized view SQL
+    transformation_sql = f"""
+-- Materialized view to migrate data to version {diff.new_version}
+CREATE MATERIALIZED VIEW FocusCostUsage_{diff.new_version}_migration_mv
+ENGINE = MergeTree()
+ORDER BY (billing_account_id, charge_period_start)
+PARTITION BY toYYYYMM(charge_period_start)
+AS
+SELECT
+    *,
+{chr(10).join(sql_parts)}
+FROM FocusCostUsage_{diff.new_version.rsplit('_', 1)[0]}_{int(diff.new_version.rsplit('_', 1)[1]) - 1}
+"""
+
+    return transformation_sql
+```
+
+#### Activity 3: `apply_transformation_and_load_data`
+
+**Purpose**: Execute migration plan and create new versioned table
+
+```python
+@activity.defn
+async def apply_transformation_and_load_data(
+    transform_code: str,
+    new_version: str
+) -> dict:
+    """
+    Apply schema migration:
+    1. Create new versioned table with updated schema
+    2. Run materialized view to backfill data
+    3. Validate row counts match
+    4. Update focus_data_table view to point to new version
+
+    Returns:
+        Migration result with row counts and status
+    """
+    import clickhouse_connect
+
+    client = clickhouse_connect.get_client(
+        host='localhost',
+        port=8123,
+        database='default'
+    )
+
+    try:
+        # 1. Execute transformation SQL (creates materialized view)
+        client.command(transform_code)
+        activity.logger.info(f"Created migration materialized view for version {new_version}")
+
+        # 2. Wait for materialized view to populate (poll until complete)
+        old_version = f"0_{int(new_version.split('_')[1]) - 1}"
+        old_count = client.query(f"SELECT COUNT(*) FROM FocusCostUsage_{old_version}").first_row[0]
+        new_count = client.query(f"SELECT COUNT(*) FROM FocusCostUsage_{new_version}_migration_mv").first_row[0]
+
+        # 3. Validate migration
+        if old_count != new_count:
+            raise ValueError(f"Row count mismatch: {old_count} -> {new_count}")
+
+        # 4. Update focus_data_table view to point to new version
+        client.command(f"""
+            CREATE OR REPLACE VIEW focus_data_table AS
+            SELECT * FROM FocusCostUsage_{new_version}_migration_mv
+        """)
+
+        activity.logger.info(f"Migration complete: {old_count} rows migrated to version {new_version}")
+
+        return {
+            "rows_migrated": new_count,
+            "old_version": old_version,
+            "new_version": new_version,
+            "status": "success"
+        }
+
+    except Exception as e:
+        activity.logger.error(f"Migration failed: {e}")
+        raise
+```
+
+### 🧾 Audit & Observability
+
+#### Schema Change Tracking
+- **Metadata Table**: `focus_schema_versions`
+  ```sql
+  CREATE TABLE focus_schema_versions (
+      version String,
+      applied_at DateTime64(3),
+      schema_diff String,  -- JSON of SchemaDiff
+      transformation_code_hash String,
+      migration_status Enum8('pending', 'success', 'failed'),
+      rows_migrated UInt64
+  ) ENGINE = MergeTree()
+  ORDER BY applied_at;
+  ```
+
+#### Observability Hooks
+- **Temporal Signals**: Emit schema change events for downstream consumers
+- **Metrics**: Track migration duration, row counts, validation results
+- **Git Integration**: Optionally commit transformation code to repo for audit trail
+- **Transformation Hash**: SHA256 hash of transformation SQL for traceability
+
+### 🧰 Integration with Existing Workflow
+
+The `SchemaMigrationWorkflow` runs **before** `FocusBillingIngestWorkflow`:
+
+```python
+@workflow.defn
+class FocusBillingIngestWorkflow:
+    """Main ingestion workflow with schema-aware migration"""
+
+    @workflow.run
+    async def run(self, params: FocusBillingIngestParams):
+        # Step 1: Check for schema drift and migrate if needed
+        migration_result = await workflow.execute_child_workflow(
+            SchemaMigrationWorkflow,
+            args=[
+                params.sample_parquet_path,
+                params.canonical_schema_path,
+                params.current_version or "0_0"
+            ]
+        )
+
+        # Update target version if migration occurred
+        target_version = migration_result["new_version"]
+
+        # Step 2: Proceed with normal ingestion to versioned table
+        # ... (existing ingestion logic using target_version)
+```
+
+### 🚀 Deployment & Usage
+
+#### Starting the Worker
+```bash
+# Workers must register SchemaMigrationWorkflow and all activities
+python app/azure_billing/workflows/temporal_worker.py
+```
+
+#### Triggering Schema Migration
+```bash
+# Via API
+curl -X POST "http://localhost:4300/api/v1/workflows/trigger" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "workflow_type": "schema_migration",
+    "parameters": {
+      "source_parquet_path": "/path/to/sample.parquet",
+      "canonical_schema_path": "/home/chris/repo/area-code/FOCUS_Spec/specification/datasets",
+      "current_version": "0_0"
+    }
+  }'
+```
+
+#### Local Development
+```bash
+# Use Moose CLI to validate schema changes locally
+moose-cli dev --port 4200
+
+# Run schema diff detection only (dry run)
+python -m app.focus_billing.schema_migration_cli --dry-run
+```
+
+### 🧬 Optional Enhancements
+- **Retry Logic**: Temporal automatically retries failed activities with exponential backoff
+- **Signal-Based Updates**: Send signals to running workflows to trigger schema checks
+- **Moose Deploy Integration**: Use Boreal for zero-config deployment of versioned models
+- **Automated Testing**: Run FOCUS compliance tests after each migration
+- **Rollback Capability**: Keep old table versions for quick rollback if needed
+
+---
+
 ## Open Questions / Assumptions
 - Initial delivery focuses on the two dataset tables + views; dimension tables staged for later if needed.
 - Queries in YAML currently use positional `?` parameters for date ranges; assume first two parameters are `start` and `end`.
 - Parquet exports might include additional provider-specific columns; ingest pipeline should store them as JSON in `extended_attributes` if they aren't mapped (fallback plan).
 - Manifest table retention strategy (basic logging is acceptable for now).
+- **Schema Migration**: Initial version is `0_0`; migrations increment minor version (`0_1`, `0_2`, etc.)
