@@ -160,6 +160,253 @@ graph TB
    - Schema Metadata
    - Features Overview
 
+### 🔌 Plugin Management System
+
+The BIA system includes a centralized plugin registry stored in the `bia_config` PostgreSQL database. All connectors, transformers, and sinks are configured through this registry.
+
+#### Plugin Registry Database Schema
+
+```mermaid
+erDiagram
+    plugins ||--o{ plugin_versions : has
+    plugins ||--o{ plugin_configurations : has
+    plugins ||--o{ plugin_installations : installed_in
+    plugins ||--o{ plugin_dependencies : depends_on
+    plugins ||--o{ plugin_reviews : receives
+    plugins ||--o{ plugin_usage_analytics : tracks
+    plugins }o--o{ plugin_tags : tagged_with
+    plugins }o--|| plugin_categories : belongs_to
+
+    plugins {
+        uuid id PK
+        varchar name UK
+        varchar display_name
+        text description
+        varchar version
+        varchar author
+        varchar category
+        jsonb tags
+        varchar plugin_type
+        varchar entry_point
+        jsonb requirements
+        varchar icon_url
+        varchar documentation_url
+        varchar repository_url
+        varchar license
+        jsonb config_schema
+        jsonb default_config
+        varchar status
+        boolean is_official
+        boolean is_verified
+        int download_count
+        decimal rating
+        int review_count
+        timestamp created_at
+        timestamp updated_at
+        timestamp published_at
+    }
+
+    plugin_configurations {
+        uuid id PK
+        varchar plugin_name FK,UK
+        jsonb configuration
+        timestamp created_at
+        timestamp updated_at
+        varchar created_by
+        boolean is_active
+        varchar version
+        text description
+        varchar updated_by
+    }
+
+    plugin_versions {
+        uuid id PK
+        uuid plugin_id FK
+        varchar version_number UK
+        jsonb changelog
+        jsonb requirements
+        varchar status
+        timestamp released_at
+    }
+
+    plugin_installations {
+        uuid id PK
+        uuid plugin_id FK
+        varchar environment
+        varchar version
+        jsonb config_overrides
+        boolean is_enabled
+        timestamp installed_at
+    }
+
+    plugin_dependencies {
+        uuid id PK
+        uuid plugin_id FK
+        varchar dependency_name
+        varchar version_constraint
+        boolean is_required
+    }
+```
+
+#### Plugin Configuration Class Diagram
+
+```mermaid
+classDiagram
+    class PluginRegistry {
+        +String host
+        +Integer port
+        +String database
+        +String schema
+        +getPluginConfig(pluginName: String) JSONb
+        +listActivePlugins() List~Plugin~
+        +updatePluginConfig(pluginName: String, config: JSONb) Boolean
+    }
+
+    class PluginConfiguration {
+        +UUID id
+        +String plugin_name
+        +JSONb configuration
+        +Boolean is_active
+        +String version
+        +DateTime created_at
+        +DateTime updated_at
+        +validate() Boolean
+        +toDict() Dict
+    }
+
+    class ClickHouseSinkPlugin {
+        +String host
+        +Integer port
+        +String user
+        +String password
+        +String dbName
+        +Boolean useSSL
+        +Integer batchSize
+        +String tableName
+        +connect() ClickHouseClient
+        +executeBatch(records: List) Boolean
+    }
+
+    class AzureBlobConnector {
+        +String storageAccount
+        +String sasToken
+        +String dataContainer
+        +String pathPrefix
+        +listBlobs() List~BlobItem~
+        +downloadBlob(path: String) Bytes
+    }
+
+    class FOCUSTransformer {
+        +String focusVersion
+        +String inputFormat
+        +String outputModel
+        +String sinkPlugin
+        +Boolean enableValidation
+        +transform(data: Any) FOCUSData
+    }
+
+    PluginRegistry --> PluginConfiguration : manages
+    PluginConfiguration --> ClickHouseSinkPlugin : configures
+    PluginConfiguration --> AzureBlobConnector : configures
+    PluginConfiguration --> FOCUSTransformer : configures
+    FOCUSTransformer ..> ClickHouseSinkPlugin : uses
+    AzureBlobConnector ..> FOCUSTransformer : feeds
+```
+
+#### Configuration Retrieval Sequence
+
+```mermaid
+sequenceDiagram
+    participant Activity as Schema Migration Activity
+    participant ConfigReader as _get_clickhouse_config()
+    participant MooseConfig as moose.config.toml
+    participant PostgreSQL as bia_config Database
+    participant PluginTable as plugin_configurations
+    participant ClickHouse as ClickHouse Server
+
+    Activity->>ConfigReader: Request ClickHouse config
+
+    ConfigReader->>MooseConfig: Read [plugin_registry_db]
+    MooseConfig-->>ConfigReader: PG connection params
+
+    ConfigReader->>PostgreSQL: Connect with credentials
+    PostgreSQL-->>ConfigReader: Connection established
+
+    ConfigReader->>PluginTable: SELECT configuration<br/>FROM plugin_configurations<br/>WHERE plugin_name = 'ClickHouse Sink'<br/>AND is_active = true
+
+    alt Plugin found
+        PluginTable-->>ConfigReader: JSONB config:<br/>{host, port, user, password, dbName}
+        ConfigReader->>ConfigReader: Validate required fields
+        ConfigReader-->>Activity: Return plugin config
+
+        Activity->>ClickHouse: Connect with config
+        ClickHouse-->>Activity: Connection successful
+        Activity->>ClickHouse: Execute migration SQL
+    else Plugin not found
+        PluginTable-->>ConfigReader: No rows returned
+        ConfigReader-->>Activity: Raise RuntimeError:<br/>"ClickHouse Sink plugin not configured"
+    end
+```
+
+#### Plugin Configuration Example
+
+**ClickHouse Sink Plugin** (`plugin_registry.plugin_configurations`):
+```json
+{
+  "host": "ck.mightytech.cn",
+  "port": 8443,
+  "user": "finops",
+  "password": "cU2f947&9T{6d",
+  "dbName": "finops-odw",
+  "useSSL": true,
+  "batchSize": 1000,
+  "tableName": "focus_billing_data",
+  "createTableIfNotExists": true
+}
+```
+
+**Configuration Source:**
+- **Plugin Registry Database** - `plugin_configurations` table (single source of truth)
+- No environment variable overrides
+- No fallback defaults - fails if plugin not configured
+
+#### Available Plugins
+
+| Plugin Name | Type | Description | Status |
+|------------|------|-------------|--------|
+| ClickHouse Sink | Sink | Write FOCUS data to ClickHouse OLAP database | Active |
+| Azure Blob Storage Connector | Source | Read billing data from Azure Blob Storage | Active |
+| Azure EA Connector | Source | Connect to Azure Enterprise Agreement API | Inactive |
+| FOCUS 1.2 Transformer | Transformer | Transform billing data to FOCUS 1.2 spec | Active |
+| GCP Billing Export | Source | Read GCP BigQuery billing export | Inactive |
+
+#### Plugin Management APIs
+
+**Query Plugin Configuration:**
+```sql
+SELECT configuration
+FROM plugin_registry.plugin_configurations
+WHERE plugin_name = 'ClickHouse Sink'
+AND is_active = true;
+```
+
+**Update Plugin Configuration:**
+```sql
+UPDATE plugin_registry.plugin_configurations
+SET configuration = '{"host": "localhost", "port": 18123, ...}'::jsonb,
+    updated_at = NOW(),
+    updated_by = 'user@example.com'
+WHERE plugin_name = 'ClickHouse Sink';
+```
+
+**List All Active Plugins:**
+```sql
+SELECT plugin_name, version, description
+FROM plugin_registry.plugin_configurations
+WHERE is_active = true
+ORDER BY plugin_name;
+```
+
 ### 🚀 Quick Start
 
 Get up and running in minutes with our automated setup:

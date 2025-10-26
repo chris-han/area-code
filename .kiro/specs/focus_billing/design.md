@@ -259,8 +259,161 @@ async def ingest_focus_batch(records: List[FocusCostUsage]):
 - **Dry-Run Mode**: Workflow parameter to validate transformations without sending to Moose
 
 ## Configuration
+
+### Plugin Registry System
+
+**All infrastructure configurations are managed through the centralized Plugin Registry stored in the `bia_config` PostgreSQL database.**
+
+#### Configuration Retrieval Rules
+
+1. **Single Source of Truth**: Plugin Registry Database (`plugin_registry.plugin_configurations` table)
+2. **No Environment Variables**: Do not read from environment variables in workflow activities
+3. **PostgreSQL Connection**: Read from `[plugin_registry_db]` section in `moose.config.toml`
+4. **Fail-Fast**: Raise RuntimeError if plugin configuration not found
+
+#### PostgreSQL Plugin Registry Connection
+
+```python
+def _get_clickhouse_config() -> dict:
+    """
+    Read ClickHouse configuration from plugin_registry in bia_config database.
+
+    Configuration source priority (ONLY source):
+    1. Plugin Registry Database (plugin_configurations table)
+
+    DO NOT:
+    - Read from environment variables
+    - Use hardcoded defaults
+    - Accept overrides from any other source
+
+    Returns:
+        Dictionary with ClickHouse connection parameters
+
+    Raises:
+        RuntimeError: If plugin configuration cannot be retrieved
+    """
+    import psycopg2
+    import tomli
+    from pathlib import Path
+
+    # Read PostgreSQL connection from moose.config.toml
+    moose_config_path = Path(__file__).resolve().parents[3] / 'moose.config.toml'
+    if moose_config_path.exists():
+        with open(moose_config_path, 'rb') as f:
+            moose_config = tomli.load(f)
+            pg_config = moose_config.get('plugin_registry_db', {})
+    else:
+        # Fallback defaults for PostgreSQL connection ONLY
+        pg_config = {
+            'host': 'localhost',
+            'port': 5432,
+            'database': 'bia_config',
+            'user': 'temporal',
+            'password': 'temporal'
+        }
+
+    try:
+        conn = psycopg2.connect(
+            host=pg_config.get('host', 'localhost'),
+            port=pg_config.get('port', 5432),
+            database=pg_config.get('database', 'bia_config'),
+            user=pg_config.get('user', 'temporal'),
+            password=pg_config.get('password', 'temporal')
+        )
+
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT configuration
+            FROM plugin_registry.plugin_configurations
+            WHERE plugin_name = 'ClickHouse Sink'
+            AND is_active = true
+            LIMIT 1
+        """)
+
+        row = cursor.fetchone()
+        cursor.close()
+        conn.close()
+
+        if not row:
+            raise RuntimeError(
+                "ClickHouse Sink plugin not found in plugin_registry. "
+                "Please configure the plugin in bia_config database."
+            )
+
+        plugin_config = row[0]  # JSONB column
+        config = {
+            'host': plugin_config.get('host'),
+            'port': plugin_config.get('port'),
+            'database': plugin_config.get('dbName', 'default'),
+            'user': plugin_config.get('user'),
+            'password': plugin_config.get('password'),
+        }
+
+        if not config['host'] or not config['port']:
+            raise RuntimeError(
+                f"Invalid ClickHouse Sink configuration: host={config['host']}, port={config['port']}"
+            )
+
+        return config
+
+    except psycopg2.Error as e:
+        raise RuntimeError(f"Failed to connect to plugin_registry database: {e}") from e
+```
+
+#### Plugin Configuration Example
+
+**ClickHouse Sink Plugin** stored in `plugin_registry.plugin_configurations`:
+
+```json
+{
+  "host": "ck.mightytech.cn",
+  "port": 8443,
+  "user": "finops",
+  "password": "cU2f947&9T{6d",
+  "dbName": "finops-odw",
+  "useSSL": true,
+  "batchSize": 1000,
+  "tableName": "focus_billing_data"
+}
+```
+
+#### Configuration Flow
+
+```mermaid
+sequenceDiagram
+    participant Activity as Temporal Activity
+    participant ConfigReader as _get_clickhouse_config()
+    participant MooseConfig as moose.config.toml
+    participant PostgreSQL as bia_config Database
+    participant PluginTable as plugin_configurations
+    participant ClickHouse as ClickHouse Server
+
+    Activity->>ConfigReader: Request ClickHouse config
+
+    ConfigReader->>MooseConfig: Read [plugin_registry_db]
+    MooseConfig-->>ConfigReader: PG connection params
+
+    ConfigReader->>PostgreSQL: Connect with credentials
+    PostgreSQL-->>ConfigReader: Connection established
+
+    ConfigReader->>PluginTable: SELECT configuration<br/>WHERE plugin_name = 'ClickHouse Sink'
+
+    alt Plugin found
+        PluginTable-->>ConfigReader: JSONB config
+        ConfigReader->>ConfigReader: Validate required fields
+        ConfigReader-->>Activity: Return plugin config
+
+        Activity->>ClickHouse: Connect using config
+        ClickHouse-->>Activity: Connection successful
+    else Plugin not found
+        PluginTable-->>ConfigReader: No rows
+        ConfigReader-->>Activity: Raise RuntimeError
+    end
+```
+
+#### Other Configuration Settings
+
 - Add `FOCUS_DATA_ROOT` env (default to path in focus-mcp project). Document fallback.
-- Reuse ClickHouse credentials from `moose.config.toml`; avoid duplicating secrets.
 - Optionally allow workflow params (batch size, concurrency).
 
 ## Observability & Validation

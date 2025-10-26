@@ -2,9 +2,11 @@
 
 import hashlib
 import json
+import os
+import tomli
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Any
+from typing import Any
 
 import pyarrow.parquet as pq
 import clickhouse_connect
@@ -12,6 +14,87 @@ from temporalio import activity
 
 from .models import SchemaDiff, MigrationResult
 from .spec_parser import parse_focus_spec, map_focus_type_to_clickhouse
+
+
+def _get_clickhouse_config() -> dict:
+    """
+    Read ClickHouse configuration from plugin_registry in bia_config database.
+
+    Reads directly from plugin_registry.plugin_configurations table
+    for the active 'ClickHouse Sink' plugin.
+
+    Returns:
+        Dictionary with ClickHouse connection parameters
+
+    Raises:
+        RuntimeError: If plugin configuration cannot be retrieved
+    """
+    import psycopg2
+
+    moose_config_path = Path(__file__).resolve().parents[3] / 'moose.config.toml'
+    if moose_config_path.exists():
+        with open(moose_config_path, 'rb') as f:
+            moose_config = tomli.load(f)
+            pg_config = moose_config.get('plugin_registry_db', {})
+    else:
+        pg_config = {
+            'host': 'localhost',
+            'port': 5432,
+            'database': 'bia_config',
+            'user': 'temporal',
+            'password': 'temporal'
+        }
+
+    try:
+        conn = psycopg2.connect(
+            host=pg_config.get('host', 'localhost'),
+            port=pg_config.get('port', 5432),
+            database=pg_config.get('database', 'bia_config'),
+            user=pg_config.get('user', 'temporal'),
+            password=pg_config.get('password', 'temporal')
+        )
+
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT configuration
+            FROM plugin_registry.plugin_configurations
+            WHERE plugin_name = 'ClickHouse Sink'
+            AND is_active = true
+            LIMIT 1
+        """)
+
+        row = cursor.fetchone()
+        cursor.close()
+        conn.close()
+
+        if not row:
+            raise RuntimeError(
+                "ClickHouse Sink plugin not found in plugin_registry. "
+                "Please configure the plugin in bia_config database."
+            )
+
+        plugin_config = row[0]
+        config = {
+            'host': plugin_config.get('host'),
+            'port': plugin_config.get('port'),
+            'database': plugin_config.get('dbName', 'default'),
+            'user': plugin_config.get('user'),
+            'password': plugin_config.get('password'),
+        }
+
+        if not config['host'] or not config['port']:
+            raise RuntimeError(
+                f"Invalid ClickHouse Sink configuration: host={config['host']}, port={config['port']}"
+            )
+
+        activity.logger.info(
+            f"Loaded ClickHouse config from plugin_registry: {config['host']}:{config['port']}"
+        )
+
+        return config
+
+    except psycopg2.Error as e:
+        raise RuntimeError(f"Failed to connect to plugin_registry database: {e}") from e
 
 
 @activity.defn
@@ -161,17 +244,46 @@ async def apply_transformation_and_load_data(
 
     start_time = datetime.utcnow()
 
+    clickhouse_config = _get_clickhouse_config()
+    activity.logger.info(
+        f"Connecting to ClickHouse at {clickhouse_config['host']}:{clickhouse_config['port']}"
+    )
+
     client = clickhouse_connect.get_client(
-        host='localhost',
-        port=8123,
-        database='default'
+        host=clickhouse_config['host'],
+        port=clickhouse_config['port'],
+        database=clickhouse_config.get('database', 'default'),
+        username=clickhouse_config.get('user'),
+        password=clickhouse_config.get('password'),
     )
 
     try:
+        old_version = f"0_{int(new_version.split('_')[1]) - 1}"
+
+        table_exists_result = client.query(f"""
+            SELECT count()
+            FROM system.tables
+            WHERE database = '{clickhouse_config['database']}'
+            AND name = 'FocusCostUsage_{old_version}'
+        """)
+        table_exists = table_exists_result.first_row[0] > 0 if table_exists_result.row_count > 0 else False
+
+        if not table_exists:
+            activity.logger.warning(
+                f"Base table FocusCostUsage_{old_version} does not exist. "
+                f"Skipping migration - table must be created first via ingestion workflow."
+            )
+            return {
+                "rows_migrated": 0,
+                "old_version": old_version,
+                "new_version": new_version,
+                "status": "skipped",
+                "reason": "base_table_not_found",
+                "duration_seconds": 0
+            }
+
         client.command(transform_code)
         activity.logger.info(f"Created migration materialized view for version {new_version}")
-
-        old_version = f"0_{int(new_version.split('_')[1]) - 1}"
 
         old_count_result = client.query(f"SELECT COUNT(*) FROM FocusCostUsage_{old_version}")
         old_count = old_count_result.first_row[0] if old_count_result.row_count > 0 else 0
