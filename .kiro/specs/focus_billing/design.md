@@ -629,9 +629,285 @@ python -m app.focus_billing.schema_migration_cli --dry-run
 
 ---
 
+## FinOps Dashboard - BIA Frontend Integration
+
+### Architecture Overview
+
+The BIA (Business Intelligence Application) frontend integrates with two backend systems:
+
+1. **Admin Functions** → BIA Backend API (port 4300)
+   - Workflow management (trigger, status, list)
+   - Worker management (start, restart, status)
+   - System health checks
+   - Plugin management
+
+2. **FinOps Dashboard** → Moose Consumption API (port 4201)
+   - FOCUS billing analytics
+   - Cost comparison and analysis
+   - Supported features catalog
+   - Real-time data queries
+
+### Frontend Architecture
+
+```mermaid
+graph TB
+    subgraph "BIA Frontend (Next.js - Port 3003)"
+        UI["React UI Components"]
+        ADMIN["Admin Pages<br/>/workflows, /admin"]
+        FINOPS["FinOps Dashboard<br/>/finops/*"]
+
+        subgraph "API Layer"
+            BIA_CLIENT["BIA Client<br/>port 4300"]
+            MOOSE_CLIENT["Moose Client<br/>port 4201"]
+        end
+    end
+
+    subgraph "Backend Services"
+        BIA_BACKEND["BIA Backend<br/>FastAPI - Port 4300<br/>- Temporal workflows<br/>- Worker management"]
+        MOOSE_API["Moose Consumption API<br/>Port 4201<br/>- FOCUS queries<br/>- Analytics endpoints"]
+    end
+
+    subgraph "Data Storage"
+        CLICKHOUSE["ClickHouse<br/>FOCUS tables"]
+        TEMPORAL["Temporal<br/>Workflow state"]
+    end
+
+    ADMIN --> BIA_CLIENT
+    FINOPS --> MOOSE_CLIENT
+
+    BIA_CLIENT --> BIA_BACKEND
+    MOOSE_CLIENT --> MOOSE_API
+
+    BIA_BACKEND --> TEMPORAL
+    MOOSE_API --> CLICKHOUSE
+
+    classDef frontend fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef backend fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
+    classDef storage fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+
+    class UI,ADMIN,FINOPS,BIA_CLIENT,MOOSE_CLIENT frontend
+    class BIA_BACKEND,MOOSE_API backend
+    class CLICKHOUSE,TEMPORAL storage
+```
+
+### FOCUS Supported Features Integration
+
+The FinOps dashboard exposes all 18 FOCUS supported features as interactive dashboards:
+
+#### Core Features (Tier 1)
+1. **Cost Comparison** - Compare BilledCost, ContractedCost, EffectiveCost, ListCost
+2. **Effective Cost Analysis** - Analyze spending trends with amortized costs
+3. **Billed Cost & Invoice Alignment** - Reconcile costs with invoices
+4. **Cost and Usage Attribution** - Tag-based cost allocation
+
+#### Resource & Service Management (Tier 2)
+5. **Resource Usage** - Track resource consumption metrics
+6. **Provider Services** - Service-level cost breakdown
+7. **Service Categorization** - Organize services by category
+8. **Location** - Geographic cost distribution
+9. **Account Structures** - Multi-account cost visibility
+
+#### Commitment & Purchase Management (Tier 3)
+10. **Commit Usage and Under Usage** - Track commitment utilization
+11. **Marketplace Purchases** - Third-party marketplace spending
+12. **Verify, Compare, Track Unit Prices** - Unit price analysis
+
+#### Advanced Analytics (Tier 4)
+13. **Charge Categorization** - Categorize charges by type
+14. **Data Granularity** - Adjust data aggregation levels
+15. **Provider Calculated Split Cost Allocation** - Shared resource costs
+16. **Custom Columns** - Provider-specific extensions
+17. **Schema Metadata** - FOCUS schema introspection
+18. **Supported Features Overview** - Feature catalog
+
+### API Structure
+
+#### Moose Consumption API Endpoints
+
+```typescript
+// Base URL: http://localhost:4201/api
+
+// FOCUS Analytics Endpoints
+GET  /focus/features                    // List all supported features
+GET  /focus/features/:feature_id        // Get feature details
+POST /focus/queries/:feature_id/execute // Execute feature query
+
+// Pre-built Analytics
+POST /consumption/CostComparison
+POST /consumption/EffectiveCostAnalysis
+POST /consumption/CommitmentDiscountPurchases
+POST /consumption/CorrectionCharges
+POST /consumption/RecurringCharges
+POST /consumption/ResourceUsageByService
+POST /consumption/CostByLocation
+POST /consumption/AccountCostBreakdown
+POST /consumption/MarketplacePurchases
+POST /consumption/UnitPriceAnalysis
+```
+
+### Frontend Implementation Plan
+
+#### 1. API Client Layer
+
+**File**: `src/api/focus.ts`
+
+```typescript
+import { mooseClient } from './client'
+
+export interface FocusSupportedFeature {
+  id: string
+  name: string
+  description: string
+  introduced_version: string
+  dependent_columns: string[]
+  supporting_columns: string[]
+  example_sql?: string
+}
+
+export interface CostComparisonRequest {
+  billing_period_start: string
+  billing_period_end: string
+  provider_name?: string
+  billing_account_id?: string
+}
+
+export interface CostComparisonResponse {
+  provider_name: string
+  billing_account_id: string
+  billing_account_name: string
+  service_name: string
+  total_effective_cost: number
+  total_billed_cost: number
+  total_contracted_cost: number
+  total_list_cost: number
+  contracted_discount: number
+  effective_discount: number
+}
+
+export const focusApi = {
+  listSupportedFeatures: () =>
+    mooseClient.get<FocusSupportedFeature[]>('/focus/features'),
+
+  getFeature: (featureId: string) =>
+    mooseClient.get<FocusSupportedFeature>(`/focus/features/${featureId}`),
+
+  costComparison: (params: CostComparisonRequest) =>
+    mooseClient.post<CostComparisonResponse[]>('/consumption/CostComparison', params),
+
+  effectiveCostAnalysis: (params: CostComparisonRequest) =>
+    mooseClient.post<any[]>('/consumption/EffectiveCostAnalysis', params),
+}
+```
+
+#### 2. React Hooks
+
+**File**: `src/hooks/useFocus.ts`
+
+```typescript
+import { useQuery, useMutation } from '@tanstack/react-query'
+import { focusApi } from '@/api/focus'
+
+export function useSupportedFeatures() {
+  return useQuery({
+    queryKey: ['focus', 'features'],
+    queryFn: () => focusApi.listSupportedFeatures(),
+  })
+}
+
+export function useCostComparison() {
+  return useMutation({
+    mutationFn: focusApi.costComparison,
+  })
+}
+```
+
+#### 3. Dashboard Pages
+
+**File Structure**:
+```
+src/app/finops/
+├── layout.tsx                    # FinOps dashboard layout
+├── page.tsx                      # Dashboard overview
+├── features/
+│   ├── page.tsx                  # Features catalog
+│   └── [featureId]/
+│       └── page.tsx              # Individual feature dashboard
+├── cost-comparison/
+│   └── page.tsx                  # Cost comparison dashboard
+├── effective-cost/
+│   └── page.tsx                  # Effective cost analysis
+├── commitments/
+│   └── page.tsx                  # Commitment tracking
+└── resources/
+    └── page.tsx                  # Resource usage
+```
+
+#### 4. UI Components
+
+**Key Components**:
+- `<CostComparisonChart>` - Visualize cost metrics
+- `<EffectiveCostTimeline>` - Spending trends over time
+- `<CommitmentUtilization>` - Commitment usage gauges
+- `<ServiceCategoryBreakdown>` - Service cost pie chart
+- `<ResourceUsageTable>` - Detailed resource metrics
+- `<FeatureCard>` - Supported feature display
+- `<DateRangePicker>` - Date range selector for queries
+
+#### 5. Navigation Structure
+
+```typescript
+// src/components/navigation.tsx additions
+
+const finopsNavItems = [
+  { name: 'Dashboard', href: '/finops', icon: ChartBarIcon },
+  { name: 'Features', href: '/finops/features', icon: SparklesIcon },
+  { name: 'Cost Analysis', href: '/finops/cost-comparison', icon: CurrencyDollarIcon },
+  { name: 'Commitments', href: '/finops/commitments', icon: CalendarIcon },
+  { name: 'Resources', href: '/finops/resources', icon: ServerIcon },
+]
+```
+
+### Data Flow
+
+1. **User Action** → FinOps dashboard page loads
+2. **Frontend** → Fetch supported features via `mooseClient` (port 4201)
+3. **Moose API** → Query ClickHouse FOCUS tables
+4. **Response** → JSON data rendered in React components
+5. **Visualization** → Charts, tables, metrics displayed
+
+### Configuration
+
+**Environment Variables** (already configured in `src/lib/env.ts`):
+```env
+NEXT_PUBLIC_MOOSE_CONSUMPTION_BASE_URL=http://localhost:4201/api
+NEXT_PUBLIC_API_BASE_URL=http://localhost:4300
+```
+
+### Security & Access Control
+
+- **CORS**: Moose consumption API must allow origin `http://localhost:3003`
+- **Authentication**: Optional - can add token-based auth later
+- **Rate Limiting**: Consider implementing for production
+
+### Testing Strategy
+
+1. **API Integration Tests**: Verify Moose consumption endpoints
+2. **Component Tests**: Test individual dashboard components
+3. **E2E Tests**: Full user workflows (select date range → view cost comparison)
+
+### Deployment Considerations
+
+- **Port Configuration**: Ensure frontend, BIA backend, and Moose API are on separate ports
+- **Reverse Proxy**: Use Next.js API routes (`/api/bia/*`) to proxy BIA backend calls
+- **Direct Connection**: Moose consumption API called directly from browser
+- **Error Handling**: Implement fallback UI for API failures
+
+---
+
 ## Open Questions / Assumptions
 - Initial delivery focuses on the two dataset tables + views; dimension tables staged for later if needed.
 - Queries in YAML currently use positional `?` parameters for date ranges; assume first two parameters are `start` and `end`.
 - Parquet exports might include additional provider-specific columns; ingest pipeline should store them as JSON in `extended_attributes` if they aren't mapped (fallback plan).
 - Manifest table retention strategy (basic logging is acceptable for now).
 - **Schema Migration**: Initial version is `0_0`; migrations increment minor version (`0_1`, `0_2`, etc.)
+- **FinOps Dashboard**: Moose consumption API port changed to 4201 (proxy_port in moose.config.toml)

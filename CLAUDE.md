@@ -15,11 +15,24 @@
 ✅ Test with current container setup
 ❌ **NEVER** use hardcoded IP addresses in code
 
+### Moose Configuration Rules
+⚠️ **Port Configuration**:
+- `moose.config.toml` requires TWO separate ports:
+  - `port = 4200`: Main server (ingestion, MCP)
+  - `proxy_port = 4201`: Consumption API proxy
+- ❌ **DO NOT** set `proxy_port = port` (causes port conflict)
+- The ports MUST be different for Moose to function correctly
+
 ## Current Infrastructure
 - Temporal Server: `temporalio/auto-setup:1.29.0` at `172.18.0.3:7233`
-- API Server: Running on port 4300
+- BIA API Server: Running on port 4300
+- Moose Data Warehouse:
+  - Main server: port 4200 (ingestion `/ingest/*`, MCP `/mcp`)
+  - Consumption API proxy: port 4201 (consumption `/api/*`)
 - Frontend: Expected on port 3000
 - Temporal UI: Available at `localhost:8080`
+- MinIO: http://localhost:9500 (Console: 9501)
+- Kafdrop: http://localhost:9999
 
 ## Workflow System Status
 - ✅ API endpoints working (`/api/v1/workflows/list`)

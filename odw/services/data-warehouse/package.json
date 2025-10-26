@@ -7,6 +7,7 @@
     "clean": "./app/scripts/clean.sh",
     "odw:dev": "./app/scripts/dev.sh",
     "odw:dev:clean": "./app/scripts/clean.sh",
-    "odw:moose:dev": "./app/scripts/dev.sh"
+    "odw:moose:dev": "./app/scripts/dev.sh",
+    "bia:dev": "./app/scripts/bia-api.sh"
   }
 }

@@ -1,7 +1,7 @@
 from app.ingest.models import LogSource
 from app.utils.simulator import simulate_failures
-from connectors.connector_factory import ConnectorFactory, ConnectorType
-from connectors.logs_connector import LogsConnectorConfig
+# from connectors.connector_factory import ConnectorFactory, ConnectorType
+# from connectors.logs_connector import LogsConnectorConfig
 from moose_lib import Task, TaskConfig, Workflow, WorkflowConfig, cli_log, CliLogData
 from pydantic import BaseModel
 from typing import Optional
@@ -21,52 +21,7 @@ class LogsExtractParams(BaseModel):
     fail_percentage: Optional[int] = 0
 
 def run_task(input: LogsExtractParams) -> None:
-    cli_log(CliLogData(action="LogsWorkflow", message="Running Logs task...", message_type="Info"))
-
-    # Create a connector to extract data from Logs
-    connector = ConnectorFactory[LogSource].create(
-        ConnectorType.Logs,
-        LogsConnectorConfig(batch_size=input.batch_size)
-    )
-
-    # Extract data from Logs
-    data = connector.extract()
-
-    cli_log(CliLogData(
-        action="LogsWorkflow",
-        message=f"Extracted {len(data)} items",
-        message_type="Info"
-    ))
-
-    failed_count = simulate_failures(data, input.fail_percentage)
-    if failed_count > 0:
-        cli_log(CliLogData(
-            action="LogsWorkflow",
-            message=f"Marked {failed_count} items ({input.fail_percentage}%) as failed",
-            message_type="Info"
-        ))
-
-    data_dicts = [item.model_dump() for item in data]
-    
-    try:
-        response = requests.post(
-            "http://localhost:4200/ingest/LogSource",
-            json=data_dicts,
-            headers={"Content-Type": "application/json"}
-        )
-        response.raise_for_status()
-        
-        cli_log(CliLogData(
-            action="LogsWorkflow",
-            message=f"Successfully sent {len(data)} items to ingest API",
-            message_type="Info"
-        ))
-    except Exception as e:
-        cli_log(CliLogData(
-            action="LogsWorkflow",
-            message=f"Failed to send data to ingest API: {str(e)}",
-            message_type="Error"
-        ))
+    cli_log(CliLogData(action="LogsWorkflow", message="Logs workflow disabled - connectors module not available", message_type="Info"))
 
 logs_task = Task[LogsExtractParams, None](
     name="logs-task",

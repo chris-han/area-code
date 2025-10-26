@@ -1,4 +1,5 @@
-from moose_lib import MaterializedView, MaterializedViewOptions, ClickHouseEngines, AggregateFunction
+from moose_lib import MaterializedView, MaterializedViewOptions, AggregateFunction, OlapTable, OlapConfig
+from moose_lib.blocks import AggregatingMergeTreeEngine
 from pydantic import BaseModel
 from typing import Annotated
 from app.ingest.models import eventModel
@@ -22,13 +23,19 @@ query = f"""
 """
 
 # Materialized view definition
+daily_pageviews_table = OlapTable[DailyPageViewsSchema](
+    name="daily_pageviews_table",
+    config=OlapConfig(
+        engine=AggregatingMergeTreeEngine(),
+        order_by_fields=["view_date"]
+    )
+)
+
 daily_pageviews_mv = MaterializedView[DailyPageViewsSchema](
     MaterializedViewOptions(
         select_statement=query,
-        table_name="daily_pageviews_table",
         materialized_view_name="daily_pageviews_mv",
         select_tables=[eventModel.get_table()],
-        engine=ClickHouseEngines.AggregatingMergeTree,
-        order_by_fields=["view_date"]
-    )
-) 
+    ),
+    target_table=daily_pageviews_table
+)

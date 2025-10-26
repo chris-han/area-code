@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 const envSchema = z.object({
   NEXT_PUBLIC_API_BASE_URL: z.string().url().default('http://localhost:4300'),
-  NEXT_PUBLIC_MOOSE_CONSUMPTION_BASE_URL: z.string().url().default('http://localhost:4200/consumption'),
+  NEXT_PUBLIC_MOOSE_CONSUMPTION_BASE_URL: z.string().url().default('http://localhost:4201/api'),
   NEXT_PUBLIC_TEMPORAL_UI_URL: z.string().url().default('http://localhost:8080'),
   NEXT_PUBLIC_MINIO_CONSOLE_URL: z.string().url().default('http://localhost:9501'),
   NEXT_PUBLIC_KAFDROP_URL: z.string().url().default('http://localhost:9999'),

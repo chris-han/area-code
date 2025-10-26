@@ -4,17 +4,19 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { 
-  BarChart3, 
-  Settings, 
-  Workflow, 
+import {
+  BarChart3,
+  Settings,
+  Workflow,
   Home,
-  ExternalLink
+  ExternalLink,
+  DollarSign
 } from 'lucide-react'
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: Home },
   { name: 'Workflows', href: '/workflows', icon: Workflow },
+  { name: 'FinOps', href: '/finops', icon: DollarSign },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
   { name: 'Admin', href: '/admin', icon: Settings },
 ]

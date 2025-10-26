@@ -1,7 +1,7 @@
 from app.ingest.models import Medical, UnstructuredData, UnstructuredDataSource
 from app.utils.llm_service import get_llm_service
-from connectors.connector_factory import ConnectorFactory, ConnectorType
-from connectors.s3_connector import S3ConnectorConfig, S3FileContent
+# from connectors.connector_factory import ConnectorFactory, ConnectorType
+# from connectors.s3_connector import S3ConnectorConfig, S3FileContent
 from moose_lib import Task, TaskConfig, Workflow, WorkflowConfig, cli_log, CliLogData
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
@@ -126,19 +126,19 @@ def stage_1_s3_to_unstructured(input: UnstructuredDataExtractParams) -> List[str
         message_type="Info"
     ))
 
-    connector = ConnectorFactory[S3FileContent].create(
-        ConnectorType.S3,
-        S3ConnectorConfig(s3_pattern=input.source_file_pattern)
-    )
+    # connector = ConnectorFactory[S3FileContent].create(
+    #     ConnectorType.S3,
+    #     S3ConnectorConfig(s3_pattern=input.source_file_pattern)
+    # )
 
     cli_log(CliLogData(
         action="UnstructuredDataWorkflow",
-        message="DEBUG: S3 connector created successfully, starting file extraction...",
+        message="DEBUG: S3 connector disabled - connectors module not available",
         message_type="Info"
     ))
 
     # Extract files from S3
-    files = connector.extract()
+    files = []  # connector.extract()
 
     cli_log(CliLogData(
         action="UnstructuredDataWorkflow",

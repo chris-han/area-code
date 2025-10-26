@@ -1,7 +1,7 @@
 from app.ingest.models import BlobSource
 from app.utils.simulator import simulate_failures
-from connectors.connector_factory import ConnectorFactory, ConnectorType
-from connectors.blob_connector import BlobConnectorConfig
+# from connectors.connector_factory import ConnectorFactory, ConnectorType
+# from connectors.blob_connector import BlobConnectorConfig
 from moose_lib import Task, TaskConfig, Workflow, WorkflowConfig, cli_log, CliLogData
 from pydantic import BaseModel
 from typing import Optional
@@ -21,52 +21,13 @@ class BlobExtractParams(BaseModel):
     fail_percentage: Optional[int] = 0
 
 def run_task(input: BlobExtractParams) -> None:
-    cli_log(CliLogData(action="BlobWorkflow", message="Running Blob task...", message_type="Info"))
-
-    # Create a connector to extract data from Blob
-    connector = ConnectorFactory[BlobSource].create(
-        ConnectorType.Blob,
-        BlobConnectorConfig(batch_size=input.batch_size)
-    )
-
-    # Extract data from Blob
-    data = connector.extract()
-
-    cli_log(CliLogData(
-        action="BlobWorkflow",
-        message=f"Extracted {len(data)} items",
-        message_type="Info"
-    ))
-
-    failed_count = simulate_failures(data, input.fail_percentage)
-    if failed_count > 0:
-        cli_log(CliLogData(
-            action="BlobWorkflow",
-            message=f"Marked {failed_count} items ({input.fail_percentage}%) as failed",
-            message_type="Info"
-        ))
-
-    data_dicts = [item.model_dump() for item in data]
-    
-    try:
-        response = requests.post(
-            "http://localhost:4200/ingest/BlobSource",
-            json=data_dicts,
-            headers={"Content-Type": "application/json"}
-        )
-        response.raise_for_status()
-        
-        cli_log(CliLogData(
-            action="BlobWorkflow",
-            message=f"Successfully sent {len(data)} items to ingest API",
-            message_type="Info"
-        ))
-    except Exception as e:
-        cli_log(CliLogData(
-            action="BlobWorkflow",
-            message=f"Failed to send data to ingest API: {str(e)}",
-            message_type="Error"
-        ))
+    cli_log(CliLogData(action="BlobWorkflow", message="Blob workflow disabled - connectors module not available", message_type="Info"))
+    # TODO: Implement connector-based extraction when connectors module is available
+    # connector = ConnectorFactory[BlobSource].create(
+    #     ConnectorType.Blob,
+    #     BlobConnectorConfig(batch_size=input.batch_size)
+    # )
+    # data = connector.extract()
 
 blob_task = Task[BlobExtractParams, None](
     name="blob-task",

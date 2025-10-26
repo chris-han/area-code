@@ -32,8 +32,87 @@ print_error() {
     echo -e "${RED}[DATA-WAREHOUSE]${NC} $1"
 }
 
-# Port configuration
-DATA_WAREHOUSE_PORT=4200
+# Port configuration defaults; final values loaded from moose.config.toml when available
+DEFAULT_DATA_WAREHOUSE_PORT=4200
+DEFAULT_PROXY_PORT=4201
+MOOSE_CONFIG_PATH="$SERVICE_DIR/moose.config.toml"
+declare -a DATA_WAREHOUSE_PORTS=("$DEFAULT_DATA_WAREHOUSE_PORT" "$DEFAULT_PROXY_PORT")
+
+extract_port_from_config() {
+    local key="$1"
+    local default="$2"
+    local config_path="$MOOSE_CONFIG_PATH"
+
+    if [ ! -f "$config_path" ]; then
+        echo "$default"
+        return
+    fi
+
+    awk -v key="$key" -v fallback="$default" '
+        BEGIN { in_section=0; found=0; }
+        /^\s*\[http_server_config\]\s*$/ { in_section=1; next }
+        /^\s*\[.*\]\s*$/ {
+            if (in_section && !found) {
+                print fallback
+                exit
+            }
+            in_section=0
+            next
+        }
+        in_section {
+            line=$0
+            sub(/#.*/, "", line)
+            if (match(line, "^[ \t]*" key "[ \t]*=[ \t]*([0-9]+)", m)) {
+                print m[1]
+                found=1
+                exit
+            }
+        }
+        END {
+            if (!found) {
+                print fallback
+            }
+        }
+    ' "$config_path"
+}
+
+load_service_ports() {
+    if [ ! -f "$MOOSE_CONFIG_PATH" ]; then
+        print_warning "moose.config.toml not found; using default ports: ${DATA_WAREHOUSE_PORTS[*]}"
+        return
+    fi
+
+    local primary_port
+    primary_port=$(extract_port_from_config "port" "$DEFAULT_DATA_WAREHOUSE_PORT")
+    local proxy_port
+    proxy_port=$(extract_port_from_config "proxy_port" "$DEFAULT_PROXY_PORT")
+
+    local resolved_ports=()
+    local port
+    for port in "$primary_port" "$proxy_port"; do
+        if [ -n "$port" ]; then
+            local duplicate=false
+            for existing in "${resolved_ports[@]}"; do
+                if [ "$existing" = "$port" ]; then
+                    duplicate=true
+                    break
+                fi
+            done
+
+            if [ "$duplicate" = false ]; then
+                resolved_ports+=("$port")
+            fi
+        fi
+    done
+
+    if [ ${#resolved_ports[@]} -eq 0 ]; then
+        print_warning "Could not determine data warehouse ports from moose.config.toml; using defaults: ${DATA_WAREHOUSE_PORTS[*]}"
+        return
+    fi
+
+    DATA_WAREHOUSE_PORTS=("${resolved_ports[@]}")
+    print_status "Resolved data warehouse ports: ${DATA_WAREHOUSE_PORTS[*]}"
+}
 
 # Virtual environment utility functions
 check_venv_exists() {
@@ -162,13 +241,20 @@ clean_moose_infrastructure() {
     fi
 }
 
-clean_data_warehouse_port() {
-    print_status "Checking for process using port $DATA_WAREHOUSE_PORT..."
+clean_port_usage() {
+    local port=$1
 
-    local pid=$(lsof -ti :$DATA_WAREHOUSE_PORT 2>/dev/null)
+    if [ -z "$port" ]; then
+        return
+    fi
+
+    print_status "Checking for process using port $port..."
+
+    local pid
+    pid=$(lsof -ti ":$port" -sTCP:LISTEN 2>/dev/null | head -n 1)
 
     if [ -n "$pid" ]; then
-        print_warning "Found process $pid using port $DATA_WAREHOUSE_PORT"
+        print_warning "Found process $pid using port $port"
         print_status "Attempting to terminate process $pid..."
 
         # Try graceful termination first
@@ -179,7 +265,7 @@ clean_data_warehouse_port() {
             local max_attempts=10
             while [ $attempts -lt $max_attempts ]; do
                 if ! kill -0 "$pid" 2>/dev/null; then
-                    print_success "Process $pid terminated gracefully"
+                    print_success "Process $pid on port $port terminated gracefully"
                     return 0
                 fi
                 sleep 1
@@ -201,8 +287,15 @@ clean_data_warehouse_port() {
             print_warning "Could not send signal to process $pid (may already be dead)"
         fi
     else
-        print_success "No processes found using port $DATA_WAREHOUSE_PORT"
+        print_success "No processes found using port $port"
     fi
+}
+
+clean_data_warehouse_ports() {
+    local port
+    for port in "${DATA_WAREHOUSE_PORTS[@]}"; do
+        clean_port_usage "$port"
+    done
 }
 
 clean_abi_api_port() {
@@ -231,8 +324,9 @@ clean_abi_api_port() {
 main() {
     print_status "Cleaning up Data Warehouse service..."
 
+    load_service_ports
     clean_moose_infrastructure
-    clean_data_warehouse_port
+    clean_data_warehouse_ports
     clean_abi_api_port
 
     print_success "Data Warehouse service cleanup completed"

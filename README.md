@@ -31,6 +31,135 @@ Frontend: Vite | React 19 | TypeScript | TanStack (Router, Query, Form) | Tailwi
 
 The odw project is a production-ready starter kit for an operational data warehouse, using the Moose framework to ingest data from various sources (Blobs, Events, Logs, FOCUS billing data) into an analytical backend (ClickHouse).
 
+### 🏗️ BIA Admin Frontend Architecture
+
+The BIA (Business Intelligence Application) frontend integrates with two backend systems for comprehensive data warehouse management and FinOps analytics:
+
+```mermaid
+graph TB
+    subgraph "Client Browser"
+        USER["User"]
+    end
+
+    subgraph "BIA Frontend - Next.js (Port 3003)"
+        UI["React UI"]
+        ADMIN_PAGES["Admin Pages<br/>/workflows, /admin"]
+        FINOPS_PAGES["FinOps Dashboard<br/>/finops/*"]
+
+        subgraph "API Clients"
+            BIA_CLIENT["BIA Client<br/>→ Port 4300"]
+            MOOSE_CLIENT["Moose Client<br/>→ Port 4201"]
+        end
+    end
+
+    subgraph "Backend Services"
+        BIA_BACKEND["BIA Backend API<br/>FastAPI - Port 4300"]
+        MOOSE_DW["Moose Data Warehouse<br/>Port 4200 (Ingestion)<br/>Port 4201 (Consumption API)"]
+    end
+
+    subgraph "Workflow & Orchestration"
+        TEMPORAL["Temporal Server<br/>Port 7233"]
+        WORKER["Temporal Worker<br/>FOCUS ETL, Schema Migration"]
+    end
+
+    subgraph "Data Storage"
+        CLICKHOUSE["ClickHouse<br/>Port 18123<br/>FOCUS Tables"]
+        REDPANDA["Redpanda<br/>Port 19092<br/>Streaming Topics"]
+    end
+
+    subgraph "Infrastructure Services"
+        MINIO["MinIO<br/>Port 9500/9501<br/>Object Storage"]
+        KAFDROP["Kafdrop<br/>Port 9999<br/>Queue Monitor"]
+    end
+
+    USER --> UI
+    UI --> ADMIN_PAGES
+    UI --> FINOPS_PAGES
+
+    ADMIN_PAGES --> BIA_CLIENT
+    FINOPS_PAGES --> MOOSE_CLIENT
+
+    BIA_CLIENT -->|Workflow Management<br/>Worker Control<br/>System Health| BIA_BACKEND
+    MOOSE_CLIENT -->|FOCUS Analytics<br/>Cost Queries<br/>Consumption APIs| MOOSE_DW
+
+    BIA_BACKEND -->|Trigger Workflows<br/>Check Status| TEMPORAL
+    BIA_BACKEND -->|Worker Mgmt| WORKER
+
+    MOOSE_DW -->|Ingest Data| REDPANDA
+    MOOSE_DW -->|Query FOCUS Data| CLICKHOUSE
+
+    WORKER -->|Execute Activities| TEMPORAL
+    WORKER -->|Transform & Load| CLICKHOUSE
+    WORKER -->|Read Parquet| MINIO
+
+    REDPANDA --> CLICKHOUSE
+
+    classDef frontend fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef backend fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
+    classDef workflow fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef storage fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    classDef infra fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+
+    class USER,UI,ADMIN_PAGES,FINOPS_PAGES,BIA_CLIENT,MOOSE_CLIENT frontend
+    class BIA_BACKEND,MOOSE_DW backend
+    class TEMPORAL,WORKER workflow
+    class CLICKHOUSE,REDPANDA storage
+    class MINIO,KAFDROP infra
+```
+
+**Key Features:**
+
+1. **Dual Backend Integration**
+   - **Admin Functions** → BIA Backend API (port 4300)
+     - Workflow management (trigger, status, list)
+     - Worker management (start, restart, status)
+     - System health checks
+     - Plugin management
+
+   - **FinOps Dashboard** → Moose Consumption API (port 4201)
+     - FOCUS billing analytics
+     - Cost comparison and analysis
+     - 18 supported FOCUS features
+     - Real-time data queries
+
+2. **Port Configuration**
+   - Frontend: `3003` (Next.js)
+   - BIA Backend: `4300` (FastAPI)
+   - Moose Ingestion: `4200` (HTTP ingestion, MCP)
+   - Moose Consumption: `4201` (Analytics APIs)
+   - Temporal: `7233` (Workflow engine)
+   - ClickHouse: `18123` (OLAP database)
+   - Redpanda: `19092` (Message queue)
+   - MinIO: `9500/9501` (Object storage)
+   - Kafdrop: `9999` (Queue monitoring)
+   - Temporal UI: `8080` (Workflow UI)
+
+3. **Data Flow**
+   ```
+   Parquet Files → Temporal Workflow → Transform → Moose Ingestion (4200) →
+   Redpanda → ClickHouse → Moose Consumption API (4201) → FinOps Dashboard
+   ```
+
+4. **FOCUS Supported Features** (18 Total)
+   - Cost Comparison
+   - Effective Cost Analysis
+   - Billed Cost & Invoice Alignment
+   - Cost and Usage Attribution
+   - Resource Usage
+   - Provider Services
+   - Service Categorization
+   - Location Analysis
+   - Account Structures
+   - Commitment Usage & Under-usage
+   - Marketplace Purchases
+   - Unit Price Verification
+   - Charge Categorization
+   - Data Granularity
+   - Split Cost Allocation
+   - Custom Columns
+   - Schema Metadata
+   - Features Overview
+
 ### 🚀 Quick Start
 
 Get up and running in minutes with our automated setup:

@@ -13,6 +13,7 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
+from fastapi import HTTPException
 from pydantic import BaseModel, Field
 
 from .temporal_client import TemporalClient
@@ -398,7 +399,12 @@ async def control_workflow(temporal_client: TemporalClient, params: WorkflowCont
         elif params.action == "retry":
             new_workflow_id = f"retry_{params.workflow_id}_{datetime.utcnow().strftime('%H%M%S')}"
             original_status = await temporal_client.get_workflow_status(params.workflow_id)
-            workflow_type = original_status.get("workflow_type", WorkflowType.AZURE_BILLING_EXTRACTION.value)
+            workflow_type = original_status.get("workflow_type")
+            if not workflow_type:
+                raise ValueError(
+                    f"Workflow {params.workflow_id} has no workflow_type in status. "
+                    f"Status info: {original_status}"
+                )
 
             execution_id = await temporal_client.start_workflow(
                 workflow_type=workflow_type,
@@ -445,7 +451,7 @@ async def get_workflow_status(temporal_client: TemporalClient, params: WorkflowS
 
         workflow = WorkflowExecution(
             workflow_id=params.workflow_id,
-            workflow_type=WorkflowType(status_info.get("workflow_type", WorkflowType.AZURE_BILLING_EXTRACTION.value)),
+            workflow_type=WorkflowType(status_info["workflow_type"]),
             status=WorkflowStatus(status_info.get("status", WorkflowStatus.RUNNING.value)),
             start_time=status_info.get("start_time"),
             end_time=status_info.get("end_time"),
@@ -494,27 +500,9 @@ async def get_workflow_status(temporal_client: TemporalClient, params: WorkflowS
     except Exception as exc:  # pragma: no cover - Temporal failures
         logger.error("Error getting workflow status for %s: %s", params.workflow_id, exc)
 
-        fallback = WorkflowExecution(
-            workflow_id=params.workflow_id,
-            workflow_type=WorkflowType.AZURE_BILLING_EXTRACTION,
-            status=WorkflowStatus.RUNNING,
-            start_time=datetime.utcnow() - timedelta(minutes=15),
-            end_time=None,
-            duration_seconds=None,
-            parameters={
-                "start_date": "2024-10-01",
-                "end_date": "2024-10-18",
-                "batch_size": 1000,
-            },
-            result=None,
-            records_processed=0,
-            created_by="fallback",
-        )
-
-        return WorkflowStatusResponse(
-            workflow=fallback,
-            task_details=None,
-            execution_log=None,
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get workflow status for {params.workflow_id}: {str(exc)}"
         )
 
 
