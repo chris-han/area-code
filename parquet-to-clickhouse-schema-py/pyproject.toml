@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "parquet-to-clickhouse-schema-py"
+version = "0.1.0"
+description = "Generate ClickHouse schemas from Parquet files using Polars + PyArrow"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "pyarrow>=12",
+  "pydantic>=2.5"
+]
+
+[project.scripts]
+parquet-to-clickhouse-schema = "parquet_to_clickhouse_schema_py.cli:main"

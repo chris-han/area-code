@@ -745,7 +745,7 @@ This guide walks you through the complete FOCUS billing data pipeline from raw P
 Ensure you have sample FOCUS data in the correct location:
 ```bash
 # Verify data exists
-ls odw/services/data-warehouse/app/focus_billing/data/focus/20250701-20250731/
+ls bia_admin/bia_backend/workflows/focus_billing/data/focus/20250701-20250731/
 ```
 
 If data doesn't exist, you can generate sample data or use your own FOCUS 1.2 compliant Parquet exports.

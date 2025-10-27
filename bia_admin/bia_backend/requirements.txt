@@ -6,5 +6,6 @@ redis>=5.0.0
 uvicorn>=0.24.0
 boto3>=1.26.0
 asyncpg==0.30.0
-tomli>=2.0.1; python_version < "3.11"
+tomli>=2.0.1
 jsonschema
+psycopg2-binary
