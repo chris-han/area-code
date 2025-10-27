@@ -23,6 +23,9 @@ temp_*.sh
 temp_*.json
 elasticsearch_migration.log
 
+# Python bytecode
+*.pyc
+
 # Development logs
 dev-*.log
 nohup.out
@@ -42,4 +45,5 @@ odw/services/data-warehouse/app/.azure_billing
 focus-mcp-main/data/
 .venv
 odw/services/data-warehouse/app/focus_billing/data/
+bia_admin/bia_backend/workflows/focus_billing/data/
 bia_admin/bia_backend/services/__pycache__/temporal_client.cpython-312.pyc
