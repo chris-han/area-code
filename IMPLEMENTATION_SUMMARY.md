@@ -231,7 +231,7 @@ curl -X POST http://localhost:4200/consumption/EffectiveCostAnalysis \
 ## Test Data
 Sample parquet files available at:
 ```
-/home/chris/repo/area-code/bia_admin/bia_backend/workflows/focus_billing/data/focus/
+/home/chris/repo/area-code/odw/services/data-warehouse/app/focus_billing/data/focus/
 ├── 20250701-20250731/  (22 files)
 ├── 20250801-20250831/  (38 files)
 └── 20250901-20250930/  (37 files)
@@ -239,7 +239,7 @@ Sample parquet files available at:
 
 Test with specific file:
 ```
-/home/chris/repo/area-code/bia_admin/bia_backend/workflows/focus_billing/data/focus/20250701-20250731/202507161527/cc47e41e-a6ab-462e-9b26-fe7237024648/part_0_0001.snappy.parquet
+/home/chris/repo/area-code/odw/services/data-warehouse/app/focus_billing/data/focus/20250701-20250731/202507161527/cc47e41e-a6ab-462e-9b26-fe7237024648/part_0_0001.snappy.parquet
 ```
 
 ## Benefits of Moose Stack Approach
