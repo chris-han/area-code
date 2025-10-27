@@ -131,7 +131,7 @@ class TemporalClient:
                 from pathlib import Path
                 repo_root = Path(__file__).resolve().parents[3]  # Go up to area-code root
 
-                default_parquet = str(repo_root / "odw/services/data-warehouse/app/focus_billing/data/focus/20250701-20250731/202507220944/b1861aa3-c2fe-460d-9ff2-a6f28d0ef073/part_0_0001.snappy.parquet")
+                default_parquet = str(repo_root / "bia_admin/bia_backend/workflows/focus_billing/data/focus/20250701-20250731/202507220944/b1861aa3-c2fe-460d-9ff2-a6f28d0ef073/part_0_0001.snappy.parquet")
                 default_spec = str(repo_root / "FOCUS_Spec/specification/datasets")
 
                 workflow_args = [

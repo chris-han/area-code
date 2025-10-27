@@ -1,0 +1,37 @@
+{
+  "manifestVersion": "2024-04-01",
+  "byteCount": 280386,
+  "blobCount": 1,
+  "dataRowCount": 2568,
+  "exportConfig": {
+    "exportName": "focus-cost",
+    "resourceId": "/subscriptions/6b14b494-56c5-44d2-a6fb-00ef27001c44/providers/Microsoft.CostManagement/exports/focus-cost",
+    "dataVersion": "1.2-preview",
+    "apiVersion": "2025-03-01",
+    "type": "FocusCost",
+    "timeFrame": "MonthToDate",
+    "granularity": "Daily"
+  },
+  "deliveryConfig": {
+    "partitionData": true,
+    "dataOverwriteBehavior": "CreateNewReport",
+    "fileFormat": "Parquet",
+    "compressionMode": "Snappy",
+    "containerUri": "/subscriptions/6b14b494-56c5-44d2-a6fb-00ef27001c44/resourceGroups/MarsFinOps/providers/Microsoft.Storage/storageAccounts/databrickstore",
+    "rootFolderPath": "1.2"
+  },
+  "runInfo": {
+    "executionType": "Scheduled",
+    "submittedTime": "2025-09-02T09:42:01.181442Z",
+    "runId": "73405976-a074-4021-bc45-7991bc4db3b5",
+    "startDate": "2025-08-01T00:00:00",
+    "endDate": "2025-08-31T00:00:00"
+  },
+  "blobs": [
+    {
+      "blobName": "1.2/focus-cost/20250801-20250831/202509020944/73405976-a074-4021-bc45-7991bc4db3b5/part_0_0001.snappy.parquet",
+      "byteCount": 280386,
+      "dataRowCount": 2568
+    }
+  ]
+}

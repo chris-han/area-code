@@ -102,6 +102,23 @@ install_connectors_package() {
     print_success "Connectors package available from $connectors_path"
 }
 
+configure_focus_billing_shim() {
+    local repo_root
+    repo_root="$(cd "$SERVICE_DIR/../../.." && pwd)"
+
+    case ":$PYTHONPATH:" in
+        *":$SERVICE_DIR:"*) ;;
+        *) export PYTHONPATH="$SERVICE_DIR${PYTHONPATH:+:$PYTHONPATH}" ;;
+    esac
+
+    case ":$PYTHONPATH:" in
+        *":$repo_root:"*) ;;
+        *) export PYTHONPATH="$repo_root${PYTHONPATH:+:$PYTHONPATH}" ;;
+    esac
+
+    print_success "Focus billing shim configured (PYTHONPATH includes $SERVICE_DIR and $repo_root)"
+}
+
 is_port_in_use() {
     local port=$1
     if lsof -i ":$port" >/dev/null 2>&1; then
@@ -140,6 +157,7 @@ install_dependencies() {
     ensure_venv_activated
 
     install_connectors_package
+    configure_focus_billing_shim
 
     print_status "Installing data-warehouse dependencies in virtual environment..."
     uv pip install . --offline 2>/dev/null || uv pip install .
